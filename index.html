@@ -70,7 +70,7 @@ function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  const wolf=document.createElement("span");wolf.className="all-mark";wolf.textContent="🐺";const txt=document.createElement("span");txt.className="all-text";txt.textContent="ALLE";alle.append(wolf,txt);
  alle.onclick=()=>{if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
- roller.forEach((r,i)=>{const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));const im=document.createElement("img");im.src="bilder/"+r.bilde;im.alt=r.navn;im.loading="lazy";b.append(im);b.onclick=()=>{valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};grid.append(b)});
+ roller.forEach((r,i)=>{const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));const im=document.createElement("img");im.src=r.bilde;im.alt=r.navn;im.loading="lazy";b.append(im);b.onclick=()=>{valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};grid.append(b)});
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("alleKnapp").textContent=valgt.size===roller.length?"Fjern alle kort":"Velg alle kort";$("startKnapp").disabled=valgt.size===0;
 }
 let faser=[],faseValgt=0,opptaker=null,biter=[],lyd=null;
