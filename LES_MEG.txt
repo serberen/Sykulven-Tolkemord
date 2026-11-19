@@ -1,0 +1,11 @@
+ULTIMATE VARULV – OPPLASTING TIL GITHUB
+
+Alle filene i denne pakken skal ligge direkte ved siden av hverandre i hovedmappen på GitHub.
+IKKE opprett eller bruk en mappe som heter «bilder».
+
+1. Last opp/erstatt index.html.
+2. Last opp alle .webp-filene direkte i samme hovedmappe som index.html.
+3. Trykk Commit changes.
+4. Åpne nettsiden og trykk Ctrl + F5.
+
+Bildene lastes fra samme mappe som index.html.
