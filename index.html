@@ -143,6 +143,15 @@ textarea{min-height:70px}
 </div>
 <p id="lydStatus" class="small" aria-live="polite">Ingen lydklipp er lastet opp for denne fasen.</p>
 </div>
+<div class="panel" style="margin:14px 0;background:#0d1a2d">
+<h2>Spill av hele sekvensen</h2>
+<p class="small">Spiller av alle opplastede lydklipp i spillrekkefølge. Mellom hver beskjed går en rolig nedtelling på 10 sekunder med lav tikking.</p>
+<div class="controls" style="justify-content:flex-start">
+<button class="action primary" id="spillAlleKnapp">▶ Spill alle lydklipp</button>
+<button class="action" id="stoppAlleKnapp" disabled>■ Stopp sekvens</button>
+</div>
+<p id="sekvensStatus" class="small" aria-live="polite">Klar til å spille sekvensen.</p>
+</div>
 <p id="status" class="status" aria-live="polite"></p><h2>Spillsekvens</h2><div id="faseListe" class="phase-list"></div>
 <h2 style="margin-top:18px">Rediger valgt fase</h2><label for="faseNavn">Fasenavn</label><input id="faseNavn"><label for="faseBeskrivelse">Instruksjon</label><textarea id="faseBeskrivelse"></textarea>
 <div class="actions"><button class="action" id="lagreFaseKnapp">Lagre tekst</button><button class="action" id="slettOpptakKnapp">Slett opptak</button></div></section>
@@ -182,6 +191,7 @@ function tegnKort(){grid.innerHTML="";
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
 }
 let faser=[],faseValgt=0,lyd=null,lydUrl=null;
+let sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
 const dbp=new Promise((ok,feil)=>{let q=indexedDB.open("ultimate-varulv-opptak",1);q.onupgradeneeded=()=>q.result.createObjectStore("lyd");q.onsuccess=()=>ok(q.result);q.onerror=()=>feil(q.error)});
 async function dbSet(k,v){let d=await dbp;return new Promise((ok,no)=>{let t=d.transaction("lyd","readwrite");t.objectStore("lyd").put(v,k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
 async function dbGet(k){let d=await dbp;return new Promise((ok,no)=>{let q=d.transaction("lyd").objectStore("lyd").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
@@ -198,6 +208,58 @@ async function spillOpptak(){
  lyd.onended=()=>{$("stoppLydKnapp").disabled=true};
  try{await lyd.play();$("stoppLydKnapp").disabled=false;$ ("status").textContent="Spiller av opplastet lydklipp."}catch(e){$("status").textContent="Kunne ikke spille av lydfilen."}
 }
+function stoppSekvens(tekst="Sekvensen er stoppet."){
+ sekvensAktiv=false;sekvensToken++;
+ if(sekvensTimer){clearInterval(sekvensTimer);sekvensTimer=null}
+ if(lyd){lyd.pause();lyd.currentTime=0;lyd.dispatchEvent(new Event("ended"))}
+ $("stoppAlleKnapp").disabled=true;$("spillAlleKnapp").disabled=false;
+ $("sekvensStatus").textContent=tekst;
+}
+function lavtTick(){
+ try{
+  const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+  if(!sekvensAudioContext)sekvensAudioContext=new C();
+  if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();
+  const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();
+  osc.type="sine";osc.frequency.value=720;
+  gain.gain.setValueAtTime(0.0001,sekvensAudioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.018,sekvensAudioContext.currentTime+0.006);
+  gain.gain.exponentialRampToValueAtTime(0.0001,sekvensAudioContext.currentTime+0.045);
+  osc.connect(gain);gain.connect(sekvensAudioContext.destination);
+  osc.start();osc.stop(sekvensAudioContext.currentTime+0.05);
+ }catch(e){}
+}
+function ventPaaLyd(lydObj){
+ return new Promise(resolve=>{
+  const ferdig=()=>{lydObj.removeEventListener("ended",ferdig);lydObj.removeEventListener("error",feil);resolve(true)};
+  const feil=()=>{lydObj.removeEventListener("ended",ferdig);lydObj.removeEventListener("error",feil);resolve(false)};
+  lydObj.addEventListener("ended",ferdig,{once:true});lydObj.addEventListener("error",feil,{once:true});
+ });
+}
+async function spillHeleSekvensen(){
+ if(sekvensAktiv)return;
+ const token=++sekvensToken,kø=[];
+ for(let i=0;i<faser.length;i++){const blob=await dbGet(faser[i].id);if(blob)kø.push({index:i,blob,navn:faser[i].navn})}
+ if(token!==sekvensToken)return;
+ if(!kø.length){$("sekvensStatus").textContent="Ingen lydklipp er lastet opp for spillfasene ennå.";return}
+ sekvensAktiv=true;$("spillAlleKnapp").disabled=true;$("stoppAlleKnapp").disabled=false;
+ $("sekvensStatus").textContent="Starter sekvensen – "+kø.length+" lydklipp funnet.";
+ for(let n=0;n<kø.length;n++){
+  if(token!==sekvensToken)break;
+  const item=kø[n];faseValgt=item.index;await visFase();if(token!==sekvensToken)break;
+  if(lyd){lyd.pause();lyd.currentTime=0}if(lydUrl)URL.revokeObjectURL(lydUrl);
+  lydUrl=URL.createObjectURL(item.blob);lyd=new Audio(lydUrl);
+  $("sekvensStatus").textContent="Spiller "+(n+1)+" av "+kø.length+": "+item.navn;
+  try{await lyd.play()}catch(e){$("sekvensStatus").textContent="Kunne ikke spille: "+item.navn;continue}
+  const ok=await ventPaaLyd(lyd);if(token!==sekvensToken)break;if(!ok)continue;
+  if(n<kø.length-1){
+   let igjen=10;$("sekvensStatus").textContent="Neste beskjed om 10 sekunder…";lavtTick();
+   sekvensTimer=setInterval(()=>{if(token!==sekvensToken)return;igjen--;if(igjen>0){$("sekvensStatus").textContent="Neste beskjed om "+igjen+" sekunder…";lavtTick()}else{clearInterval(sekvensTimer);sekvensTimer=null}},1000);
+   await new Promise(resolve=>{const vent=()=>{if(token!==sekvensToken||!sekvensTimer){resolve();return}setTimeout(vent,100)};vent()});
+  }
+ }
+ if(token===sekvensToken){sekvensAktiv=false;$("spillAlleKnapp").disabled=false;$("stoppAlleKnapp").disabled=true;$("sekvensStatus").textContent="Hele lydsekvensen er ferdig."}
+}
 async function oppdaterLydStatus(){
  const blob=await dbGet(faser[faseValgt].id);
  $("lydStatus").textContent=blob?"Et lydklipp er lastet opp for denne fasen.":"Ingen lydklipp er lastet opp for denne fasen.";
@@ -205,8 +267,10 @@ async function oppdaterLydStatus(){
 }
 $("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";lagFaser()};
 $("tilbakeKnapp").onclick=()=>{$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden")};
-$("forrigeKnapp").onclick=()=>{if(faseValgt>0){faseValgt--;visFase();spillOpptak()}};$("nesteKnapp").onclick=()=>{if(faseValgt<faser.length-1){faseValgt++;visFase();spillOpptak()}};$("spillLydKnapp").onclick=spillOpptak;
+$("forrigeKnapp").onclick=()=>{if(sekvensAktiv)stoppSekvens("Sekvensen ble avbrutt.");if(faseValgt>0){faseValgt--;visFase();spillOpptak()}};$("nesteKnapp").onclick=()=>{if(sekvensAktiv)stoppSekvens("Sekvensen ble avbrutt.");if(faseValgt<faser.length-1){faseValgt++;visFase();spillOpptak()}};$("spillLydKnapp").onclick=spillOpptak;
 $("stoppLydKnapp").onclick=()=>{if(lyd)lyd.pause();$("stoppLydKnapp").disabled=true};
+$("spillAlleKnapp").onclick=spillHeleSekvensen;
+$("stoppAlleKnapp").onclick=()=>stoppSekvens();
 $("lastOppLydKnapp").onclick=async()=>{
  const fil=$("lydFil").files[0];
  if(!fil){$("lydStatus").textContent="Velg en lydfil først.";return}
