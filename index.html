@@ -71,7 +71,7 @@ const roller=[
 ["Beruset","beruset.webp","Den berusede følger sin rollehandling."],
 ["Bråkmaker","brakmaker.webp","Bråkmakeren våkner og bytter kort mellom to spillere."],
 ["Prins","prins.webp","Prinsen har ingen nattlig handling."],
-["Avslører","avslo rer.webp","Avsløreren våkner og bruker sin rollehandling."],
+["Avslører","avslo-rer.webp","Avsløreren våkner og bruker sin rollehandling."],
 ["Sov Ulven","sov-ulven.webp","Sovulven følger sin rollehandling."],
 ["Søvnløs","sovnlos.webp","Søvnløse følger sin rollehandling."],
 ["Dulter","dulter.webp","Dulteren våkner og følger sin rollehandling."],
@@ -93,6 +93,10 @@ function tegnKort(){
   const nm=document.createElement("div");nm.className="name";nm.textContent=r[0];
   b.append(im,nm);b.onclick=()=>{valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};grid.append(b);
  });
+ const alle=document.createElement("button");alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.type="button";
+ const allImg=document.createElement("div");allImg.style.aspectRatio=".71";allImg.style.display="grid";allImg.style.placeItems="center";allImg.style.fontSize="64px";allImg.textContent="🐺";
+ const allName=document.createElement("div");allName.className="name";allName.textContent="ALLE";
+ alle.append(allImg,allName);alle.onclick=()=>{if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
  document.getElementById("valgtAntall").textContent=`${valgt.size} av ${roller.length} valgt`;
  document.getElementById("alleKnapp").textContent=valgt.size===roller.length?"Fjern alle kort":"Velg alle kort";
  document.getElementById("startKnapp").disabled=valgt.size===0;
