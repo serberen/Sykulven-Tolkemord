@@ -1,396 +1,135 @@
-
 <!doctype html>
 <html lang="no">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#111827">
-<title>Ultimate Varulv – Spilleder</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827"><title>Ultimate Varulv – Spilleder</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-:root{color-scheme:dark;--bg:#0b1020;--panel:#151d30;--panel2:#202b42;--line:#34415b;--text:#f4f6fb;--muted:#aab5c8;--accent:#a7b8ff;--green:#75d6a2}
-*{box-sizing:border-box}
-body{margin:0;background:radial-gradient(ellipse at top,#1b2943 0,#0b1020 58%);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
-header{padding:28px 18px 18px;text-align:center}
-header .wolf{font-size:34px}
-h1{font-size:clamp(24px,5vw,38px);margin:4px 0;letter-spacing:.06em}
-header p{color:var(--muted);margin:0}
-main{max-width:920px;margin:auto;padding:0 16px 40px}
-.topbar{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin:10px 0 16px}
-.pill{border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:var(--muted);font-size:13px}
-.layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr);gap:16px}
-.card{background:linear-gradient(160deg,#19243a,#121a2b);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 12px 35px #0003}
-h2{font-size:17px;margin:0 0 14px}
-.fase{background:var(--panel2);border:1px solid var(--line);border-radius:15px;padding:20px;margin-bottom:14px;text-align:center}
-.fase small{color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
-.fase h2{font-size:27px;margin:6px 0}
-.fase p{color:var(--muted);margin:0}
-.kontroller{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;margin-top:16px}
-button{font:inherit;border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:#263550;color:var(--text);cursor:pointer}
-button:hover{filter:brightness(1.15)}
-button.hoved{background:#5269b4;border-color:#7187d5}
-button.opptak{background:#6b303d;border-color:#a84d60}
-button:disabled{opacity:.45;cursor:not-allowed}
-.fremdrift{height:7px;background:#29354c;border-radius:99px;overflow:hidden;margin:14px 0}
-.fremdrift span{display:block;height:100%;background:var(--accent);width:0}
-.liste{display:grid;gap:8px;max-height:480px;overflow:auto}
-.fasevalg{display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#111a2b}
-.fasevalg.aktiv{border-color:var(--accent);background:#202d49}
-.fasevalg .nummer{color:var(--muted);font-size:12px;width:20px}
-.fasevalg .navn{flex:1;min-width:0}
-.fasevalg .navn strong{display:block;font-size:14px}
-.fasevalg .navn span{color:var(--muted);font-size:12px}
-.fasevalg button{padding:7px 9px;font-size:13px}
-.fasevalg .spill{background:#35466a}
-label{display:block;color:var(--muted);font-size:13px;margin:12px 0 5px}
-input,textarea{width:100%;padding:10px;border:1px solid var(--line);border-radius:10px;background:#0d1525;color:var(--text);font:inherit}
-textarea{min-height:76px;resize:vertical}
-.rad{display:flex;gap:8px;flex-wrap:wrap}
-.rad>*{flex:1}
-.merknad{font-size:13px;color:var(--muted);margin:12px 0 0}
-.status{min-height:22px;color:var(--green);font-size:13px;margin-top:8px}
-.bunntekst{color:var(--muted);font-size:12px;text-align:center;margin-top:20px}
-@media(max-width:720px){.layout{grid-template-columns:1fr}.liste{max-height:none}.card{padding:15px}}
+:root{color-scheme:dark;--bg:#0b1020;--panel:#172238;--line:#35445f;--text:#f5f6fb;--muted:#aeb9ca;--accent:#a9bbff;--green:#69d6a0}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1d2b46,#0b1020 65%);color:var(--text);font:16px/1.45 system-ui,sans-serif}
+header{text-align:center;padding:24px 14px 12px}header .wolf{font-size:34px}h1{margin:2px 0;font-size:clamp(25px,5vw,38px);letter-spacing:.05em}header p{margin:0;color:var(--muted)}
+main{max-width:1100px;margin:auto;padding:10px 16px 40px}.panel{background:#151f32;border:1px solid var(--line);border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 12px 35px #0003}
+h2{font-size:19px;margin:0 0 12px}.intro{color:var(--muted);margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.card{position:relative;border:2px solid #48556c;border-radius:13px;overflow:hidden;background:#0b1424;padding:0;color:white;cursor:pointer;transition:.15s;min-width:0}
+.card img{display:block;width:100%;aspect-ratio: .71;object-fit:cover}
+.card .name{padding:7px 3px;text-align:center;font-size:clamp(10px,1.5vw,14px);font-weight:800;min-height:36px;display:flex;align-items:center;justify-content:center}
+.card.selected{border-color:#70dfa7;box-shadow:0 0 0 2px #70dfa755,0 0 18px #70dfa733;transform:translateY(-2px)}
+.card.selected:after{content:"✓";position:absolute;right:7px;top:7px;background:#24875c;border-radius:50%;width:27px;height:27px;display:grid;place-items:center;font-weight:900}
+.card.all{background:linear-gradient(145deg,#344c79,#18243d);border-color:#91aaff}
+.card.all img{object-fit:contain;background:#17263e;padding:12px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center}
+button{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#293953;color:white;font:inherit;cursor:pointer}
+button.primary{background:#526bb4;border-color:#8298e4;font-weight:700}button:disabled{opacity:.4;cursor:not-allowed}
+.small{font-size:13px;color:var(--muted)}.count{margin-left:auto;color:var(--muted);font-size:13px}
+.hidden{display:none!important}
+.phasebox{text-align:center;background:#202d45;border:1px solid #465979;border-radius:14px;padding:22px;margin:12px 0}
+.phasebox h2{font-size:clamp(23px,4vw,32px);margin:8px}.phasebox p{color:var(--muted);margin:0}
+.controls{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.phase-list{display:grid;gap:7px}.phase-row{display:flex;align-items:center;gap:10px;background:#101a2c;border:1px solid var(--line);padding:10px;border-radius:10px}.phase-row.active{border-color:var(--accent)}.phase-row span:nth-child(2){flex:1}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}input,textarea{width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:#0b1424;color:white;font:inherit}textarea{min-height:70px}
+.status{color:var(--green);min-height:22px;font-size:13px}.foot{text-align:center;color:var(--muted);font-size:12px;padding:12px}
+@media(max-width:650px){.grid{gap:6px}.panel{padding:12px}.card .name{font-size:10px;min-height:32px}.card.selected:after{width:22px;height:22px;right:4px;top:4px}}
 </style>
 </head>
 <body>
-<header>
-<div class="wolf">🐺</div>
-<h1>ULTIMATE VARULV</h1>
-<p>SPILLEDERKONTROLL</p>
-</header>
-
+<header><div class="wolf">🐺</div><h1>ULTIMATE VARULV</h1><p>SPILLEDERKONTROLL</p></header>
 <main>
-<div class="topbar">
-<span class="pill">🎙️ Egne stemmeopptak</span>
-<span class="pill" id="antallOpptak">0 opptak lagret</span>
-</div>
-
-<div class="layout">
-<section class="card">
-<div class="fase">
-<small id="fasenummer">FASE 1</small>
-<h2 id="fasetittel">Alle lukker øynene</h2>
-<p id="fasebeskrivelse">Alle spillerne lukker øynene.</p>
-<div class="fremdrift"><span id="fremdriftslinje"></span></div>
-
-<div class="kontroller">
-<button id="forrigeKnapp">← Forrige</button>
-<button class="hoved" id="spillKnapp">▶ Spill av</button>
-<button id="nesteKnapp">Neste →</button>
-</div>
-
-<div class="kontroller">
-<button id="opptakKnapp" class="opptak">● Spill inn stemme</button>
-<button id="stoppOpptakKnapp" disabled>■ Stopp opptak</button>
-<button id="stoppLydKnapp" disabled>■ Stopp lyd</button>
-</div>
-
-<div class="status" id="status" aria-live="polite"></div>
-</div>
-
-<h2>Rediger valgt fase</h2>
-<label for="tittelFelt">Navn på fase</label>
-<input id="tittelFelt">
-
-<label for="beskrivelseFelt">Instruksjon / beskrivelse</label>
-<textarea id="beskrivelseFelt"></textarea>
-
-<div class="rad" style="margin-top:10px">
-<button id="lagreTekstKnapp" class="hoved">Lagre tekst</button>
-<button id="slettOpptakKnapp">Slett opptak</button>
-</div>
-
-<p class="merknad">Opptak lagres lokalt i nettleseren på denne enheten. Gi nettleseren tilgang til mikrofonen når den spør.</p>
+<section id="valgSide" class="panel">
+<h2>Velg kort til spillet</h2>
+<p class="intro">Trykk på kortene du vil bruke. Grønn markering betyr at kortet er valgt. «Alle» velger eller fjerner alle kortene samtidig.</p>
+<div id="kortRutenett" class="grid"></div>
+<div class="actions"><button id="alleKnapp" class="primary">Velg alle kort</button><button id="ingenKnapp">Fjern alle valg</button><span id="valgtAntall" class="count">0 av 19 valgt</span></div>
+<div class="actions"><button id="startKnapp" class="primary" disabled>Start spill →</button></div>
 </section>
-
-<section class="card">
-<h2>Spillrekkefølge</h2>
-<div class="liste" id="faseliste"></div>
-
-<div class="rad" style="margin-top:12px">
-<button id="leggTilKnapp">＋ Legg til fase</button>
-<button id="tilbakestillKnapp">Tilbakestill eksempel</button>
-</div>
-
-<p class="merknad">Trykk på en fase for å velge den. Spill av opptaket, eller bruk Neste for å styre rekkefølgen manuelt.</p>
+<section id="spillSide" class="panel hidden">
+<div class="actions"><button id="tilbakeKnapp">← Til kortvelgeren</button><span id="spillAntall" class="count"></span></div>
+<div class="phasebox"><small id="faseNummer">FASE 1</small><h2 id="faseTittel">Alle lukker øynene</h2><p id="faseTekst">Alle spillerne lukker øynene.</p></div>
+<div class="controls"><button id="forrigeKnapp">← Forrige</button><button id="spillLydKnapp" class="primary">▶ Spill opptak</button><button id="nesteKnapp">Neste →</button></div>
+<div class="controls"><button id="opptakKnapp">● Spill inn stemme</button><button id="stoppOpptakKnapp" disabled>■ Stopp opptak</button><button id="stoppLydKnapp" disabled>■ Stopp lyd</button></div>
+<p id="status" class="status" aria-live="polite"></p>
+<h2>Spillsekvens</h2><div id="faseListe" class="phase-list"></div>
+<h2 style="margin-top:18px">Rediger valgt fase</h2>
+<label for="faseNavn">Fasenavn</label><input id="faseNavn">
+<label for="faseBeskrivelse">Instruksjon</label><textarea id="faseBeskrivelse"></textarea>
+<div class="actions"><button id="lagreFaseKnapp">Lagre tekst</button><button id="slettOpptakKnapp">Slett opptak</button></div>
 </section>
-</div>
-
-<div class="bunntekst">Laget for privat bruk • Lydopptak lagres på enheten din</div>
+<div class="foot">Opptak lagres lokalt i nettleseren på denne enheten.</div>
 </main>
-
 <script>
-const standardfaser = [
-["Alle lukker øynene","Alle spillerne lukker øynene."],
-["Varulvene våkner","Varulvene åpner øynene og finner hverandre."],
-["Varulvene sovner","Varulvene lukker øynene igjen."],
-["Seeren våkner","Seeren åpner øynene og velger en spiller."],
-["Seeren sovner","Seeren lukker øynene igjen."],
-["Legen våkner","Legen åpner øynene og velger hvem som skal beskyttes."],
-["Legen sovner","Legen lukker øynene igjen."],
-["Alle åpner øynene","Alle spillerne åpner øynene."],
-["Diskusjon","Diskuter hvem dere tror er varulv."],
-["Avstemning","Stem på hvem som skal ut av landsbyen."]
+const roller=[
+["Røver","rover.webp","Røveren våkner og velger hvem han vil bytte rolle med."],
+["Frimurer","frimurer.webp","Frimurerne våkner og kjenner igjen hverandre."],
+["Synsk","synsk.webp","Den synske våkner og undersøker én spiller."],
+["Håndlanger","handlanger.webp","Håndlangeren våkner og får vite hvem varulvene er."],
+["Syk Ulven","syk-ulven.webp","Den syke ulven våkner sammen med varulvene."],
+["Emo","emo.webp","Emo våkner og følger sin spesielle rolle."],
+["Doppelgjenger","dobbeltgjenger.webp","Dobbeltgjengeren våkner og velger en spiller å kopiere."],
+["Jeger","jeger.webp","Jegeren våkner og følger sin rollehandling."],
+["Landsbyboer","landsbyboer.webp","Landsbyboeren har ingen nattlig handling."],
+["Rimmi","rimmi.webp","Rimmi våkner og følger sin rollehandling."],
+["Beruset","beruset.webp","Den berusede følger sin rollehandling."],
+["Bråkmaker","brakmaker.webp","Bråkmakeren våkner og bytter kort mellom to spillere."],
+["Prins","prins.webp","Prinsen har ingen nattlig handling."],
+["Avslører","avslo rer.webp","Avsløreren våkner og bruker sin rollehandling."],
+["Sov Ulven","sov-ulven.webp","Sovulven følger sin rollehandling."],
+["Søvnløs","sovnlos.webp","Søvnløse følger sin rollehandling."],
+["Dulter","dulter.webp","Dulteren våkner og følger sin rollehandling."],
+["Vokter","vokter.webp","Vokteren våkner og velger hvem som skal beskyttes."],
+["Paranormal Etterforsker","paranormal-etterforsker.webp","Den paranormale etterforskeren våkner og undersøker."]
 ];
-
-let faser=standardfaser.map((x,i)=>({
-id:i+1,tittel:x[0],beskrivelse:x[1]
-}));
-
-let valgt=0;
-let lydopptaker=null;
-let lydbiter=[];
-let aktivLyd=null;
-
-const finn=id=>document.getElementById(id);
-
-const databaseLøfte=new Promise((resolve,reject)=>{
-const forespørsel=indexedDB.open("ultimate-varulv-lyd",1);
-forespørsel.onupgradeneeded=()=>forespørsel.result.createObjectStore("opptak");
-forespørsel.onsuccess=()=>resolve(forespørsel.result);
-forespørsel.onerror=()=>reject(forespørsel.error);
-});
-
-async function lagreLyd(nøkkel,verdi){
-const db=await databaseLøfte;
-return new Promise((ok,feil)=>{
-let tx=db.transaction("opptak","readwrite");
-tx.objectStore("opptak").put(verdi,nøkkel);
-tx.oncomplete=ok;
-tx.onerror=()=>feil(tx.error);
-});
+const valgt=new Set();
+const grid=document.getElementById("kortRutenett");
+const imgPath=n=>"bilder/"+n;
+function tegnKort(){
+ grid.innerHTML="";
+ const alle=document.createElement("button");alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.type="button";
+ const allImg=document.createElement("div");allImg.style.aspectRatio=".71";allImg.style.display="grid";allImg.style.placeItems="center";allImg.style.fontSize="64px";allImg.textContent="🐺";
+ const allName=document.createElement("div");allName.className="name";allName.textContent="ALLE";
+ alle.append(allImg,allName);alle.onclick=()=>{if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
+ roller.forEach((r,i)=>{
+  const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");
+  const im=document.createElement("img");im.src=imgPath(r[1]);im.alt=r[0];im.loading="lazy";
+  const nm=document.createElement("div");nm.className="name";nm.textContent=r[0];
+  b.append(im,nm);b.onclick=()=>{valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};grid.append(b);
+ });
+ document.getElementById("valgtAntall").textContent=`${valgt.size} av ${roller.length} valgt`;
+ document.getElementById("alleKnapp").textContent=valgt.size===roller.length?"Fjern alle kort":"Velg alle kort";
+ document.getElementById("startKnapp").disabled=valgt.size===0;
 }
-
-async function hentLyd(nøkkel){
-const db=await databaseLøfte;
-return new Promise((ok,feil)=>{
-let r=db.transaction("opptak").objectStore("opptak").get(nøkkel);
-r.onsuccess=()=>ok(r.result);
-r.onerror=()=>feil(r.error);
-});
+let faser=[],faseValgt=0,opptaker=null,biter=[],lyd=null;
+const $=id=>document.getElementById(id);
+const dbp=new Promise((ok,feil)=>{let q=indexedDB.open("ultimate-varulv-opptak",1);q.onupgradeneeded=()=>q.result.createObjectStore("lyd");q.onsuccess=()=>ok(q.result);q.onerror=()=>feil(q.error)});
+async function dbSet(k,v){let d=await dbp;return new Promise((ok,no)=>{let t=d.transaction("lyd","readwrite");t.objectStore("lyd").put(v,k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
+async function dbGet(k){let d=await dbp;return new Promise((ok,no)=>{let q=d.transaction("lyd").objectStore("lyd").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+async function dbDel(k){let d=await dbp;return new Promise((ok,no)=>{let t=d.transaction("lyd","readwrite");t.objectStore("lyd").delete(k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
+function lagFaser(){
+ faser=[{id:"start",navn:"Alle lukker øynene",tekst:"Alle spillerne lukker øynene."}];
+ const rekkefolge=["Doppelgjenger","Røver","Synsk","Frimurer","Håndlanger","Vokter","Bråkmaker","Avslører","Paranormal Etterforsker","Dulter","Rimmi","Beruset","Søvnløs","Syk Ulven","Sov Ulven","Emo","Jeger"];
+ rekkefolge.forEach(n=>{let r=roller.find(x=>x[0]===n);if(r&&valgt.has(roller.indexOf(r)))faser.push({id:n,navn:n+" våkner",tekst:r[2]})});
+ faser.push({id:"slutt",navn:"Alle åpner øynene",tekst:"Alle spillerne åpner øynene. Landsbyen våkner."},{id:"snakk",navn:"Diskusjon",tekst:"Diskuter hvem dere tror er varulv."},{id:"stem",navn:"Avstemning",tekst:"Stem på hvem som skal ut av landsbyen."});
+ faseValgt=0;
 }
-
-async function slettLyd(nøkkel){
-const db=await databaseLøfte;
-return new Promise((ok,feil)=>{
-let tx=db.transaction("opptak","readwrite");
-tx.objectStore("opptak").delete(nøkkel);
-tx.oncomplete=ok;
-tx.onerror=()=>feil(tx.error);
-});
+function tegnSpill(){
+ const f=faser[faseValgt];$("faseNummer").textContent=`FASE ${faseValgt+1} AV ${faser.length}`;$("faseTittel").textContent=f.navn;$("faseTekst").textContent=f.tekst;
+ $("faseNavn").value=f.navn;$("faseBeskrivelse").value=f.tekst;$("forrigeKnapp").disabled=faseValgt===0;$("nesteKnapp").disabled=faseValgt===faser.length-1;
+ $("faseListe").innerHTML="";
+ faser.forEach((x,i)=>{let row=document.createElement("div");row.className="phase-row"+(i===faseValgt?" active":"");let no=document.createElement("span");no.textContent=(i+1)+".";let name=document.createElement("span");name.textContent=x.navn;let btn=document.createElement("button");btn.textContent="Velg";btn.onclick=()=>{faseValgt=i;tegnSpill()};row.append(no,name,btn);$("faseListe").append(row)});
+ $("spillAntall").textContent=valgt.size+" roller valgt";
 }
-
-function visStatus(melding){
-finn("status").textContent=melding;
-}
-
-function tegnAppen(){
-const fase=faser[valgt];
-
-finn("fasenummer").textContent=`FASE ${valgt+1} AV ${faser.length}`;
-finn("fasetittel").textContent=fase.tittel;
-finn("fasebeskrivelse").textContent=fase.beskrivelse;
-finn("fremdriftslinje").style.width=`${(valgt+1)/faser.length*100}%`;
-
-finn("tittelFelt").value=fase.tittel;
-finn("beskrivelseFelt").value=fase.beskrivelse;
-
-finn("forrigeKnapp").disabled=valgt===0;
-finn("nesteKnapp").disabled=valgt===faser.length-1;
-finn("faseliste").innerHTML="";
-
-faser.forEach((element,i)=>{
-let rad=document.createElement("div");
-rad.className="fasevalg"+(i===valgt?" aktiv":"");
-
-let nummer=document.createElement("span");
-nummer.className="nummer";
-nummer.textContent=i+1;
-
-let navn=document.createElement("div");
-navn.className="navn";
-
-let t=document.createElement("strong");
-t.textContent=element.tittel;
-
-let b=document.createElement("span");
-b.textContent=element.beskrivelse;
-navn.append(t,b);
-
-let velg=document.createElement("button");
-velg.textContent="Velg";
-velg.onclick=()=>{
-valgt=i;
-tegnAppen();
-visStatus("");
-};
-
-let spill=document.createElement("button");
-spill.className="spill";
-spill.textContent="▶";
-spill.title="Spill av opptak";
-spill.onclick=()=>spillAvOpptak(element.id);
-
-rad.append(nummer,navn,spill,velg);
-finn("faseliste").append(rad);
-});
-
-oppdaterAntall();
-}
-
-async function oppdaterAntall(){
-let antall=0;
-for(const fase of faser){
-if(await hentLyd(fase.id))antall++;
-}
-finn("antallOpptak").textContent=`${antall} opptak lagret`;
-}
-
-async function spillAvOpptak(id){
-try{
-if(aktivLyd){
-aktivLyd.pause();
-aktivLyd=null;
-}
-
-let opptak=await hentLyd(id);
-
-if(!opptak){
-visStatus("Det finnes ikke noe opptak for denne fasen ennå.");
-return;
-}
-
-aktivLyd=new Audio(URL.createObjectURL(opptak));
-finn("stoppLydKnapp").disabled=false;
-
-aktivLyd.onended=()=>{
-finn("stoppLydKnapp").disabled=true;
-aktivLyd=null;
-};
-
-await aktivLyd.play();
-visStatus("Spiller av opptaket …");
-
-}catch(e){
-visStatus("Kunne ikke spille av opptaket.");
-}
-}
-
-finn("spillKnapp").onclick=()=>spillAvOpptak(faser[valgt].id);
-
-finn("stoppLydKnapp").onclick=()=>{
-if(aktivLyd){
-aktivLyd.pause();
-aktivLyd=null;
-}
-finn("stoppLydKnapp").disabled=true;
-visStatus("Avspillingen er stoppet.");
-};
-
-finn("forrigeKnapp").onclick=()=>{
-valgt=Math.max(0,valgt-1);
-tegnAppen();
-visStatus("");
-};
-
-finn("nesteKnapp").onclick=()=>{
-valgt=Math.min(faser.length-1,valgt+1);
-tegnAppen();
-visStatus("");
-};
-
-finn("lagreTekstKnapp").onclick=()=>{
-faser[valgt].tittel=finn("tittelFelt").value.trim()||"Fase uten navn";
-faser[valgt].beskrivelse=finn("beskrivelseFelt").value.trim();
-tegnAppen();
-visStatus("Teksten er lagret for denne økten.");
-};
-
-finn("opptakKnapp").onclick=async()=>{
-try{
-if(!navigator.mediaDevices?.getUserMedia){
-visStatus("Lydopptak krever en sikker nettside (HTTPS) og en nettleser som støtter mikrofon.");
-return;
-}
-
-const strøm=await navigator.mediaDevices.getUserMedia({audio:true});
-lydbiter=[];
-lydopptaker=new MediaRecorder(strøm);
-
-lydopptaker.ondataavailable=e=>{
-if(e.data.size)lydbiter.push(e.data);
-};
-
-lydopptaker.onstop=async()=>{
-let fil=new Blob(lydbiter,{
-type:lydopptaker.mimeType||"audio/webm"
-});
-
-await lagreLyd(faser[valgt].id,fil);
-strøm.getTracks().forEach(spor=>spor.stop());
-
-finn("opptakKnapp").disabled=false;
-finn("stoppOpptakKnapp").disabled=true;
-
-visStatus("Opptaket er lagret på denne enheten.");
-oppdaterAntall();
-};
-
-lydopptaker.start();
-finn("opptakKnapp").disabled=true;
-finn("stoppOpptakKnapp").disabled=false;
-visStatus("Tar opp … Les inn instruksjonen din.");
-
-}catch(e){
-visStatus("Fikk ikke tilgang til mikrofonen. Kontroller tillatelsene i nettleseren.");
-}
-};
-
-finn("stoppOpptakKnapp").onclick=()=>{
-if(lydopptaker&&lydopptaker.state!=="inactive"){
-lydopptaker.stop();
-}
-};
-
-finn("slettOpptakKnapp").onclick=async()=>{
-await slettLyd(faser[valgt].id);
-visStatus("Opptaket er slettet.");
-oppdaterAntall();
-};
-
-finn("leggTilKnapp").onclick=()=>{
-faser.push({
-id:Date.now(),
-tittel:"Ny fase",
-beskrivelse:"Skriv instruksjonen her."
-});
-valgt=faser.length-1;
-tegnAppen();
-visStatus("Ny fase er lagt til.");
-};
-
-finn("tilbakestillKnapp").onclick=async()=>{
-if(!confirm("Vil du tilbakestille spillrekkefølgen til standardlisten? Egendefinerte faser fjernes fra listen.")){
-return;
-}
-
-faser=standardfaser.map((x,i)=>({
-id:i+1,
-tittel:x[0],
-beskrivelse:x[1]
-}));
-
-valgt=0;
-tegnAppen();
-visStatus("Standardrekkefølgen er lastet inn.");
-};
-
-tegnAppen();
-
-if("serviceWorker" in navigator&&location.protocol.startsWith("http")){
-navigator.serviceWorker.register("./sw.js").catch(()=>{});
-}
+$("startKnapp").onclick=()=>{lagFaser();$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");tegnSpill()};
+$("tilbakeKnapp").onclick=()=>{$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden")};
+$("forrigeKnapp").onclick=()=>{faseValgt=Math.max(0,faseValgt-1);tegnSpill()};
+$("nesteKnapp").onclick=()=>{faseValgt=Math.min(faser.length-1,faseValgt+1);tegnSpill()};
+$("lagreFaseKnapp").onclick=()=>{faser[faseValgt].navn=$("faseNavn").value.trim()||"Fase";faser[faseValgt].tekst=$("faseBeskrivelse").value.trim();tegnSpill();$("status").textContent="Fasen er oppdatert."};
+$("spillLydKnapp").onclick=async()=>{let blob=await dbGet(faser[faseValgt].id);if(!blob){$("status").textContent="Ingen opptak for denne fasen ennå.";return}if(lyd)lyd.pause();lyd=new Audio(URL.createObjectURL(blob));$("stoppLydKnapp").disabled=false;lyd.onended=()=>{$("stoppLydKnapp").disabled=true};lyd.play();$("status").textContent="Spiller av opptaket."};
+$("stoppLydKnapp").onclick=()=>{if(lyd)lyd.pause();$("stoppLydKnapp").disabled=true;$("status").textContent="Avspillingen er stoppet."};
+$("opptakKnapp").onclick=async()=>{try{let stream=await navigator.mediaDevices.getUserMedia({audio:true});biter=[];opptaker=new MediaRecorder(stream);opptaker.ondataavailable=e=>{if(e.data.size)biter.push(e.data)};opptaker.onstop=async()=>{await dbSet(faser[faseValgt].id,new Blob(biter,{type:opptaker.mimeType||"audio/webm"}));stream.getTracks().forEach(t=>t.stop());$("opptakKnapp").disabled=false;$("stoppOpptakKnapp").disabled=true;$("status").textContent="Opptaket er lagret på denne enheten."};opptaker.start();$("opptakKnapp").disabled=true;$("stoppOpptakKnapp").disabled=false;$("status").textContent="Tar opp stemmen din …"}catch(e){$("status").textContent="Mikrofontilgang ble ikke gitt. Kontroller nettleserens tillatelser."}};
+$("stoppOpptakKnapp").onclick=()=>{if(opptaker&&opptaker.state!=="inactive")opptaker.stop()};
+$("slettOpptakKnapp").onclick=async()=>{await dbDel(faser[faseValgt].id);$("status").textContent="Opptaket er slettet."};
+$("ingenKnapp").onclick=()=>{valgt.clear();tegnKort()};
+$("alleKnapp").onclick=()=>{if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};
+tegnKort();
+if("serviceWorker"in navigator&&location.protocol.startsWith("http"))navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script>
-</body>
-</html>
+</body></html>

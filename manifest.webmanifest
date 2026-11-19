@@ -1,9 +1,1 @@
-{
-  "name": "Ultimate Werewolf GM",
-  "short_name": "Werewolf GM",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#0b1020",
-  "theme_color": "#111827",
-  "description": "Game Master lydkontroll for Ultimate Werewolf"
-}
+{"name":"Ultimate Varulv – Spilleder","short_name":"Varulv","start_url":"./","display":"standalone","background_color":"#0b1020","theme_color":"#101827","description":"Norsk spillederverktøy for varulvspillet"}
