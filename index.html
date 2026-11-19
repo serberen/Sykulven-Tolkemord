@@ -192,6 +192,16 @@ function tegnKort(){grid.innerHTML="";
 }
 let faser=[],faseValgt=0,lyd=null,lydUrl=null;
 let sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
+const bakgrunnsmusikk=new Audio("ulvis.mp3");
+bakgrunnsmusikk.loop=true;
+bakgrunnsmusikk.volume=0.22;
+function startBakgrunnsmusikk(){
+ bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;bakgrunnsmusikk.volume=0.22;
+ bakgrunnsmusikk.play().catch(()=>{$("sekvensStatus").textContent="Nettleseren blokkerte bakgrunnsmusikken. Trykk Spill alle igjen."});
+}
+function stoppBakgrunnsmusikk(){
+ bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;
+}
 const dbp=new Promise((ok,feil)=>{let q=indexedDB.open("ultimate-varulv-opptak",1);q.onupgradeneeded=()=>q.result.createObjectStore("lyd");q.onsuccess=()=>ok(q.result);q.onerror=()=>feil(q.error)});
 async function dbSet(k,v){let d=await dbp;return new Promise((ok,no)=>{let t=d.transaction("lyd","readwrite");t.objectStore("lyd").put(v,k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
 async function dbGet(k){let d=await dbp;return new Promise((ok,no)=>{let q=d.transaction("lyd").objectStore("lyd").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
@@ -210,6 +220,7 @@ async function spillOpptak(){
 }
 function stoppSekvens(tekst="Sekvensen er stoppet."){
  sekvensAktiv=false;sekvensToken++;
+ stoppBakgrunnsmusikk();
  if(sekvensTimer){clearInterval(sekvensTimer);sekvensTimer=null}
  if(lyd){lyd.pause();lyd.currentTime=0;lyd.dispatchEvent(new Event("ended"))}
  $("stoppAlleKnapp").disabled=true;$("spillAlleKnapp").disabled=false;
@@ -238,10 +249,11 @@ function ventPaaLyd(lydObj){
 }
 async function spillHeleSekvensen(){
  if(sekvensAktiv)return;
+ startBakgrunnsmusikk();
  const token=++sekvensToken,kø=[];
  for(let i=0;i<faser.length;i++){const blob=await dbGet(faser[i].id);if(blob)kø.push({index:i,blob,navn:faser[i].navn})}
  if(token!==sekvensToken)return;
- if(!kø.length){$("sekvensStatus").textContent="Ingen lydklipp er lastet opp for spillfasene ennå.";return}
+ if(!kø.length){stoppBakgrunnsmusikk();$("sekvensStatus").textContent="Ingen lydklipp er lastet opp for spillfasene ennå.";return}
  sekvensAktiv=true;$("spillAlleKnapp").disabled=true;$("stoppAlleKnapp").disabled=false;
  $("sekvensStatus").textContent="Starter sekvensen – "+kø.length+" lydklipp funnet.";
  for(let n=0;n<kø.length;n++){
@@ -258,7 +270,7 @@ async function spillHeleSekvensen(){
    await new Promise(resolve=>{const vent=()=>{if(token!==sekvensToken||!sekvensTimer){resolve();return}setTimeout(vent,100)};vent()});
   }
  }
- if(token===sekvensToken){sekvensAktiv=false;$("spillAlleKnapp").disabled=false;$("stoppAlleKnapp").disabled=true;$("sekvensStatus").textContent="Hele lydsekvensen er ferdig."}
+ if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("spillAlleKnapp").disabled=false;$("stoppAlleKnapp").disabled=true;$("sekvensStatus").textContent="Hele lydsekvensen er ferdig."}
 }
 async function oppdaterLydStatus(){
  const blob=await dbGet(faser[faseValgt].id);
