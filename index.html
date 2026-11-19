@@ -6,156 +6,158 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101827">
 <title>Ultimate Varulv – Spilleder</title>
-<link rel="manifest" href="manifest.webmanifest">
 
 <style>
 :root {
-  color-scheme: dark;
   --bg: #0b1020;
+  --panel: #172238;
   --line: #35445f;
   --text: #f5f6fb;
   --muted: #aeb9ca;
-  --accent: #a9bbff;
+  --accent: #8099ed;
   --green: #69d6a0;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
-  background: radial-gradient(ellipse at top, #1d2b46, #0b1020 65%);
+  background: radial-gradient(ellipse at top, #1d2b46, #0b1020 70%);
   color: var(--text);
-  font: 16px/1.45 system-ui, sans-serif;
+  font: 15px/1.45 system-ui, sans-serif;
 }
 
 header {
   text-align: center;
-  padding: 24px 14px 12px;
+  padding: 25px 12px 15px;
 }
 
-header .wolf {
-  font-size: 34px;
-}
+header .wolf { font-size: 35px; }
 
 h1 {
-  margin: 2px 0;
-  font-size: clamp(25px, 5vw, 38px);
+  margin: 3px 0;
+  font-size: clamp(25px, 4vw, 36px);
   letter-spacing: .05em;
 }
 
 header p {
-  margin: 0;
   color: var(--muted);
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: .08em;
 }
 
 main {
-  max-width: 1100px;
+  width: min(1100px, 96%);
   margin: auto;
-  padding: 10px 16px 40px;
+  padding-bottom: 40px;
 }
 
 .panel {
-  background: #151f32;
+  background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 17px;
+  border-radius: 17px;
+  padding: 18px;
   margin: 12px 0;
   box-shadow: 0 12px 35px #0003;
 }
 
 h2 {
   font-size: 19px;
-  margin: 0 0 12px;
+  margin: 0 0 9px;
 }
 
 .intro {
   color: var(--muted);
-  margin: 0 0 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
 }
+
+/* KORTVELGER: 6 X 4 */
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
 }
 
 .card {
   position: relative;
-  border: 2px solid #48556c;
-  border-radius: 13px;
-  overflow: hidden;
-  background: #0b1424;
   padding: 0;
+  overflow: hidden;
+  border: 2px solid #46536a;
+  border-radius: 12px;
+  background: #0c1628;
   color: white;
   cursor: pointer;
-  transition: .15s;
   min-width: 0;
+  transition: border-color .15s, transform .15s, box-shadow .15s;
 }
 
 .card img {
   display: block;
   width: 100%;
-  aspect-ratio: .71;
+  aspect-ratio: 0.71;
   object-fit: cover;
+  object-position: center;
 }
 
 .card .name {
-  padding: 7px 3px;
-  text-align: center;
-  font-size: clamp(10px, 1.5vw, 14px);
-  font-weight: 800;
-  min-height: 36px;
+  min-height: 34px;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  padding: 5px 2px;
+  text-align: center;
+  font-weight: 800;
+  font-size: clamp(10px, 1.2vw, 13px);
+  line-height: 1.2;
 }
 
 .card.selected {
-  border-color: #70dfa7;
-  box-shadow: 0 0 0 2px #70dfa755, 0 0 18px #70dfa733;
+  border-color: var(--green);
+  box-shadow: 0 0 0 2px #69d6a055, 0 0 15px #69d6a033;
   transform: translateY(-2px);
 }
 
-.card.selected:after {
+.card.selected::after {
   content: "✓";
   position: absolute;
-  right: 7px;
-  top: 7px;
-  background: #24875c;
+  top: 6px;
+  right: 6px;
+  width: 25px;
+  height: 25px;
   border-radius: 50%;
-  width: 27px;
-  height: 27px;
+  background: #21895c;
   display: grid;
   place-items: center;
   font-weight: 900;
 }
 
 .card.all {
-  background: linear-gradient(145deg, #344c79, #18243d);
-  border-color: #91aaff;
+  border-color: #8099ed;
+  background: linear-gradient(145deg, #344c79, #17243d);
 }
 
-.card.all .all-image {
+.all-image {
   aspect-ratio: .71;
   display: grid;
   place-items: center;
-  font-size: 64px;
-  background: #17263e;
+  background: radial-gradient(circle, #344d79, #142139);
+  font-size: clamp(40px, 6vw, 70px);
 }
 
 .actions {
   display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-  margin-top: 14px;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 15px;
 }
 
 button {
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 9px;
   padding: 10px 14px;
   background: #293953;
   color: white;
@@ -177,37 +179,32 @@ button:disabled {
 .count {
   margin-left: auto;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
 }
 
-.hidden {
-  display: none !important;
-}
+.hidden { display: none !important; }
 
 .phasebox {
   text-align: center;
   background: #202d45;
   border: 1px solid #465979;
   border-radius: 14px;
-  padding: 22px;
-  margin: 12px 0;
+  padding: 25px 15px;
+  margin: 15px 0;
 }
 
 .phasebox h2 {
-  font-size: clamp(23px, 4vw, 32px);
-  margin: 8px;
+  font-size: clamp(22px, 4vw, 32px);
+  margin: 10px 0;
 }
 
-.phasebox p {
-  color: var(--muted);
-  margin: 0;
-}
+.phasebox p { color: var(--muted); }
 
 .controls {
   display: flex;
-  gap: 9px;
   justify-content: center;
   flex-wrap: wrap;
+  gap: 9px;
   margin: 12px 0;
 }
 
@@ -220,30 +217,26 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: #101a2c;
-  border: 1px solid var(--line);
   padding: 10px;
   border-radius: 10px;
+  background: #101a2c;
+  border: 1px solid var(--line);
 }
 
-.phase-row.active {
-  border-color: var(--accent);
-}
+.phase-row.active { border-color: var(--accent); }
 
-.phase-row span:nth-child(2) {
-  flex: 1;
-}
+.phase-row span:nth-child(2) { flex: 1; }
 
 label {
   display: block;
   color: var(--muted);
   font-size: 13px;
-  margin: 10px 0 5px;
+  margin: 12px 0 5px;
 }
 
 input, textarea {
   width: 100%;
-  padding: 10px;
+  padding: 11px;
   border-radius: 9px;
   border: 1px solid var(--line);
   background: #0b1424;
@@ -251,9 +244,7 @@ input, textarea {
   font: inherit;
 }
 
-textarea {
-  min-height: 70px;
-}
+textarea { min-height: 85px; }
 
 .status {
   color: var(--green);
@@ -268,26 +259,22 @@ textarea {
   padding: 12px;
 }
 
-@media(max-width: 650px) {
-  .grid {
-    gap: 6px;
+@media (max-width: 700px) {
+  .grid { gap: 6px; }
+  .panel { padding: 11px; }
+  .card .name { font-size: 9px; min-height: 29px; }
+  .card.selected::after {
+    width: 19px;
+    height: 19px;
+    top: 3px;
+    right: 3px;
   }
+}
 
-  .panel {
-    padding: 12px;
-  }
-
-  .card .name {
-    font-size: 10px;
-    min-height: 32px;
-  }
-
-  .card.selected:after {
-    width: 22px;
-    height: 22px;
-    right: 4px;
-    top: 4px;
-  }
+@media (max-width: 380px) {
+  .grid { gap: 4px; }
+  .card { border-radius: 7px; }
+  .card .name { font-size: 8px; }
 }
 </style>
 </head>
@@ -308,7 +295,7 @@ textarea {
 
 <p class="intro">
 Trykk på kortene du vil bruke. Grønn markering betyr at kortet er valgt.
-«Alle» velger eller fjerner alle kortene samtidig.
+Kort nummer 24 velger eller fjerner alle kortene samtidig.
 </p>
 
 <div id="kortRutenett" class="grid"></div>
@@ -316,7 +303,7 @@ Trykk på kortene du vil bruke. Grønn markering betyr at kortet er valgt.
 <div class="actions">
   <button id="alleKnapp" class="primary">Velg alle kort</button>
   <button id="ingenKnapp">Fjern alle valg</button>
-  <span id="valgtAntall" class="count">0 av 19 valgt</span>
+  <span id="valgtAntall" class="count">0 av 23 valgt</span>
 </div>
 
 <div class="actions">
@@ -326,6 +313,7 @@ Trykk på kortene du vil bruke. Grønn markering betyr at kortet er valgt.
 </div>
 
 </section>
+
 
 <section id="spillSide" class="panel hidden">
 
@@ -357,12 +345,12 @@ Trykk på kortene du vil bruke. Grønn markering betyr at kortet er valgt.
 <h2>Spillsekvens</h2>
 <div id="faseListe" class="phase-list"></div>
 
-<h2 style="margin-top:18px">Rediger valgt fase</h2>
+<h2 style="margin-top:20px">Rediger valgt fase</h2>
 
-<label for="faseNavn">Fasenavn</label>
+<label for="faseNavn">Navn på fase</label>
 <input id="faseNavn">
 
-<label for="faseBeskrivelse">Instruksjon</label>
+<label for="faseBeskrivelse">Instruksjon / beskrivelse</label>
 <textarea id="faseBeskrivelse"></textarea>
 
 <div class="actions">
@@ -378,37 +366,184 @@ Opptak lagres lokalt i nettleseren på denne enheten.
 
 </main>
 
+
 <script>
 
-// ROLLER OG BILDEFILER
+// ALLE 23 KORTENE
 
 const roller = [
-["Røver","rover.webp","Røveren våkner og velger hvem han vil bytte rolle med."],
-["Frimurer","frimurer.webp","Frimurerne våkner og kjenner igjen hverandre."],
-["Synsk","synsk.webp","Den synske våkner og undersøker én spiller."],
-["Håndlanger","handlanger.webp","Håndlangeren våkner og får vite hvem varulvene er."],
-["Syk Ulven","syk-ulven.webp","Den syke ulven våkner sammen med varulvene."],
-["Emo","emo.webp","Emo våkner og følger sin spesielle rolle."],
-["Doppelgjenger","dobbeltgjenger.webp","Dobbeltgjengeren våkner og velger en spiller å kopiere."],
-["Jeger","jeger.webp","Jegeren våkner og følger sin rollehandling."],
-["Landsbyboer","landsbyboer.webp","Landsbyboeren har ingen nattlig handling."],
-["Rimmi","rimmi.webp","Rimmi våkner og følger sin rollehandling."],
-["Beruset","beruset.webp","Den berusede følger sin rollehandling."],
-["Bråkmaker","brakmaker.webp","Bråkmakeren våkner og bytter kort mellom to spillere."],
-["Prins","prins.webp","Prinsen har ingen nattlig handling."],
-["Avslører","avslo-rer.webp","Avsløreren våkner og bruker sin rollehandling."],
-["Sov Ulven","sov-ulven.webp","Sovulven følger sin rollehandling."],
-["Søvnløs","sovnlos.webp","Søvnløse følger sin rollehandling."],
-["Dulter","dulter.webp","Dulteren våkner og følger sin rollehandling."],
-["Vokter","vokter.webp","Vokteren våkner og velger hvem som skal beskyttes."],
-["Paranormal Etterforsker","paranormal-etterforsker.webp","Den paranormale etterforskeren våkner og undersøker."]
+
+{
+  navn: "Røver",
+  fil: "rover.webp",
+  fase: "Røver",
+  tekst: "Røveren våkner og velger hvem han vil bytte rolle med."
+},
+
+{
+  navn: "Frimurer",
+  fil: "frimurer.webp",
+  fase: "Frimurer",
+  tekst: "Frimurerne våkner og kjenner igjen hverandre."
+},
+
+{
+  navn: "Frimurer",
+  fil: "frimurer_2.webp",
+  fase: "Frimurer",
+  tekst: "Frimurerne våkner og kjenner igjen hverandre."
+},
+
+{
+  navn: "Synsk",
+  fil: "synsk.webp",
+  fase: "Synsk",
+  tekst: "Den synske våkner og undersøker én spiller."
+},
+
+{
+  navn: "Håndlanger",
+  fil: "handlanger.webp",
+  fase: "Håndlanger",
+  tekst: "Håndlangeren våkner og får vite hvem varulvene er."
+},
+
+{
+  navn: "Syk Ulven",
+  fil: "syk-ulven.webp",
+  fase: "Syk Ulven",
+  tekst: "Den syke ulven våkner tillsammans med varulvene."
+},
+
+{
+  navn: "Syk Ulven",
+  fil: "syk-ulven_2.webp",
+  fase: "Syk Ulven",
+  tekst: "Den syke ulven våkner tillsammans med varulvene."
+},
+
+{
+  navn: "Emo",
+  fil: "emo.webp",
+  fase: "Emo",
+  tekst: "Emo våkner og følger sin rollehandling."
+},
+
+{
+  navn: "Doppelgjenger",
+  fil: "doppelgjenger.webp",
+  fase: "Doppelgjenger",
+  tekst: "Doppelgjengeren våkner og velger en spiller å kopiere."
+},
+
+{
+  navn: "Jeger",
+  fil: "jeger.webp",
+  fase: "Jeger",
+  tekst: "Jegeren våkner og følger sin rollehandling."
+},
+
+{
+  navn: "Landsbyboer",
+  fil: "landsbyboer.webp",
+  fase: "Landsbyboer",
+  tekst: "Landsbyboeren har ingen nattlig handling."
+},
+
+{
+  navn: "Landsbyboer",
+  fil: "landsbyboer_2.webp",
+  fase: "Landsbyboer",
+  tekst: "Landsbyboeren har ingen nattlig handling."
+},
+
+{
+  navn: "Landsbyboer",
+  fil: "landsbyboer_3.webp",
+  fase: "Landsbyboer",
+  tekst: "Landsbyboeren har ingen nattlig handling."
+},
+
+{
+  navn: "Rimmi",
+  fil: "rimmi.webp",
+  fase: "Rimmi",
+  tekst: "Rimmi våkner og følger sin rollehandling."
+},
+
+{
+  navn: "Beruset",
+  fil: "beruset.webp",
+  fase: "Beruset",
+  tekst: "Den berusede følger sin rollehandling."
+},
+
+{
+  navn: "Bråkmaker",
+  fil: "brakmaker.webp",
+  fase: "Bråkmaker",
+  tekst: "Bråkmakeren våkner og bytter kort mellom to spillere."
+},
+
+{
+  navn: "Prins",
+  fil: "prins.webp",
+  fase: "Prins",
+  tekst: "Prinsen har ingen nattlig handling."
+},
+
+{
+  navn: "Avslører",
+  fil: "avslo-rer.webp",
+  fase: "Avslører",
+  tekst: "Avsløreren våkner og bruker sin rollehandling."
+},
+
+{
+  navn: "Sov Ulven",
+  fil: "sov-ulven.webp",
+  fase: "Sov Ulven",
+  tekst: "Sovulven følger sin rollehandling."
+},
+
+{
+  navn: "Søvnløs",
+  fil: "sovnlos.webp",
+  fase: "Søvnløs",
+  tekst: "Søvnløse følger sin rollehandling."
+},
+
+{
+  navn: "Dulter",
+  fil: "dulter.webp",
+  fase: "Dulter",
+  tekst: "Dulteren våkner og følger sin rollehandling."
+},
+
+{
+  navn: "Vokter",
+  fil: "vokter.webp",
+  fase: "Vokter",
+  tekst: "Vokteren våkner og velger hvem som skal beskyttes."
+},
+
+{
+  navn: "Paranormal Etterforsker",
+  fil: "paranormal-etterforsker.webp",
+  fase: "Paranormal Etterforsker",
+  tekst: "Den paranormale etterforskeren våkner og undersøker."
+}
+
 ];
+
+
+// VALG
 
 const valgt = new Set();
 
 const grid = document.getElementById("kortRutenett");
 
-const imgPath = navn => navn;
+const bildeSti = fil => fil;
 
 
 // BYGG KORTVELGEREN
@@ -417,34 +552,36 @@ function tegnKort() {
 
   grid.innerHTML = "";
 
-  // De 19 rollekortene
-
   roller.forEach((rolle, indeks) => {
 
-    const kort = document.createElement("button");
+    const kortElement = document.createElement("button");
 
-    kort.type = "button";
+    kortElement.type = "button";
 
-    kort.className =
+    kortElement.className =
       "card" + (valgt.has(indeks) ? " selected" : "");
 
     const bilde = document.createElement("img");
 
-    bilde.src = imgPath(rolle[1]);
+    bilde.src = bildeSti(rolle.fil);
 
-    bilde.alt = rolle[0];
+    bilde.alt = rolle.navn;
 
     bilde.loading = "lazy";
+
+    bilde.onerror = () => {
+      bilde.alt = "Fant ikke bildet: " + rolle.fil;
+    };
 
     const navn = document.createElement("div");
 
     navn.className = "name";
 
-    navn.textContent = rolle[0];
+    navn.textContent = rolle.navn;
 
-    kort.append(bilde, navn);
+    kortElement.append(bilde, navn);
 
-    kort.onclick = () => {
+    kortElement.onclick = () => {
 
       if (valgt.has(indeks)) {
         valgt.delete(indeks);
@@ -456,51 +593,56 @@ function tegnKort() {
 
     };
 
-    grid.append(kort);
+    grid.append(kortElement);
 
   });
 
 
-  // KORT NUMMER 20: ALLE
+  // KORT NUMMER 24: ALLE
 
-  const alleKort = document.createElement("button");
+  const alleKortElement = document.createElement("button");
 
-  alleKort.type = "button";
+  alleKortElement.type = "button";
 
-  alleKort.className =
+  alleKortElement.className =
     "card all" +
     (valgt.size === roller.length ? " selected" : "");
 
-  const alleBilde = document.createElement("div");
+  const alleBildeElement = document.createElement("div");
 
-  alleBilde.className = "all-image";
+  alleBildeElement.className = "all-image";
 
-  alleBilde.textContent = "🐺";
+  alleBildeElement.textContent = "🐺";
 
-  const alleNavn = document.createElement("div");
+  const alleNavnElement = document.createElement("div");
 
-  alleNavn.className = "name";
+  alleNavnElement.className = "name";
 
-  alleNavn.textContent = "ALLE";
+  alleNavnElement.textContent = "ALLE";
 
-  alleKort.append(alleBilde, alleNavn);
+  alleKortElement.append(
+    alleBildeElement,
+    alleNavnElement
+  );
 
-  alleKort.onclick = () => {
+  alleKortElement.onclick = () => {
 
     if (valgt.size === roller.length) {
+
       valgt.clear();
+
     } else {
+
       roller.forEach((_, indeks) => valgt.add(indeks));
+
     }
 
     tegnKort();
 
   };
 
-  grid.append(alleKort);
+  grid.append(alleKortElement);
 
-
-  // OPPDATER STATUS
 
   document.getElementById("valgtAntall").textContent =
     `${valgt.size} av ${roller.length} valgt`;
@@ -516,7 +658,7 @@ function tegnKort() {
 }
 
 
-// SPILLEDER OG NATTSEKVENS
+// SPILLEDER
 
 let faser = [];
 
@@ -528,98 +670,95 @@ let biter = [];
 
 let lyd = null;
 
-const $ = id => document.getElementById(id);
 
+// LYDLAGRING
 
-// LAGRING AV LYDOPPTAK
+const dbPromise = new Promise((resolve, reject) => {
 
-const dbp = new Promise((ok, feil) => {
+  const request = indexedDB.open("ultimate-varulv-opptak", 1);
 
-  let forespørsel =
-    indexedDB.open("ultimate-varulv-opptak", 1);
-
-  forespørsel.onupgradeneeded = () => {
-    forespørsel.result.createObjectStore("lyd");
+  request.onupgradeneeded = () => {
+    request.result.createObjectStore("lyd");
   };
 
-  forespørsel.onsuccess = () => ok(forespørsel.result);
+  request.onsuccess = () => resolve(request.result);
 
-  forespørsel.onerror = () => feil(forespørsel.error);
+  request.onerror = () => reject(request.error);
 
 });
 
 
-async function dbSet(nøkkel, verdi) {
+async function lagreLyd(nøkkel, verdi) {
 
-  let db = await dbp;
+  const db = await dbPromise;
 
-  return new Promise((ok, feil) => {
+  return new Promise((resolve, reject) => {
 
-    let transaksjon =
-      db.transaction("lyd", "readwrite");
+    const transaction = db.transaction("lyd", "readwrite");
 
-    transaksjon.objectStore("lyd").put(verdi, nøkkel);
+    transaction.objectStore("lyd").put(verdi, nøkkel);
 
-    transaksjon.oncomplete = ok;
+    transaction.oncomplete = resolve;
 
-    transaksjon.onerror = () => feil(transaksjon.error);
+    transaction.onerror = () => reject(transaction.error);
 
   });
 
 }
 
 
-async function dbGet(nøkkel) {
+async function hentLyd(nøkkel) {
 
-  let db = await dbp;
+  const db = await dbPromise;
 
-  return new Promise((ok, feil) => {
+  return new Promise((resolve, reject) => {
 
-    let forespørsel =
+    const request =
       db.transaction("lyd").objectStore("lyd").get(nøkkel);
 
-    forespørsel.onsuccess = () => ok(forespørsel.result);
+    request.onsuccess = () => resolve(request.result);
 
-    forespørsel.onerror = () => feil(forespørsel.error);
-
-  });
-
-}
-
-
-async function dbDel(nøkkel) {
-
-  let db = await dbp;
-
-  return new Promise((ok, feil) => {
-
-    let transaksjon =
-      db.transaction("lyd", "readwrite");
-
-    transaksjon.objectStore("lyd").delete(nøkkel);
-
-    transaksjon.oncomplete = ok;
-
-    transaksjon.onerror = () => feil(transaksjon.error);
+    request.onerror = () => reject(request.error);
 
   });
 
 }
 
 
-// LAG NATTSEKVENS BASERT PÅ VALGTE ROLLER
+async function slettLyd(nøkkel) {
+
+  const db = await dbPromise;
+
+  return new Promise((resolve, reject) => {
+
+    const transaction = db.transaction("lyd", "readwrite");
+
+    transaction.objectStore("lyd").delete(nøkkel);
+
+    transaction.oncomplete = resolve;
+
+    transaction.onerror = () => reject(transaction.error);
+
+  });
+
+}
+
+
+// LAG NATTSEKVENS
 
 function lagFaser() {
 
   faser = [
+
     {
       id: "start",
       navn: "Alle lukker øynene",
       tekst: "Alle spillerne lukker øynene."
     }
+
   ];
 
-  const rekkefolge = [
+  const rekkefølge = [
     "Doppelgjenger",
     "Røver",
     "Synsk",
@@ -639,21 +778,30 @@ function lagFaser() {
     "Jeger"
   ];
 
-  rekkefolge.forEach(navn => {
+  rekkefølge.forEach(rolleNavn => {
 
-    let rolle = roller.find(r => r[0] === navn);
+    const rolle = roller.find(r => r.fase === rolleNavn);
 
-    if (rolle && valgt.has(roller.indexOf(rolle))) {
+    if (!rolle) return;
+
+    const erValgt = roller.some((r, indeks) =>
+      r.fase === rolleNavn && valgt.has(indeks)
+    );
+
+    if (erValgt) {
 
       faser.push({
-        id: navn,
-        navn: navn + " våkner",
-        tekst: rolle[2]
+
+        id: rolleNavn,
+        navn: rolleNavn + " våkner",
+        tekst: rolle.tekst
+
       });
 
     }
 
   });
+
 
   faser.push(
     {
@@ -662,12 +810,12 @@ function lagFaser() {
       tekst: "Alle spillerne åpner øynene. Landsbyen våkner."
     },
     {
-      id: "snakk",
+      id: "diskusjon",
       navn: "Diskusjon",
       tekst: "Diskuter hvem dere tror er varulv."
     },
     {
-      id: "stem",
+      id: "avstemning",
       navn: "Avstemning",
       tekst: "Stem på hvem som skal ut av landsbyen."
     }
@@ -678,46 +826,51 @@ function lagFaser() {
 }
 
 
-// VIS SPILLSEKVENSEN
+// VIS FASER
 
 function tegnSpill() {
 
   const fase = faser[faseValgt];
 
-  $("faseNummer").textContent =
+  document.getElementById("faseNummer").textContent =
     `FASE ${faseValgt + 1} AV ${faser.length}`;
 
-  $("faseTittel").textContent = fase.navn;
+  document.getElementById("faseTittel").textContent =
+    fase.navn;
 
-  $("faseTekst").textContent = fase.tekst;
+  document.getElementById("faseTekst").textContent =
+    fase.tekst;
 
-  $("faseNavn").value = fase.navn;
+  document.getElementById("faseNavn").value =
+    fase.navn;
 
-  $("faseBeskrivelse").value = fase.tekst;
+  document.getElementById("faseBeskrivelse").value =
+    fase.tekst;
 
-  $("forrigeKnapp").disabled = faseValgt === 0;
+  document.getElementById("forrigeKnapp").disabled =
+    faseValgt === 0;
 
-  $("nesteKnapp").disabled =
+  document.getElementById("nesteKnapp").disabled =
     faseValgt === faser.length - 1;
 
-  $("faseListe").innerHTML = "";
+  document.getElementById("faseListe").innerHTML = "";
 
   faser.forEach((element, indeks) => {
 
-    let rad = document.createElement("div");
+    const rad = document.createElement("div");
 
     rad.className =
       "phase-row" + (indeks === faseValgt ? " active" : "");
 
-    let nummer = document.createElement("span");
+    const nummer = document.createElement("span");
 
     nummer.textContent = (indeks + 1) + ".";
 
-    let navn = document.createElement("span");
+    const navn = document.createElement("span");
 
     navn.textContent = element.navn;
 
-    let knapp = document.createElement("button");
+    const knapp = document.createElement("button");
 
     knapp.textContent = "Velg";
 
@@ -731,41 +884,41 @@ function tegnSpill() {
 
     rad.append(nummer, navn, knapp);
 
-    $("faseListe").append(rad);
+    document.getElementById("faseListe").append(rad);
 
   });
 
-  $("spillAntall").textContent =
-    valgt.size + " roller valgt";
+  document.getElementById("spillAntall").textContent =
+    valgt.size + " kort valgt";
 
 }
 
 
-// START OG NAVIGERING
+// START SPILL
 
-$("startKnapp").onclick = () => {
+document.getElementById("startKnapp").onclick = () => {
 
   lagFaser();
 
-  $("valgSide").classList.add("hidden");
+  document.getElementById("valgSide").classList.add("hidden");
 
-  $("spillSide").classList.remove("hidden");
+  document.getElementById("spillSide").classList.remove("hidden");
 
   tegnSpill();
 
 };
 
 
-$("tilbakeKnapp").onclick = () => {
+document.getElementById("tilbakeKnapp").onclick = () => {
 
-  $("spillSide").classList.add("hidden");
+  document.getElementById("spillSide").classList.add("hidden");
 
-  $("valgSide").classList.remove("hidden");
+  document.getElementById("valgSide").classList.remove("hidden");
 
 };
 
 
-$("forrigeKnapp").onclick = () => {
+document.getElementById("forrigeKnapp").onclick = () => {
 
   faseValgt = Math.max(0, faseValgt - 1);
 
@@ -774,7 +927,7 @@ $("forrigeKnapp").onclick = () => {
 };
 
 
-$("nesteKnapp").onclick = () => {
+document.getElementById("nesteKnapp").onclick = () => {
 
   faseValgt = Math.min(faser.length - 1, faseValgt + 1);
 
@@ -783,74 +936,82 @@ $("nesteKnapp").onclick = () => {
 };
 
 
-// REDIGERING AV FASER
+// REDIGER FASE
 
-$("lagreFaseKnapp").onclick = () => {
+document.getElementById("lagreFaseKnapp").onclick = () => {
 
   faser[faseValgt].navn =
-    $("faseNavn").value.trim() || "Fase";
+    document.getElementById("faseNavn").value.trim() || "Fase";
 
   faser[faseValgt].tekst =
-    $("faseBeskrivelse").value.trim();
+    document.getElementById("faseBeskrivelse").value.trim();
 
   tegnSpill();
 
-  $("status").textContent = "Fasen er oppdatert.";
+  document.getElementById("status").textContent =
+    "Fasen er oppdatert.";
 
 };
 
 
 // LYDAVSPILLING
 
-$("spillLydKnapp").onclick = async () => {
+document.getElementById("spillLydKnapp").onclick = async () => {
 
-  let blob = await dbGet(faser[faseValgt].id);
+  const faseId = faser[faseValgt].id;
+
+  const blob = await hentLyd(faseId);
 
   if (!blob) {
 
-    $("status").textContent =
+    document.getElementById("status").textContent =
       "Ingen opptak for denne fasen ennå.";
 
     return;
 
   }
 
-  if (lyd) lyd.pause();
+  if (lyd) {
+    lyd.pause();
+    URL.revokeObjectURL(lyd.src);
+  }
 
   lyd = new Audio(URL.createObjectURL(blob));
 
-  $("stoppLydKnapp").disabled = false;
+  document.getElementById("stoppLydKnapp").disabled = false;
 
   lyd.onended = () => {
-    $("stoppLydKnapp").disabled = true;
+    document.getElementById("stoppLydKnapp").disabled = true;
   };
 
-  lyd.play();
+  await lyd.play();
 
-  $("status").textContent = "Spiller av opptaket.";
+  document.getElementById("status").textContent =
+    "Spiller av opptaket.";
 
 };
 
 
-$("stoppLydKnapp").onclick = () => {
+document.getElementById("stoppLydKnapp").onclick = () => {
 
   if (lyd) lyd.pause();
 
-  $("stoppLydKnapp").disabled = true;
+  document.getElementById("stoppLydKnapp").disabled = true;
 
-  $("status").textContent = "Avspillingen er stoppet.";
+  document.getElementById("status").textContent =
+    "Avspillingen er stoppet.";
 
 };
 
 
 // LYDOPPTAK
 
-$("opptakKnapp").onclick = async () => {
+document.getElementById("opptakKnapp").onclick = async () => {
 
   try {
 
-    let strøm =
-      await navigator.mediaDevices.getUserMedia({audio: true});
+    const strøm =
+      await navigator.mediaDevices.getUserMedia({ audio: true });
 
     biter = [];
 
@@ -864,7 +1025,7 @@ $("opptakKnapp").onclick = async () => {
 
     opptaker.onstop = async () => {
 
-      await dbSet(
+      await lagreLyd(
         faser[faseValgt].id,
         new Blob(biter, {
           type: opptaker.mimeType || "audio/webm"
@@ -873,34 +1034,35 @@ $("opptakKnapp").onclick = async () => {
 
       strøm.getTracks().forEach(spor => spor.stop());
 
-      $("opptakKnapp").disabled = false;
+      document.getElementById("opptakKnapp").disabled = false;
 
-      $("stoppOpptakKnapp").disabled = true;
+      document.getElementById("stoppOpptakKnapp").disabled = true;
 
-      $("status").textContent =
+      document.getElementById("status").textContent =
         "Opptaket er lagret på denne enheten.";
 
     };
 
     opptaker.start();
 
-    $("opptakKnapp").disabled = true;
+    document.getElementById("opptakKnapp").disabled = true;
 
-    $("stoppOpptakKnapp").disabled = false;
+    document.getElementById("stoppOpptakKnapp").disabled = false;
 
-    $("status").textContent = "Tar opp stemmen din …";
+    document.getElementById("status").textContent =
+      "Tar opp stemmen din …";
 
-  } catch (e) {
+  } catch (feil) {
 
-    $("status").textContent =
-      "Mikrofontilgang ble ikke gitt. Kontroller nettleserens tillatelser.";
+    document.getElementById("status").textContent =
+      "Mikrofontilgang mangler. Kontroller nettleserens tillatelser.";
 
   }
 
 };
 
 
-$("stoppOpptakKnapp").onclick = () => {
+document.getElementById("stoppOpptakKnapp").onclick = () => {
 
   if (opptaker && opptaker.state !== "inactive") {
     opptaker.stop();
@@ -909,18 +1071,19 @@ $("stoppOpptakKnapp").onclick = () => {
 };
 
 
-$("slettOpptakKnapp").onclick = async () => {
+document.getElementById("slettOpptakKnapp").onclick = async () => {
 
-  await dbDel(faser[faseValgt].id);
+  await slettLyd(faser[faseValgt].id);
 
-  $("status").textContent = "Opptaket er slettet.";
+  document.getElementById("status").textContent =
+    "Opptaket er slettet.";
 
 };
 
 
-// KORTVELGERENS KNAPPER
+// KORTVELGER
 
-$("ingenKnapp").onclick = () => {
+document.getElementById("ingenKnapp").onclick = () => {
 
   valgt.clear();
 
@@ -929,7 +1092,7 @@ $("ingenKnapp").onclick = () => {
 };
 
 
-$("alleKnapp").onclick = () => {
+document.getElementById("alleKnapp").onclick = () => {
 
   if (valgt.size === roller.length) {
 
@@ -946,18 +1109,9 @@ $("alleKnapp").onclick = () => {
 };
 
 
-// START APPEN
+// START
 
 tegnKort();
-
-if ("serviceWorker" in navigator &&
-    location.protocol.startsWith("http")) {
-
-  navigator.serviceWorker
-    .register("./sw.js")
-    .catch(() => {});
-
-}
 
 </script>
 
