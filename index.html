@@ -2,34 +2,124 @@
 <html lang="no">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#101827"><title>Ultimate Varulv – Spilleder</title>
+<meta name="theme-color" content="#081426">
+<meta name="description" content="Syk Ulven – Tolkemord. Spillederkontroll for nattens roller og stemmeopptak.">
+<title>Syk Ulven – Tolkemord</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1020;--panel:#172238;--line:#35445f;--text:#f5f6fb;--muted:#aeb9ca;--green:#69d6a0}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#1d2b46,#0b1020 65%);color:var(--text);font:16px/1.45 system-ui,sans-serif}
-header{text-align:center;padding:24px 14px 12px}header .wolf{font-size:34px}h1{margin:2px 0;font-size:clamp(25px,5vw,38px);letter-spacing:.05em}header p{margin:0;color:var(--muted)}
-main{max-width:1250px;margin:auto;padding:10px 16px 40px}.panel{background:#151f32;border:1px solid var(--line);border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 12px 35px #0003}
-h2{font-size:19px;margin:0 0 12px}.intro{color:var(--muted);margin:0 0 14px}
-.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
-.card{position:relative;display:block;width:100%;padding:0;border:2px solid #48556c;border-radius:14px;overflow:hidden;background:#0b1424;cursor:pointer;transition:.15s;min-width:0;aspect-ratio: .72}
+:root{
+ color-scheme:dark;--bg:#061020;--panel:#111e33;--panel2:#182943;
+ --line:#344b6a;--text:#f7f4ec;--muted:#b8c5d8;--gold:#f4c34e;
+ --gold2:#ffdf83;--green:#70dfa7
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;min-height:100vh;color:var(--text);
+ background:
+  radial-gradient(ellipse at 50% 0%,#1c3a60 0,transparent 42%),
+  radial-gradient(ellipse at 12% 35%,#102849 0,transparent 34%),
+  linear-gradient(180deg,#081426 0%,#091426 55%,#050d19 100%);
+ font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif
+}
+header{
+ position:relative;text-align:center;padding:24px 16px 20px;overflow:hidden;
+ border-bottom:1px solid #b78d3b55;
+ background:linear-gradient(180deg,#071426cc,#0a1728aa)
+}
+header:before{
+ content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;
+ background:radial-gradient(circle at 50% 42%,#f3bd42 0,transparent 27%)
+}
+.brand{position:relative;display:flex;justify-content:center;align-items:center}
+.brand img{
+ display:block;width:min(100%,350px);height:auto;max-height:390px;object-fit:contain;
+ filter:drop-shadow(0 12px 28px #000a)
+}
+header p{
+ position:relative;margin:3px 0 0;color:var(--gold2);font-size:12px;
+ font-weight:800;letter-spacing:.24em;text-transform:uppercase
+}
+main{max-width:1250px;margin:auto;padding:20px 16px 44px}
+.panel{
+ background:linear-gradient(145deg,#172943f5,#101c30f5);
+ border:1px solid #49617f;border-radius:20px;padding:19px;margin:14px 0;
+ box-shadow:0 18px 48px #0005,inset 0 1px #ffffff0a
+}
+h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
+.intro{color:var(--muted);margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px}
+.card{
+ position:relative;display:block;width:100%;padding:0;border:2px solid #465b76;
+ border-radius:15px;overflow:hidden;background:#081426;cursor:pointer;
+ transition:transform .18s,border-color .18s,box-shadow .18s;min-width:0;aspect-ratio:.72
+}
+.card:hover{transform:translateY(-3px);border-color:#d5ad55;box-shadow:0 8px 20px #0006}
 .card img{display:block;width:100%;height:100%;object-fit:cover}
-.card.selected{border-color:#70dfa7;box-shadow:0 0 0 2px #70dfa755,0 0 18px #70dfa733;transform:translateY(-2px)}
-.card.selected:after{content:"✓";position:absolute;right:7px;top:7px;background:#24875c;border-radius:50%;width:27px;height:27px;display:grid;place-items:center;font-weight:900;color:#fff}
-.card.all{background:#172b46;border-color:#91aaff;display:block;padding:0}.card.all img{display:block;width:100%;height:100%;object-fit:cover}
-.card.all .all-mark{font-size:clamp(36px,5vw,68px);line-height:1}.card.all .all-text{font-size:clamp(16px,2vw,24px);font-weight:900;letter-spacing:.06em}
-.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center}button.action{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#293953;color:white;font:inherit;cursor:pointer}button.primary{background:#526bb4;border-color:#8298e4;font-weight:700}button:disabled{opacity:.4;cursor:not-allowed}
-.small{font-size:13px;color:var(--muted)}.count{margin-left:auto;color:var(--muted);font-size:13px}.hidden{display:none!important}
-.phasebox{text-align:center;background:#202d45;border:1px solid #465979;border-radius:14px;padding:22px;margin:12px 0}.phasebox h2{font-size:clamp(23px,4vw,32px);margin:8px}.phasebox p{color:var(--muted);margin:0}
-.controls{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:12px 0}.phase-list{display:grid;gap:7px}.phase-row{display:flex;align-items:center;gap:10px;background:#101a2c;border:1px solid var(--line);padding:10px;border-radius:10px}.phase-row.active{border-color:#a9bbff}.phase-row span:nth-child(2){flex:1}
-label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}input,textarea{width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);background:#0b1424;color:white;font:inherit}textarea{min-height:70px}.status{color:var(--green);min-height:22px;font-size:13px}.foot{text-align:center;color:var(--muted);font-size:12px;padding:12px}
-@media(max-width:800px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}}
-@media(max-width:480px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.panel{padding:12px}.card.selected:after{width:22px;height:22px;right:4px;top:4px}}
+.card.selected{
+ border-color:var(--gold);box-shadow:0 0 0 2px #f4c34e55,0 0 22px #f4c34e33;
+ transform:translateY(-2px)
+}
+.card.selected:after{
+ content:"✓";position:absolute;right:7px;top:7px;background:#27875f;
+ border:1px solid #a8f0c9;border-radius:50%;width:27px;height:27px;
+ display:grid;place-items:center;font-weight:900;color:#fff
+}
+.card.all{background:linear-gradient(145deg,#243b5a,#101c30);border-color:#d8b65e}
+.card.all img{display:block;width:100%;height:100%;object-fit:cover}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center}
+button.action{
+ border:1px solid #506481;border-radius:11px;padding:10px 14px;
+ background:#263b58;color:white;font:inherit;cursor:pointer;transition:.15s
+}
+button.action:hover:not(:disabled){border-color:var(--gold);background:#304969}
+button.primary{
+ background:linear-gradient(135deg,#b98a2f,#e2b84d);border-color:#f5d987;
+ color:#171b24;font-weight:800
+}
+button.primary:hover:not(:disabled){background:linear-gradient(135deg,#d09e39,#f4cf70)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.small{font-size:13px;color:var(--muted)}
+.count{margin-left:auto;color:var(--gold2);font-size:13px;font-weight:700}
+.hidden{display:none!important}
+.phasebox{
+ text-align:center;background:linear-gradient(145deg,#1d3452,#14243b);
+ border:1px solid #526b8c;border-radius:16px;padding:24px;margin:12px 0
+}
+.phasebox h2{font-size:clamp(23px,4vw,32px);margin:8px;color:var(--gold2)}
+.phasebox p{color:var(--muted);margin:0}
+.controls{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.phase-list{display:grid;gap:7px}
+.phase-row{
+ display:flex;align-items:center;gap:10px;background:#0d192b;
+ border:1px solid var(--line);padding:10px;border-radius:11px
+}
+.phase-row.active{border-color:var(--gold);background:#182a43}
+.phase-row span:nth-child(2){flex:1}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}
+input,textarea{
+ width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);
+ background:#091528;color:white;font:inherit
+}
+textarea{min-height:70px}
+.status{color:var(--green);min-height:22px;font-size:13px}
+.foot{text-align:center;color:#91a5bf;font-size:12px;padding:18px 12px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}}
+@media(max-width:480px){
+ header{padding:14px 12px 16px}.brand img{width:min(86vw,290px);max-height:330px}
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .panel{padding:12px;border-radius:15px}
+ .card.selected:after{width:22px;height:22px;right:4px;top:4px}
+}
 </style>
 </head><body>
-<header><div class="wolf">🐺</div><h1>ULTIMATE VARULV</h1><p>SPILLEDERKONTROLL</p></header>
+<header>
+ <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
+ <p>Spillederkontroll</p>
+</header>
 <main>
 <section id="valgSide" class="panel"><h2>Velg kort til spillet</h2><p class="intro">Trykk på kortene du vil bruke. Grønn markering betyr at kortet er valgt. «Alle» velger eller fjerner alle kortene samtidig.</p>
 <div id="kortRutenett" class="grid"></div>
-<div class="actions"><button class="action primary" id="alleKnapp">Velg alle kort</button><button class="action" id="ingenKnapp">Fjern alle valg</button><span id="valgtAntall" class="count">0 av 23 valgt</span></div>
+<div class="actions"><span id="valgtAntall" class="count">0 av 23 valgt</span></div>
 <div class="actions"><button class="action primary" id="startKnapp" disabled>Start spill →</button></div></section>
 <section id="spillSide" class="panel hidden"><div class="actions"><button class="action" id="tilbakeKnapp">← Til kortvelgeren</button><span id="spillAntall" class="count"></span></div>
 <div class="phasebox"><small id="faseNummer">FASE 1</small><h2 id="faseTittel">Alle lukker øynene</h2><p id="faseTekst">Alle spillerne lukker øynene.</p></div>
@@ -71,7 +161,7 @@ function tegnKort(){grid.innerHTML="";
  const allImage=document.createElement("img");allImage.src="alle.webp";allImage.alt="Alle karakterene samlet på ett kort";allImage.loading="eager";alle.append(allImage);
  alle.onclick=()=>{if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
  roller.forEach((r,i)=>{const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));const im=document.createElement("img");im.src=""+r.bilde;im.alt=r.navn;im.loading="lazy";b.append(im);b.onclick=()=>{valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};grid.append(b)});
- $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("alleKnapp").textContent=valgt.size===roller.length?"Fjern alle kort":"Velg alle kort";$("startKnapp").disabled=valgt.size===0;
+ $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
 }
 let faser=[],faseValgt=0,opptaker=null,biter=[],lyd=null;
 const dbp=new Promise((ok,feil)=>{let q=indexedDB.open("ultimate-varulv-opptak",1);q.onupgradeneeded=()=>q.result.createObjectStore("lyd");q.onsuccess=()=>ok(q.result);q.onerror=()=>feil(q.error)});
@@ -84,7 +174,6 @@ async function visFase(){const f=faser[faseValgt];$("faseNummer").textContent="F
 async function spillOpptak(){const blob=await dbGet(faser[faseValgt].id);if(!blob){$("status").textContent="Det finnes ikke noe opptak for denne fasen ennå.";return}if(lyd)lyd.pause();lyd=new Audio(URL.createObjectURL(blob));lyd.play();$("stoppLydKnapp").disabled=false;lyd.onended=()=>{$("stoppLydKnapp").disabled=true}}
 $("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";lagFaser()};
 $("tilbakeKnapp").onclick=()=>{$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden")};
-$("alleKnapp").onclick=()=>{if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};$("ingenKnapp").onclick=()=>{valgt.clear();tegnKort()};
 $("forrigeKnapp").onclick=()=>{if(faseValgt>0){faseValgt--;visFase()}};$("nesteKnapp").onclick=()=>{if(faseValgt<faser.length-1){faseValgt++;visFase()}};$("spillLydKnapp").onclick=spillOpptak;
 $("stoppLydKnapp").onclick=()=>{if(lyd)lyd.pause();$("stoppLydKnapp").disabled=true};
 $("opptakKnapp").onclick=async()=>{try{const stream=await navigator.mediaDevices.getUserMedia({audio:true});biter=[];opptaker=new MediaRecorder(stream);opptaker.ondataavailable=e=>{if(e.data.size)biter.push(e.data)};opptaker.onstop=async()=>{await dbSet(faser[faseValgt].id,new Blob(biter,{type:opptaker.mimeType||"audio/webm"}));stream.getTracks().forEach(t=>t.stop());$("opptakKnapp").disabled=false;$("stoppOpptakKnapp").disabled=true;$("status").textContent="Opptaket er lagret på denne enheten."};opptaker.start();$("opptakKnapp").disabled=true;$("stoppOpptakKnapp").disabled=false;$("status").textContent="Tar opp stemmen din …"}catch(e){$("status").textContent="Mikrofontilgang ble ikke gitt. Kontroller nettleserens tillatelser."}};
