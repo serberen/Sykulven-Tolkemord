@@ -1,9 +1,7 @@
-ULTIMATE VARULV – OPPDATERTE KORTBILDER
+SYKULVEN – TOLKEMORD
 
-Last opp ALLE filene i denne ZIP-filen direkte i hovedmappen på GitHub,
-på samme nivå som index.html. Ikke opprett en bilder-mappe.
+Oppdatert versjon: lydopplasting i nettsiden er fjernet.
 
-index.html bruker filnavnene direkte fra hovedmappen.
-Alle rollebildene er de nye bildene du lastet opp.
-Frimurer, Syk Ulven og Landsbyboer har flere kort med samme illustrasjon.
-alle.webp er et samlet kort med alle rolleillustrasjonene.
+START SPILL starter automatisk opplesningen. Bare instruksjoner for roller valgt i kortmenyen blir spilt, i riktig spillrekkefølge. Lydfilene ligger som vanlige MP3-filer ved siden av index.html i GitHub-repoet.
+
+Last opp ALLE filene i denne ZIP-en til rotmappen (samme mappe som index.html) i GitHub. Ikke legg dem i en undermappe.

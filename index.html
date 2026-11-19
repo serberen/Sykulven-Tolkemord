@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#081426">
-<meta name="description" content="Syk Ulven – Tolkemord. Spillederkontroll med egne opplastede lydklipp.">
+<meta name="description" content="Syk Ulven – Tolkemord. Spillederkontroll med innebygde lydinstruksjoner.">
 <title>Syk Ulven – Tolkemord</title>
 <style>
 :root{
@@ -131,31 +131,12 @@ textarea{min-height:70px}
 <div class="actions"><button class="action primary" id="startKnapp" disabled>Start spill →</button></div></section>
 <section id="spillSide" class="panel hidden"><div class="actions"><button class="action" id="tilbakeKnapp">← Til kortvelgeren</button><span id="spillAntall" class="count"></span></div>
 <div class="phasebox"><small id="faseNummer">FASE 1</small><h2 id="faseTittel">Alle lukker øynene</h2><p id="faseTekst">Alle spillerne lukker øynene.</p></div>
-<div class="controls"><button class="action" id="forrigeKnapp">← Forrige</button><button class="action primary" id="spillLydKnapp">▶ Spill lydklipp</button><button class="action" id="nesteKnapp">Neste →</button></div>
-<div class="panel" style="margin:14px 0;background:#0d1a2d">
-<h2>Lyd for denne fasen</h2>
-<p class="small">Last opp et lydklipp fra enheten din. Bare lydklipp du selv laster opp, brukes av appen.</p>
-<input id="lydFil" type="file" accept="audio/*">
-<div class="controls" style="justify-content:flex-start">
-<button class="action primary" id="lastOppLydKnapp">Last opp lydklipp</button>
-<button class="action" id="fjernLydKnapp">Fjern lydklipp</button>
-<button class="action" id="stoppLydKnapp" disabled>■ Stopp lyd</button>
-</div>
-<p id="lydStatus" class="small" aria-live="polite">Ingen lydklipp er lastet opp for denne fasen.</p>
-</div>
-<div class="panel" style="margin:14px 0;background:#0d1a2d">
-<h2>Spill av hele sekvensen</h2>
-<p class="small">Spiller av alle opplastede lydklipp i spillrekkefølge. Mellom hver beskjed går en rolig nedtelling på 10 sekunder med lav tikking.</p>
-<div class="controls" style="justify-content:flex-start">
-<button class="action primary" id="spillAlleKnapp">▶ Spill alle lydklipp</button>
-<button class="action" id="stoppAlleKnapp" disabled>■ Stopp sekvens</button>
-</div>
-<p id="sekvensStatus" class="small" aria-live="polite">Klar til å spille sekvensen.</p>
-</div>
+<div class="controls"><button class="action" id="forrigeKnapp">← Forrige</button><button class="action primary" id="spillLydKnapp">▶ Spill instruksjon</button><button class="action" id="nesteKnapp">Neste →</button><button class="action" id="stoppLydKnapp" disabled>■ Stopp lyd</button></div>
+<p id="sekvensStatus" class="small" aria-live="polite">Opplesningen starter automatisk når du trykker Start spill.</p>
 <p id="status" class="status" aria-live="polite"></p><h2>Spillsekvens</h2><div id="faseListe" class="phase-list"></div>
 <h2 style="margin-top:18px">Rediger valgt fase</h2><label for="faseNavn">Fasenavn</label><input id="faseNavn"><label for="faseBeskrivelse">Instruksjon</label><textarea id="faseBeskrivelse"></textarea>
-<div class="actions"><button class="action" id="lagreFaseKnapp">Lagre tekst</button><button class="action" id="slettOpptakKnapp">Slett opptak</button></div></section>
-<div class="foot">Opplastede lydklipp lagres lokalt i nettleseren på denne enheten.</div></main>
+<div class="actions"><button class="action" id="lagreFaseKnapp">Lagre tekst</button></div></section>
+<div class="foot">Lydinstruksjonene er innebygd i nettsiden og spilles av automatisk ut fra valgte roller.</div></main>
 <script>
 const roller=[
  {navn:"Røver",bilde:"rover.webp",tekst:"Røveren våkner og velger hvem han vil bytte rolle med."},
@@ -190,108 +171,80 @@ function tegnKort(){grid.innerHTML="";
  roller.forEach((r,i)=>{const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));const im=document.createElement("img");im.src=""+r.bilde;im.alt=r.navn;im.loading="lazy";b.append(im);b.onclick=()=>{valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};grid.append(b)});
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
 }
-let faser=[],faseValgt=0,lyd=null,lydUrl=null;
-let sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
+let faser=[],faseValgt=0,lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
 const bakgrunnsmusikk=new Audio("ulvis.mp3");
 bakgrunnsmusikk.loop=true;
 bakgrunnsmusikk.volume=0.22;
-function startBakgrunnsmusikk(){
- bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;bakgrunnsmusikk.volume=0.22;
- bakgrunnsmusikk.play().catch(()=>{$("sekvensStatus").textContent="Nettleseren blokkerte bakgrunnsmusikken. Trykk Spill alle igjen."});
+function startBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;bakgrunnsmusikk.volume=0.22;bakgrunnsmusikk.play().catch(()=>{});}
+function stoppBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;}
+const lydfiler={
+ "alle":"lyd_00_alle_lukker_oynene.mp3",
+ "Syk Ulven":"lyd_01_syk_ulven.mp3",
+ "Frimurer":"lyd_02_frimurer.mp3",
+ "Håndlanger":"lyd_03_handlanger.mp3",
+ "Synsk":"lyd_04_synsk.mp3",
+ "Røver":"lyd_05_rover.mp3",
+ "Doppelgjenger":"lyd_06_doppelgjenger.mp3",
+ "Jeger":"lyd_07_jeger.mp3",
+ "Rimmi":"lyd_08_rimmi.mp3",
+ "Beruset":"lyd_09_beruset.mp3",
+ "Bråkmaker":"lyd_10_braakmaker.mp3",
+ "Prins":"lyd_11_prins.mp3",
+ "Avslører":"lyd_12_avsloerer.mp3",
+ "Sov Ulven":"lyd_13_sov_ulven.mp3",
+ "Søvnløs":"lyd_14_sovnlos.mp3",
+ "Dulter":"lyd_15_dulter.mp3",
+ "Vokter":"lyd_16_vokter.mp3",
+ "Paranormal Etterforsker":"lyd_17_paranormal_etterforsker.mp3",
+ "Emo":"lyd_18_emo.mp3",
+ "slutt":"lyd_19_alle_vakner.mp3"
+};
+function lagFaser(){
+ faser=[{id:"alle",navn:"Alle lukker øynene",tekst:"Alle spillerne lukker øynene.",lyd:lydfiler.alle}];
+ const rekkefolge=["Syk Ulven","Frimurer","Håndlanger","Synsk","Røver","Doppelgjenger","Jeger","Rimmi","Beruset","Bråkmaker","Prins","Avslører","Sov Ulven","Søvnløs","Dulter","Vokter","Paranormal Etterforsker","Emo"];
+ rekkefolge.forEach(n=>{const funnet=roller.find((r,i)=>r.navn===n&&valgt.has(i));if(funnet&&!faser.some(f=>f.id===n))faser.push({id:n,navn:n+" våkner",tekst:funnet.tekst,lyd:lydfiler[n]})});
+ faser.push({id:"slutt",navn:"Alle våkner",tekst:"Alle spillerne åpner øynene.",lyd:lydfiler.slutt});faseValgt=0;visFase();
 }
-function stoppBakgrunnsmusikk(){
- bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;
+function visFase(){
+ const f=faser[faseValgt];$("faseNummer").textContent="FASE "+(faseValgt+1)+" AV "+faser.length;$("faseTittel").textContent=f.navn;$("faseTekst").textContent=f.tekst;
+ $("faseNavn").value=f.navn;$("faseBeskrivelse").value=f.tekst;$("forrigeKnapp").disabled=faseValgt===0;$("nesteKnapp").disabled=faseValgt===faser.length-1;
+ const list=$("faseListe");list.innerHTML="";
+ faser.forEach((x,i)=>{const row=document.createElement("div");row.className="phase-row"+(i===faseValgt?" active":"");const num=document.createElement("span");num.textContent=i+1;const name=document.createElement("span");name.textContent=x.navn;const play=document.createElement("button");play.className="action";play.textContent="▶";play.onclick=()=>{avbrytSekvens("Sekvensen ble avbrutt.");faseValgt=i;visFase();spillFaseLyd()};const choose=document.createElement("button");choose.className="action";choose.textContent="Velg";choose.onclick=()=>{avbrytSekvens("Sekvensen ble avbrutt.");faseValgt=i;visFase()};row.append(num,name,play,choose);list.append(row)});
 }
-const dbp=new Promise((ok,feil)=>{let q=indexedDB.open("ultimate-varulv-opptak",1);q.onupgradeneeded=()=>q.result.createObjectStore("lyd");q.onsuccess=()=>ok(q.result);q.onerror=()=>feil(q.error)});
-async function dbSet(k,v){let d=await dbp;return new Promise((ok,no)=>{let t=d.transaction("lyd","readwrite");t.objectStore("lyd").put(v,k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
-async function dbGet(k){let d=await dbp;return new Promise((ok,no)=>{let q=d.transaction("lyd").objectStore("lyd").get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
-async function dbDel(k){let d=await dbp;return new Promise((ok,no)=>{let t=d.transaction("lyd","readwrite");t.objectStore("lyd").delete(k);t.oncomplete=ok;t.onerror=()=>no(t.error)})}
-function lagFaser(){faser=[{id:"alle",navn:"Alle lukker øynene",tekst:"Alle spillerne lukker øynene."}];const rekkefolge=["Syk Ulven","Frimurer","Håndlanger","Synsk","Røver","Doppelgjenger","Jeger","Rimmi","Beruset","Bråkmaker","Prins","Avslører","Sov Ulven","Søvnløs","Dulter","Vokter","Paranormal Etterforsker","Emo"];
- rekkefolge.forEach(n=>{const funnet=roller.find((r,i)=>r.navn===n&&valgt.has(i));if(funnet&&!faser.some(f=>f.id===n))faser.push({id:n,navn:n+" våkner",tekst:funnet.tekst})});faser.push({id:"slutt",navn:"Alle våkner",tekst:"Alle spillerne åpner øynene."});faseValgt=0;visFase()}
-async function visFase(){const f=faser[faseValgt];$("faseNummer").textContent="FASE "+(faseValgt+1)+" AV "+faser.length;$("faseTittel").textContent=f.navn;$("faseTekst").textContent=f.tekst;$("faseNavn").value=f.navn;$("faseBeskrivelse").value=f.tekst;$("forrigeKnapp").disabled=faseValgt===0;$("nesteKnapp").disabled=faseValgt===faser.length-1;const list=$("faseListe");list.innerHTML="";faser.forEach((x,i)=>{const row=document.createElement("div");row.className="phase-row"+(i===faseValgt?" active":"");const num=document.createElement("span");num.textContent=i+1;const name=document.createElement("span");name.textContent=x.navn;const play=document.createElement("button");play.className="action";play.textContent="▶";play.onclick=()=>{faseValgt=i;visFase();spillOpptak()};const choose=document.createElement("button");choose.className="action";choose.textContent="Velg";choose.onclick=()=>{faseValgt=i;visFase();spillOpptak()};row.append(num,name,play,choose);list.append(row)});oppdaterLydStatus()}
-async function spillOpptak(){
- const blob=await dbGet(faser[faseValgt].id);
- if(!blob){$("status").textContent="Ingen lydfil er lastet opp for denne fasen.";return}
- if(lyd){lyd.pause();lyd.currentTime=0}
- if(lydUrl)URL.revokeObjectURL(lydUrl);
- lydUrl=URL.createObjectURL(blob);lyd=new Audio(lydUrl);
- lyd.onended=()=>{$("stoppLydKnapp").disabled=true};
- try{await lyd.play();$("stoppLydKnapp").disabled=false;$ ("status").textContent="Spiller av opplastet lydklipp."}catch(e){$("status").textContent="Kunne ikke spille av lydfilen."}
+function spillFaseLyd(){
+ const f=faser[faseValgt];if(!f||!f.lyd)return;
+ if(lyd){lyd.pause();lyd.currentTime=0;}
+ lyd=new Audio(f.lyd);lyd.onended=()=>{$("stoppLydKnapp").disabled=true};
+ lyd.onerror=()=>{$("sekvensStatus").textContent="Kunne ikke finne lydfilen: "+f.lyd};
+ lyd.play().then(()=>{$("stoppLydKnapp").disabled=false;$("sekvensStatus").textContent="Spiller: "+f.navn}).catch(()=>{$("sekvensStatus").textContent="Nettleseren blokkerte avspillingen. Trykk Spill instruksjon."});
 }
-function stoppSekvens(tekst="Sekvensen er stoppet."){
- sekvensAktiv=false;sekvensToken++;
- stoppBakgrunnsmusikk();
- if(sekvensTimer){clearInterval(sekvensTimer);sekvensTimer=null}
- if(lyd){lyd.pause();lyd.currentTime=0;lyd.dispatchEvent(new Event("ended"))}
- $("stoppAlleKnapp").disabled=true;$("spillAlleKnapp").disabled=false;
- $("sekvensStatus").textContent=tekst;
+function avbrytSekvens(tekst){
+ sekvensAktiv=false;sekvensToken++;if(sekvensTimer){clearInterval(sekvensTimer);sekvensTimer=null;}
+ if(lyd){lyd.pause();lyd.currentTime=0;}stoppBakgrunnsmusikk();if(tekst)$("sekvensStatus").textContent=tekst;
 }
-function lavtTick(){
- try{
-  const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
-  if(!sekvensAudioContext)sekvensAudioContext=new C();
-  if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();
-  const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();
-  osc.type="sine";osc.frequency.value=720;
-  gain.gain.setValueAtTime(0.0001,sekvensAudioContext.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.018,sekvensAudioContext.currentTime+0.006);
-  gain.gain.exponentialRampToValueAtTime(0.0001,sekvensAudioContext.currentTime+0.045);
-  osc.connect(gain);gain.connect(sekvensAudioContext.destination);
-  osc.start();osc.stop(sekvensAudioContext.currentTime+0.05);
- }catch(e){}
-}
-function ventPaaLyd(lydObj){
- return new Promise(resolve=>{
-  const ferdig=()=>{lydObj.removeEventListener("ended",ferdig);lydObj.removeEventListener("error",feil);resolve(true)};
-  const feil=()=>{lydObj.removeEventListener("ended",ferdig);lydObj.removeEventListener("error",feil);resolve(false)};
-  lydObj.addEventListener("ended",ferdig,{once:true});lydObj.addEventListener("error",feil,{once:true});
- });
-}
+function lavtTick(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!sekvensAudioContext)sekvensAudioContext=new C();if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();osc.type="sine";osc.frequency.value=720;gain.gain.setValueAtTime(.0001,sekvensAudioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.018,sekvensAudioContext.currentTime+.006);gain.gain.exponentialRampToValueAtTime(.0001,sekvensAudioContext.currentTime+.045);osc.connect(gain);gain.connect(sekvensAudioContext.destination);osc.start();osc.stop(sekvensAudioContext.currentTime+.05)}catch(e){}}
+function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
 async function spillHeleSekvensen(){
- if(sekvensAktiv)return;
- startBakgrunnsmusikk();
- const token=++sekvensToken,kø=[];
- for(let i=0;i<faser.length;i++){const blob=await dbGet(faser[i].id);if(blob)kø.push({index:i,blob,navn:faser[i].navn})}
- if(token!==sekvensToken)return;
- if(!kø.length){stoppBakgrunnsmusikk();$("sekvensStatus").textContent="Ingen lydklipp er lastet opp for spillfasene ennå.";return}
- sekvensAktiv=true;$("spillAlleKnapp").disabled=true;$("stoppAlleKnapp").disabled=false;
- $("sekvensStatus").textContent="Starter sekvensen – "+kø.length+" lydklipp funnet.";
- for(let n=0;n<kø.length;n++){
-  if(token!==sekvensToken)break;
-  const item=kø[n];faseValgt=item.index;await visFase();if(token!==sekvensToken)break;
-  if(lyd){lyd.pause();lyd.currentTime=0}if(lydUrl)URL.revokeObjectURL(lydUrl);
-  lydUrl=URL.createObjectURL(item.blob);lyd=new Audio(lydUrl);
-  $("sekvensStatus").textContent="Spiller "+(n+1)+" av "+kø.length+": "+item.navn;
-  try{await lyd.play()}catch(e){$("sekvensStatus").textContent="Kunne ikke spille: "+item.navn;continue}
-  const ok=await ventPaaLyd(lyd);if(token!==sekvensToken)break;if(!ok)continue;
-  if(n<kø.length-1){
-   let igjen=10;$("sekvensStatus").textContent="Neste beskjed om 10 sekunder…";lavtTick();
-   sekvensTimer=setInterval(()=>{if(token!==sekvensToken)return;igjen--;if(igjen>0){$("sekvensStatus").textContent="Neste beskjed om "+igjen+" sekunder…";lavtTick()}else{clearInterval(sekvensTimer);sekvensTimer=null}},1000);
-   await new Promise(resolve=>{const vent=()=>{if(token!==sekvensToken||!sekvensTimer){resolve();return}setTimeout(vent,100)};vent()});
+ if(sekvensAktiv)return;sekvensAktiv=true;const token=++sekvensToken;startBakgrunnsmusikk();$("stoppLydKnapp").disabled=false;
+ $("sekvensStatus").textContent="Starter opplesningen …";
+ for(let i=0;i<faser.length;i++){
+  if(token!==sekvensToken)break;faseValgt=i;visFase();const f=faser[i];
+  if(lyd){lyd.pause();lyd.currentTime=0;}lyd=new Audio(f.lyd);$("sekvensStatus").textContent="Spiller "+(i+1)+" av "+faser.length+": "+f.navn;
+  try{await lyd.play()}catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydfilen "+f.lyd;break;}
+  const ferdig=await ventPaaLyd(lyd);if(token!==sekvensToken)break;if(!ferdig)break;
+  if(i<faser.length-1){
+   let igjen=10;$("sekvensStatus").textContent="Neste instruksjon om 10 sekunder …";lavtTick();
+   await new Promise(resolve=>{sekvensTimer=setInterval(()=>{if(token!==sekvensToken){clearInterval(sekvensTimer);sekvensTimer=null;resolve();return;}igjen--;if(igjen>0){$("sekvensStatus").textContent="Neste instruksjon om "+igjen+" sekunder …";lavtTick()}else{clearInterval(sekvensTimer);sekvensTimer=null;resolve()}},1000)});
   }
  }
- if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("spillAlleKnapp").disabled=false;$("stoppAlleKnapp").disabled=true;$("sekvensStatus").textContent="Hele lydsekvensen er ferdig."}
+ if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stoppLydKnapp").disabled=true;$("sekvensStatus").textContent="Opplesningen er ferdig.";}
 }
-async function oppdaterLydStatus(){
- const blob=await dbGet(faser[faseValgt].id);
- $("lydStatus").textContent=blob?"Et lydklipp er lastet opp for denne fasen.":"Ingen lydklipp er lastet opp for denne fasen.";
- $("lydFil").value="";
-}
-$("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";lagFaser()};
-$("tilbakeKnapp").onclick=()=>{$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden")};
-$("forrigeKnapp").onclick=()=>{if(sekvensAktiv)stoppSekvens("Sekvensen ble avbrutt.");if(faseValgt>0){faseValgt--;visFase();spillOpptak()}};$("nesteKnapp").onclick=()=>{if(sekvensAktiv)stoppSekvens("Sekvensen ble avbrutt.");if(faseValgt<faser.length-1){faseValgt++;visFase();spillOpptak()}};$("spillLydKnapp").onclick=spillOpptak;
-$("stoppLydKnapp").onclick=()=>{if(lyd)lyd.pause();$("stoppLydKnapp").disabled=true};
-$("spillAlleKnapp").onclick=spillHeleSekvensen;
-$("stoppAlleKnapp").onclick=()=>stoppSekvens();
-$("lastOppLydKnapp").onclick=async()=>{
- const fil=$("lydFil").files[0];
- if(!fil){$("lydStatus").textContent="Velg en lydfil først.";return}
- if(!fil.type.startsWith("audio/")){ $("lydStatus").textContent="Filen må være en lydfil.";return }
- try{await dbSet(faser[faseValgt].id,fil);$("lydStatus").textContent="Lydklippet er lastet opp og lagret på denne enheten.";$("lydFil").value="";$("status").textContent="Lydfilen er klar for denne fasen."}
- catch(e){$("lydStatus").textContent="Kunne ikke lagre lydfilen. Prøv en mindre fil."}
-};
-$("fjernLydKnapp").onclick=async()=>{await dbDel(faser[faseValgt].id);if(lyd)lyd.pause();$("stoppLydKnapp").disabled=true;await oppdaterLydStatus();$("status").textContent="Lydklippet er fjernet."};
-$("lagreFaseKnapp").onclick=()=>{faser[faseValgt].navn=$("faseNavn").value;faser[faseValgt].tekst=$("faseBeskrivelse").value;visFase();$("status").textContent="Fasen er oppdatert."};
-$("slettOpptakKnapp").onclick=async()=>{await dbDel(faser[faseValgt].id);$("status").textContent="Opptaket for fasen er slettet."};
+$("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";lagFaser();spillHeleSekvensen()};
+$("tilbakeKnapp").onclick=()=>{avbrytSekvens();$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden")};
+$("forrigeKnapp").onclick=()=>{avbrytSekvens();if(faseValgt>0){faseValgt--;visFase();spillFaseLyd()}};
+$("nesteKnapp").onclick=()=>{avbrytSekvens();if(faseValgt<faser.length-1){faseValgt++;visFase();spillFaseLyd()}};
+$("spillLydKnapp").onclick=spillFaseLyd;
+$("stoppLydKnapp").onclick=()=>{avbrytSekvens("Lydavspillingen er stoppet.");$("stoppLydKnapp").disabled=true};
+$("lagreFaseKnapp").onclick=()=>{faser[faseValgt].navn=$("faseNavn").value;faser[faseValgt].tekst=$("faseBeskrivelse").value;visFase();$("sekvensStatus").textContent="Faseteksten er oppdatert. Lydklippet er fortsatt det innebygde klippet."};
 tegnKort();
 </script></body></html>
