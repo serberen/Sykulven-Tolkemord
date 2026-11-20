@@ -222,6 +222,16 @@ function avbrytSekvens(tekst){
  sekvensAktiv=false;sekvensToken++;if(sekvensTimer){clearInterval(sekvensTimer);sekvensTimer=null;}
  if(lyd){lyd.pause();lyd.currentTime=0;}stoppBakgrunnsmusikk();if(tekst)$("sekvensStatus").textContent=tekst;
 }
+// Korte UI-lyder: korttrekk ved valg av kort og et diskret klikk på knapper.
+let uiAudioContext=null;
+function uiContext(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!uiAudioContext)uiAudioContext=new C();if(uiAudioContext.state==="suspended")uiAudioContext.resume().catch(()=>{});return uiAudioContext;}
+function spillKlikkelyd(){try{const c=uiContext();if(!c)return;const t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.setValueAtTime(1050,t);o.frequency.exponentialRampToValueAtTime(720,t+.035);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.045,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.055);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.06);}catch(e){}}
+function spillKorttrekklyd(){try{const c=uiContext();if(!c)return;const t=c.currentTime;
+ // Et lite sveip med en kort, tørr «flick»-tone som minner om å trekke et kort.
+ const o=c.createOscillator(),g=c.createGain(),filter=c.createBiquadFilter();o.type="sawtooth";o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(210,t+.105);filter.type="lowpass";filter.frequency.setValueAtTime(1700,t);filter.frequency.exponentialRampToValueAtTime(650,t+.11);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.055,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.12);o.connect(filter);filter.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.125);
+ const tap=c.createOscillator(),tg=c.createGain();tap.type="sine";tap.frequency.setValueAtTime(1150,t+.075);tg.gain.setValueAtTime(.0001,t);tg.gain.exponentialRampToValueAtTime(.022,t+.078);tg.gain.exponentialRampToValueAtTime(.0001,t+.105);tap.connect(tg);tg.connect(c.destination);tap.start(t+.075);tap.stop(t+.11);
+ }catch(e){}}
+document.addEventListener("click",event=>{const button=event.target.closest("button");if(!button||button.disabled)return;if(button.classList.contains("card"))spillKorttrekklyd();else spillKlikkelyd();},true);
 function lavtTick(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!sekvensAudioContext)sekvensAudioContext=new C();if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();osc.type="sine";osc.frequency.value=720;gain.gain.setValueAtTime(.0001,sekvensAudioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.018,sekvensAudioContext.currentTime+.006);gain.gain.exponentialRampToValueAtTime(.0001,sekvensAudioContext.currentTime+.045);osc.connect(gain);gain.connect(sekvensAudioContext.destination);osc.start();osc.stop(sekvensAudioContext.currentTime+.05)}catch(e){}}
 function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
 async function spillHeleSekvensen(){
