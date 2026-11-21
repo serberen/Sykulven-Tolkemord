@@ -83,13 +83,12 @@ h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
 .card .card-back{
  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
  padding:14px;text-align:center;white-space:normal;
- color:#f8f1df;background:
- radial-gradient(circle at 50% 18%,#425b79 0,transparent 42%),
- linear-gradient(145deg,#1b304c,#081426);
- border:1px solid #d5b35e;transform:rotateY(180deg)
+ color:#4a3824;background:
+ linear-gradient(145deg,#f6edda,#e8d7b8);
+ border:1px solid #c8ad7d;transform:rotateY(180deg)
 }
-.card .card-back strong{font-size:clamp(14px,2vw,19px);color:#ffdf83;line-height:1.2}
-.card .card-back span{font-size:clamp(11px,1.35vw,14px);line-height:1.35;color:#e3eaf4}
+.card .card-back strong{font-size:clamp(14px,2vw,19px);color:#604629;line-height:1.2}
+.card .card-back span{font-size:clamp(11px,1.35vw,14px);line-height:1.35;color:#4a3824}
 .card.flipped{transform:rotateY(180deg)!important;border-color:#e7c56d;box-shadow:0 0 0 2px #8c6a2a,0 0 22px #d5ad5570}
 .card.flipped:hover{transform:rotateY(180deg)!important}
 .card .info-bubble{
@@ -195,11 +194,12 @@ const roller=[
  {navn:"Paranormal Etterforsker",bilde:"paranormal-etterforsker.webp",tekst:"Den paranormale etterforskeren våkner og undersøker."}
 ];
 const valgt=new Set(),grid=document.getElementById("kortRutenett"),$=id=>document.getElementById(id);
+let aktivInfoKort = null;
 function lagKortflate(knapp, bilde, alt, navn, tekst){
  const front=document.createElement("img");front.className="card-front";front.src=bilde;front.alt=alt;front.loading="lazy";
  const back=document.createElement("span");back.className="card-back";back.setAttribute("aria-hidden","true");
  const title=document.createElement("strong");title.textContent=navn;
- const desc=document.createElement("span");desc.textContent=tekst||"Informasjon om denne rollen kommer snart.";
+ const desc=document.createElement("span");desc.textContent="(tekst)";
  back.append(title,desc);knapp.append(front,back);
 }
 function visInfoBoble(knapp, rolle){
@@ -214,12 +214,12 @@ function visInfoBoble(knapp, rolle){
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort","Alle","Velg eller fjern alle rollekort samtidig.");
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r.navn,r.tekst);
-  if(valgt.has(i))visInfoBoble(b,r);
-  b.onclick=()=>{if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};
+  if(valgt.has(i)&&aktivInfoKort===i)visInfoBoble(b,r);
+  b.onclick=()=>{if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}if(valgt.has(i)){valgt.delete(i);if(aktivInfoKort===i)aktivInfoKort=null;}else{valgt.add(i);aktivInfoKort=i;}tegnKort()};
   grid.append(b)
  });
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
