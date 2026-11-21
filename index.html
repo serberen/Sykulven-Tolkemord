@@ -247,7 +247,6 @@ function tegnKort(){grid.innerHTML="";
    if(swipeConsumed){event.preventDefault();event.stopImmediatePropagation();}
   },true);
 
-  if(valgt.has(i))visInfoBoble(b,r);
   b.onclick=()=>{
    if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
    const oppdaterValg=()=>{
