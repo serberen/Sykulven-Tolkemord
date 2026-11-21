@@ -298,8 +298,46 @@ textarea{min-height:70px}
  }
 }
 
+
+/* Sidepanel for lydinnstillinger */
+.settings-toggle{position:fixed;right:0;top:42%;z-index:3000;border:1px solid #d7b45e;border-right:0;border-radius:12px 0 0 12px;padding:13px 11px;background:linear-gradient(145deg,#b98a2f,#e2b84d);color:#171b24;font-weight:900;cursor:pointer;writing-mode:vertical-rl;box-shadow:0 5px 20px #0009}
+.settings-panel{position:fixed;z-index:2999;right:0;top:0;height:100dvh;width:min(330px,88vw);padding:22px 18px;background:linear-gradient(145deg,#172943,#0b1729);border-left:1px solid #b78d3b;box-shadow:-16px 0 40px #0009;transform:translateX(105%);transition:transform .24s ease;overflow-y:auto}
+.settings-panel.open{transform:translateX(0)}
+.settings-panel h2{margin:5px 0 18px;color:var(--gold2)}
+.settings-panel .setting{padding:14px 0;border-top:1px solid #344b6a}
+.settings-panel label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#f7f4ec;font-size:14px;margin:0 0 9px}
+.settings-panel input[type=range]{width:100%;accent-color:var(--gold);padding:0}
+.settings-panel input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);flex:0 0 auto}
+.settings-panel .setting-value{color:var(--gold2);font-variant-numeric:tabular-nums}
+.settings-close{float:right;border:1px solid #506481;border-radius:8px;padding:5px 10px;background:#263b58;color:white}
+.settings-help{font-size:12px;color:var(--muted);margin:8px 0 0}
+@media(max-width:480px){.settings-toggle{top:38%;padding:12px 9px;font-size:13px}}
+
 </style>
 </head><body>
+<button class="settings-toggle" id="settingsToggle" type="button" aria-expanded="false" aria-controls="settingsPanel">⚙ Innstillinger</button>
+<aside class="settings-panel" id="settingsPanel" aria-hidden="true">
+ <button class="settings-close" id="settingsClose" type="button">Lukk ✕</button>
+ <h2>Lydinnstillinger</h2>
+ <div class="setting">
+  <label for="backgroundEnabled"><span>Bakgrunnsmusikk gjennom natten</span><input id="backgroundEnabled" type="checkbox" checked></label>
+  <p class="settings-help">Slå av eller på den stemningsfulle bakgrunnslyden under nattsekvensen.</p>
+ </div>
+ <div class="setting">
+  <label for="backgroundVolume"><span>Volum på bakgrunnsmusikk</span><span class="setting-value" id="backgroundVolumeValue">22 %</span></label>
+  <input id="backgroundVolume" type="range" min="0" max="100" value="22">
+ </div>
+ <div class="setting">
+  <label for="voiceVolume"><span>Volum på lesestemmen</span><span class="setting-value" id="voiceVolumeValue">100 %</span></label>
+  <input id="voiceVolume" type="range" min="0" max="100" value="100">
+  <p class="settings-help">Justerer opplesningen av instruksjonene.</p>
+ </div>
+ <div class="setting">
+  <label for="roleInterval"><span>Pause mellom rolleopplesninger</span><span class="setting-value" id="roleIntervalValue">10 sek</span></label>
+  <input id="roleInterval" type="range" min="5" max="60" step="5" value="10">
+  <p class="settings-help">Velg mellom 5 og 60 sekunder i trinn på 5 sekunder.</p>
+ </div>
+</aside>
 <header>
  <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
  <p>Spillederkontroll</p>
@@ -421,7 +459,42 @@ function tegnKort(){grid.innerHTML="";
    const oppdaterValg=()=>{
     if(valgt.has(i)){valgt.delete(i);if(aktivInfoKort===i)aktivInfoKort=null;}
     else{valgt.add(i);aktivInfoKort=i;}
-    tegnKort();
+    
+// Lydinnstillinger: volumkontrollene påvirker også lyd som allerede spiller.
+const settingsPanel=$("settingsPanel");
+$("settingsToggle").onclick=()=>{
+ const open=settingsPanel.classList.toggle("open");
+ $("settingsToggle").setAttribute("aria-expanded",String(open));
+ settingsPanel.setAttribute("aria-hidden",String(!open));
+};
+$("settingsClose").onclick=()=>{
+ settingsPanel.classList.remove("open");
+ $("settingsToggle").setAttribute("aria-expanded","false");
+ settingsPanel.setAttribute("aria-hidden","true");
+};
+$("backgroundEnabled").onchange=event=>{
+ lydinnstillinger.bakgrunnPaa=event.target.checked;
+ settBakgrunnsmusikk();
+};
+$("backgroundVolume").oninput=event=>{
+ lydinnstillinger.bakgrunnVolum=Number(event.target.value)/100;
+ $("backgroundVolumeValue").textContent=event.target.value+"%";
+ bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
+};
+$("voiceVolume").oninput=event=>{
+ lydinnstillinger.stemmeVolum=Number(event.target.value)/100;
+ $("voiceVolumeValue").textContent=event.target.value+"%";
+ if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
+};
+$("roleInterval").oninput=event=>{
+ lydinnstillinger.pauseSekunder=Number(event.target.value);
+ $("roleIntervalValue").textContent=event.target.value+" sek";
+};
+oppdaterLydinnstillinger();
+$("roleInterval").value=lydinnstillinger.pauseSekunder;
+$("roleIntervalValue").textContent=lydinnstillinger.pauseSekunder+" sek";
+
+tegnKort();
    };
    let flipOverlay=null;
    if(aktivInfoKort!==null&&aktivInfoKort!==i){
@@ -453,9 +526,26 @@ function tegnKort(){grid.innerHTML="";
 let faser=[],faseValgt=0,lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
 const bakgrunnsmusikk=new Audio("ulvis.mp3");
 bakgrunnsmusikk.loop=true;
-bakgrunnsmusikk.volume=0.22;
-function startBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;bakgrunnsmusikk.volume=0.22;bakgrunnsmusikk.play().catch(()=>{});}
+const lydinnstillinger={bakgrunnPaa:true,bakgrunnVolum:0.22,stemmeVolum:1,pauseSekunder:10};
+function oppdaterLydinnstillinger(){
+ bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
+ if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
+ const bg=$("backgroundVolume"),voice=$("voiceVolume"),enabled=$("backgroundEnabled");
+ if(bg){bg.value=Math.round(lydinnstillinger.bakgrunnVolum*100);$("backgroundVolumeValue").textContent=bg.value+"%";}
+ if(voice){voice.value=Math.round(lydinnstillinger.stemmeVolum*100);$("voiceVolumeValue").textContent=voice.value+"%";}
+ if(enabled)enabled.checked=lydinnstillinger.bakgrunnPaa;
+}
+function startBakgrunnsmusikk(){
+ bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;
+ bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
+ if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});
+}
 function stoppBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;}
+function settBakgrunnsmusikk(){
+ bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
+ if(!lydinnstillinger.bakgrunnPaa){bakgrunnsmusikk.pause();return;}
+ if(sekvensAktiv&&bakgrunnsmusikk.paused)bakgrunnsmusikk.play().catch(()=>{});
+}
 const lydfiler={
  "alle":"lyd_00_alle_lukker_oynene.mp3",
  "Syk Ulven":"lyd_01_syk_ulven.mp3",
@@ -493,7 +583,7 @@ function visFase(){
 function spillFaseLyd(){
  const f=faser[faseValgt];if(!f||!f.lyd)return;
  if(lyd){lyd.pause();lyd.currentTime=0;}
- lyd=new Audio(f.lyd);lyd.onended=()=>{$("stoppLydKnapp").disabled=true};
+ lyd=new Audio(f.lyd);lyd.volume=lydinnstillinger.stemmeVolum;lyd.onended=()=>{$("stoppLydKnapp").disabled=true};
  lyd.onerror=()=>{$("sekvensStatus").textContent="Kunne ikke finne lydfilen: "+f.lyd};
  lyd.play().then(()=>{$("stoppLydKnapp").disabled=false;$("sekvensStatus").textContent="Spiller: "+f.navn}).catch(()=>{$("sekvensStatus").textContent="Nettleseren blokkerte avspillingen. Trykk Spill instruksjon."});
 }
@@ -537,11 +627,11 @@ async function spillHeleSekvensen(){
  $("sekvensStatus").textContent="Starter opplesningen …";
  for(let i=0;i<faser.length;i++){
   if(token!==sekvensToken)break;faseValgt=i;visFase();const f=faser[i];
-  if(lyd){lyd.pause();lyd.currentTime=0;}lyd=new Audio(f.lyd);$("sekvensStatus").textContent="Spiller "+(i+1)+" av "+faser.length+": "+f.navn;
+  if(lyd){lyd.pause();lyd.currentTime=0;}lyd=new Audio(f.lyd);lyd.volume=lydinnstillinger.stemmeVolum;$("sekvensStatus").textContent="Spiller "+(i+1)+" av "+faser.length+": "+f.navn;
   try{await lyd.play()}catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydfilen "+f.lyd;break;}
   const ferdig=await ventPaaLyd(lyd);if(token!==sekvensToken)break;if(!ferdig)break;
   if(i<faser.length-1){
-   let igjen=10;$("sekvensStatus").textContent="Neste instruksjon om 10 sekunder …";lavtTick();
+   let igjen=lydinnstillinger.pauseSekunder;$("sekvensStatus").textContent="Neste instruksjon om "+igjen+" sekunder …";lavtTick();
    await new Promise(resolve=>{sekvensTimer=setInterval(()=>{if(token!==sekvensToken){clearInterval(sekvensTimer);sekvensTimer=null;resolve();return;}igjen--;if(igjen>0){$("sekvensStatus").textContent="Neste instruksjon om "+igjen+" sekunder …";lavtTick()}else{clearInterval(sekvensTimer);sekvensTimer=null;resolve()}},1000)});
   }
  }
