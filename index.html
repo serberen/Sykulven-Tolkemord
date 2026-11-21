@@ -374,6 +374,19 @@ textarea{min-height:70px}
  .settings-toggle{top:10px !important;right:10px !important;width:44px !important;height:44px !important;font-size:27px !important}
 }
 
+/* Knapp for å slå av/på framtidig opplesning av rollekort */
+.info-audio-toggle{
+ position:fixed;top:72px;right:16px;z-index:5001;
+ width:48px;height:48px;display:grid;place-items:center;
+ border:1px solid #c9a34a;border-radius:50%;background:#080b10;
+ color:#e2b84d;cursor:pointer;box-shadow:0 4px 16px #000b;
+}
+.info-audio-toggle svg{width:25px;height:25px;display:block}
+.info-audio-toggle .mute-slash{display:none;stroke:#ef4444;stroke-width:3.5;stroke-linecap:round}
+.info-audio-toggle.muted .mute-slash{display:block}
+.info-audio-toggle:hover{background:#151b24;filter:brightness(1.12)}
+@media(max-width:480px){.info-audio-toggle{top:62px;right:10px;width:44px;height:44px}}
+
 
 .night-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
 .night-phase-list{display:grid;gap:12px;margin-top:16px}
@@ -389,6 +402,11 @@ textarea{min-height:70px}
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
+<button class="info-audio-toggle" id="infoAudioToggle" type="button" aria-label="Slå av informasjonsopplesning" aria-pressed="false" title="Opplesning av kortinformasjon på">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="mute-slash" d="M4 4 20 20"/>
+ </svg>
+</button>
 
 <header>
  <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
@@ -802,26 +820,55 @@ $("stopNightButton").onclick=()=>avbrytSekvens("Avspillingen er stoppet.");
 tegnKort();
 kobleLydkontroller();
 
-// Innstillingsmenyen – registreres på toppnivå etter at alle elementene er opprettet.
+// Innstillingsknappen blir et hjem-symbol mens innstillingene er åpne.
 let sideForInnstillinger="valgSide";
-$("settingsToggle").addEventListener("click",event=>{
- event.preventDefault();
- event.stopPropagation();
- if(!$("settingsSide").classList.contains("hidden"))return;
- sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
- $("valgSide").classList.add("hidden");
- $("spillSide").classList.add("hidden");
- $("settingsSide").classList.remove("hidden");
- $("settingsToggle").classList.add("hidden");
+const settingsToggle=$("settingsToggle");
+function oppdaterInnstillingsikon(){
+ const iInnstillinger=!$("settingsSide").classList.contains("hidden");
+ settingsToggle.textContent=iInnstillinger?"⌂":"⚙";
+ settingsToggle.setAttribute("aria-label",iInnstillinger?"Tilbake til startmenyen":"Åpne innstillinger");
+ settingsToggle.title=iInnstillinger?"Til startmenyen":"Innstillinger";
+}
+settingsToggle.addEventListener("click",event=>{
+ event.preventDefault();event.stopPropagation();
+ if(!$("settingsSide").classList.contains("hidden")){
+  // Hjem-symbolet tar alltid brukeren tilbake til kortvelgeren.
+  $("settingsSide").classList.add("hidden");
+  $("spillSide").classList.add("hidden");
+  $("valgSide").classList.remove("hidden");
+ }else{
+  sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
+  $("valgSide").classList.add("hidden");
+  $("spillSide").classList.add("hidden");
+  $("settingsSide").classList.remove("hidden");
+ }
+ oppdaterInnstillingsikon();
 });
 $("settingsBack").addEventListener("click",event=>{
- event.preventDefault();
- event.stopPropagation();
+ event.preventDefault();event.stopPropagation();
  $("settingsSide").classList.add("hidden");
  $(sideForInnstillinger).classList.remove("hidden");
- $("settingsToggle").classList.remove("hidden");
+ oppdaterInnstillingsikon();
 });
 
+// Bryteren lagrer valget slik at framtidig lydopplesning av kortbaksidene kan respektere det.
+let infoOpplesningAktiv=true;
+try{infoOpplesningAktiv=localStorage.getItem("sykulven-info-opplesning")!=="av";}catch(e){}
+const infoAudioToggle=$("infoAudioToggle");
+function oppdaterInfoAudioKnapp(){
+ infoAudioToggle.classList.toggle("muted",!infoOpplesningAktiv);
+ infoAudioToggle.setAttribute("aria-pressed",String(!infoOpplesningAktiv));
+ infoAudioToggle.setAttribute("aria-label",infoOpplesningAktiv?"Slå av informasjonsopplesning":"Slå på informasjonsopplesning");
+ infoAudioToggle.title=infoOpplesningAktiv?"Opplesning av kortinformasjon på":"Opplesning av kortinformasjon av";
+}
+infoAudioToggle.addEventListener("click",()=>{
+ infoOpplesningAktiv=!infoOpplesningAktiv;
+ try{localStorage.setItem("sykulven-info-opplesning",infoOpplesningAktiv?"på":"av");}catch(e){}
+ oppdaterInfoAudioKnapp();
+});
+window.infoOpplesningErAktiv=()=>infoOpplesningAktiv;
+oppdaterInfoAudioKnapp();
+oppdaterInnstillingsikon();
 
 document.addEventListener("click",event=>{
  const openCard=document.querySelector(".card.flipped");
