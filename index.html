@@ -73,6 +73,37 @@ h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
  display:grid;place-items:center;font-weight:950;color:#fff;text-shadow:0 1px 2px #064b25;box-shadow:0 0 0 2px #00551f,0 0 18px #00ff57
 }
 .card.all{background:linear-gradient(145deg,#243b5a,#101c30);border-color:#d8b65e}
+
+.card{perspective:1000px;transform-style:preserve-3d}
+.card .card-front,.card .card-back{
+ position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden;
+ -webkit-backface-visibility:hidden;border-radius:12px;overflow:hidden
+}
+.card .card-front{display:block;object-fit:cover;transform:rotateY(0deg)}
+.card .card-back{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+ padding:14px;text-align:center;white-space:normal;
+ color:#f8f1df;background:
+ radial-gradient(circle at 50% 18%,#425b79 0,transparent 42%),
+ linear-gradient(145deg,#1b304c,#081426);
+ border:1px solid #d5b35e;transform:rotateY(180deg)
+}
+.card .card-back strong{font-size:clamp(14px,2vw,19px);color:#ffdf83;line-height:1.2}
+.card .card-back span{font-size:clamp(11px,1.35vw,14px);line-height:1.35;color:#e3eaf4}
+.card.flipped{transform:rotateY(180deg)!important;border-color:#e7c56d;box-shadow:0 0 0 2px #8c6a2a,0 0 22px #d5ad5570}
+.card.flipped:hover{transform:rotateY(180deg)!important}
+.card .info-bubble{
+ position:absolute;z-index:5;left:7px;bottom:7px;width:31px;height:31px;
+ display:grid;place-items:center;border-radius:50%;border:2px solid #f7e7b6;
+ background:linear-gradient(145deg,#fff2bd,#d4a83d);color:#172235;
+ font:bold 19px/1 system-ui;box-shadow:0 2px 10px #000b,0 0 12px #f4c34e88;
+ animation:infoBob 1.15s ease-in-out infinite;cursor:pointer
+}
+.card .info-bubble:focus-visible{outline:3px solid white;outline-offset:3px}
+@keyframes infoBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.card.flipped .info-bubble{display:none}
+.card.all .card-front{object-fit:cover}
+
 .card.all img{display:block;width:100%;height:100%;object-fit:cover}
 .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center}
 button.action{
@@ -164,11 +195,33 @@ const roller=[
  {navn:"Paranormal Etterforsker",bilde:"paranormal-etterforsker.webp",tekst:"Den paranormale etterforskeren våkner og undersøker."}
 ];
 const valgt=new Set(),grid=document.getElementById("kortRutenett"),$=id=>document.getElementById(id);
+function lagKortflate(knapp, bilde, alt, navn, tekst){
+ const front=document.createElement("img");front.className="card-front";front.src=bilde;front.alt=alt;front.loading="lazy";
+ const back=document.createElement("span");back.className="card-back";back.setAttribute("aria-hidden","true");
+ const title=document.createElement("strong");title.textContent=navn;
+ const desc=document.createElement("span");desc.textContent=tekst||"Informasjon om denne rollen kommer snart.";
+ back.append(title,desc);knapp.append(front,back);
+}
+function visInfoBoble(knapp, rolle){
+ const bubble=document.createElement("span");bubble.className="info-bubble";bubble.textContent="i";
+ bubble.setAttribute("role","button");bubble.setAttribute("tabindex","0");
+ bubble.setAttribute("aria-label","Vis informasjon om "+rolle.navn);
+ const flip=(event)=>{event.preventDefault();event.stopPropagation();knapp.classList.add("flipped");knapp.setAttribute("aria-label",rolle.navn+", informasjon. Trykk for å snu kortet tilbake.");};
+ bubble.addEventListener("click",flip);
+ bubble.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){flip(event);}});
+ knapp.append(bubble);
+}
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
- const allImage=document.createElement("img");allImage.src="alle.webp";allImage.alt="Alle karakterene samlet på ett kort";allImage.loading="eager";alle.append(allImage);
- alle.onclick=()=>{if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
- roller.forEach((r,i)=>{const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));const im=document.createElement("img");im.src=""+r.bilde;im.alt=r.navn;im.loading="lazy";b.append(im);b.onclick=()=>{valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};grid.append(b)});
+ lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort","Alle","Velg eller fjern alle rollekort samtidig.");
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
+ roller.forEach((r,i)=>{
+  const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
+  lagKortflate(b,r.bilde,r.navn,r.navn,r.tekst);
+  if(valgt.has(i))visInfoBoble(b,r);
+  b.onclick=()=>{if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}valgt.has(i)?valgt.delete(i):valgt.add(i);tegnKort()};
+  grid.append(b)
+ });
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
 }
 let faser=[],faseValgt=0,lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
@@ -231,7 +284,7 @@ function spillKorttrekklyd(){try{const c=uiContext();if(!c)return;const t=c.curr
  const o=c.createOscillator(),g=c.createGain(),filter=c.createBiquadFilter();o.type="sawtooth";o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(210,t+.105);filter.type="lowpass";filter.frequency.setValueAtTime(1700,t);filter.frequency.exponentialRampToValueAtTime(650,t+.11);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.055,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.12);o.connect(filter);filter.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.125);
  const tap=c.createOscillator(),tg=c.createGain();tap.type="sine";tap.frequency.setValueAtTime(1150,t+.075);tg.gain.setValueAtTime(.0001,t);tg.gain.exponentialRampToValueAtTime(.022,t+.078);tg.gain.exponentialRampToValueAtTime(.0001,t+.105);tap.connect(tg);tg.connect(c.destination);tap.start(t+.075);tap.stop(t+.11);
  }catch(e){}}
-document.addEventListener("click",event=>{const button=event.target.closest("button");if(!button||button.disabled)return;if(button.classList.contains("card"))spillKorttrekklyd();else spillKlikkelyd();},true);
+document.addEventListener("click",event=>{const button=event.target.closest("button");if(!button||button.disabled)return;if(event.target.closest(".info-bubble")){spillKlikkelyd();return;}if(button.classList.contains("card"))spillKorttrekklyd();else spillKlikkelyd();},true);
 function lavtTick(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!sekvensAudioContext)sekvensAudioContext=new C();if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();osc.type="sine";osc.frequency.value=720;gain.gain.setValueAtTime(.0001,sekvensAudioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.018,sekvensAudioContext.currentTime+.006);gain.gain.exponentialRampToValueAtTime(.0001,sekvensAudioContext.currentTime+.045);osc.connect(gain);gain.connect(sekvensAudioContext.destination);osc.start();osc.stop(sekvensAudioContext.currentTime+.05)}catch(e){}}
 function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
 async function spillHeleSekvensen(){
