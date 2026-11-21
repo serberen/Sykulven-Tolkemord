@@ -360,7 +360,7 @@ function tegnKort(){grid.innerHTML="";
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
-  let touchStart=null,suppressSwipeClick=false;
+  let touchStart=null;
   b.style.touchAction="pan-y";
   // PC: tilt toward the side under the pointer; clicking either outer edge flips the card.
   b.addEventListener("pointermove",event=>{
@@ -374,10 +374,9 @@ function tegnKort(){grid.innerHTML="";
    b.classList.remove("pc-tilt-left","pc-tilt-right");
   });
 
-  // Mobil: bruk touch-hendelser separat fra klikk. Da blir ikke vanlige trykk
-  // blokkert av et gammelt swipe-flagg dersom nettleseren dropper et syntetisk klikk.
+  // Mobil: swipe håndteres direkte på touch-end. Vanlige trykk går rett til onclick.
+  // Ingen tidslås eller ventetid brukes mellom swipe og neste trykk.
   b.addEventListener("touchstart",event=>{
-   suppressSwipeClick=false;
    if(event.touches.length!==1){touchStart=null;return;}
    const t=event.touches[0];
    touchStart={x:t.clientX,y:t.clientY};
@@ -388,7 +387,8 @@ function tegnKort(){grid.innerHTML="";
    const dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;
    touchStart=null;
    if(Math.abs(dx)<35||Math.abs(dx)<Math.abs(dy)*1.2)return;
-   suppressSwipeClick=true;
+   // Hindre bare det syntetiske klikket som ellers følger akkurat denne swipen.
+   event.preventDefault();
    if(b.classList.contains("flipped")){
     b.classList.remove("flipped");
    }else{
@@ -396,15 +396,8 @@ function tegnKort(){grid.innerHTML="";
     b.classList.add("flipped");
     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
-  },{passive:true});
-  b.addEventListener("touchcancel",()=>{touchStart=null;suppressSwipeClick=false;},{passive:true});
-  b.addEventListener("click",event=>{
-   if(suppressSwipeClick){
-    suppressSwipeClick=false;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-   }
-  },true);
+  },{passive:false});
+  b.addEventListener("touchcancel",()=>{touchStart=null;},{passive:true});
 
   // PC-kantklikk flipper kortet; midten brukes til valg.
   b.addEventListener("click",event=>{
