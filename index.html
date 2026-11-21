@@ -352,7 +352,7 @@ textarea{min-height:70px}
 
 </style>
 </head><body>
-<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger" onclick="openSettingsMenu(event)"><span aria-hidden="true">⚙</span></button>
+<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger"><span aria-hidden="true">⚙️</span></button>
 
 <header>
  <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
@@ -499,46 +499,7 @@ function tegnKort(){grid.innerHTML="";
     if(valgt.has(i)){valgt.delete(i);if(aktivInfoKort===i)aktivInfoKort=null;}
     else{valgt.add(i);aktivInfoKort=i;}
     
-// Innstillinger vises som en egen side i samme stil som forsidemenyen.
-let sideForInnstillinger="valgSide";
-function openSettingsMenu(event){
- if(event){event.preventDefault();event.stopPropagation();}
- if(!$("settingsSide").classList.contains("hidden"))return;
- sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
- $("valgSide").classList.add("hidden");
- $("spillSide").classList.add("hidden");
- $("settingsSide").classList.remove("hidden");
- $("settingsToggle").classList.add("hidden");
-}
-function closeSettingsMenu(event){
- if(event){event.preventDefault();event.stopPropagation();}
- $("settingsSide").classList.add("hidden");
- $(sideForInnstillinger).classList.remove("hidden");
- $("settingsToggle").classList.remove("hidden");
-}
-$("backgroundEnabled").onchange=event=>{
- lydinnstillinger.bakgrunnPaa=event.target.checked;
- settBakgrunnsmusikk();
-};
-$("backgroundVolume").oninput=event=>{
- lydinnstillinger.bakgrunnVolum=Number(event.target.value)/100;
- $("backgroundVolumeValue").textContent=event.target.value+"%";
- bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
-};
-$("voiceVolume").oninput=event=>{
- lydinnstillinger.stemmeVolum=Number(event.target.value)/100;
- $("voiceVolumeValue").textContent=event.target.value+"%";
- if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
-};
-$("roleInterval").oninput=event=>{
- lydinnstillinger.pauseSekunder=Number(event.target.value);
- $("roleIntervalValue").textContent=event.target.value+" sek";
-};
-oppdaterLydinnstillinger();
-$("roleInterval").value=lydinnstillinger.pauseSekunder;
-$("roleIntervalValue").textContent=lydinnstillinger.pauseSekunder+" sek";
 
-tegnKort();
    };
    let flipOverlay=null;
    if(aktivInfoKort!==null&&aktivInfoKort!==i){
@@ -689,6 +650,27 @@ $("spillLydKnapp").onclick=spillFaseLyd;
 $("stoppLydKnapp").onclick=()=>{avbrytSekvens("Lydavspillingen er stoppet.");$("stoppLydKnapp").disabled=true};
 $("lagreFaseKnapp").onclick=()=>{faser[faseValgt].navn=$("faseNavn").value;faser[faseValgt].tekst=$("faseBeskrivelse").value;visFase();$("sekvensStatus").textContent="Faseteksten er oppdatert. Lydklippet er fortsatt det innebygde klippet."};
 tegnKort();
+
+// Innstillingsmenyen – registreres på toppnivå etter at alle elementene er opprettet.
+let sideForInnstillinger="valgSide";
+$("settingsToggle").addEventListener("click",event=>{
+ event.preventDefault();
+ event.stopPropagation();
+ if(!$("settingsSide").classList.contains("hidden"))return;
+ sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
+ $("valgSide").classList.add("hidden");
+ $("spillSide").classList.add("hidden");
+ $("settingsSide").classList.remove("hidden");
+ $("settingsToggle").classList.add("hidden");
+});
+$("settingsBack").addEventListener("click",event=>{
+ event.preventDefault();
+ event.stopPropagation();
+ $("settingsSide").classList.add("hidden");
+ $(sideForInnstillinger).classList.remove("hidden");
+ $("settingsToggle").classList.remove("hidden");
+});
+
 
 document.addEventListener("click",event=>{
  const openCard=document.querySelector(".card.flipped");
