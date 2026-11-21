@@ -752,8 +752,8 @@ let uiAudioContext=null;
 function uiContext(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!uiAudioContext)uiAudioContext=new C();if(uiAudioContext.state==="suspended")uiAudioContext.resume().catch(()=>{});return uiAudioContext;}
 function spillKlikkelyd(){try{const c=uiContext();if(!c)return;const t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.setValueAtTime(1050,t);o.frequency.exponentialRampToValueAtTime(720,t+.035);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.045,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.055);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.06);}catch(e){}}
 const kortFlippingLyd=new Audio("kort-flipping.mp3");
-const kortValgtLyd=new Audio("kort-valgt.wav");
-const kortFravalgtLyd=new Audio("kort-fravalgt.wav");
+const kortValgtLyd=new Audio("kort-select-ny.wav");
+const kortFravalgtLyd=new Audio("kort-deselect-ny.wav");
 function spillKorttrekklyd(){try{const klipp=kortFlippingLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
 function spillKortValgtLyd(){try{const klipp=kortValgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
 function spillKortFravalgtLyd(){try{const klipp=kortFravalgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
