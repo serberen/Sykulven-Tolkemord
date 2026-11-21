@@ -74,23 +74,24 @@ h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
 }
 .card.all{background:linear-gradient(145deg,#243b5a,#101c30);border-color:#d8b65e}
 
-.card{perspective:1000px;transform-style:preserve-3d}
+.card{perspective:1000px}
 .card .card-front,.card .card-back{
  position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden;
  -webkit-backface-visibility:hidden;border-radius:12px;overflow:hidden
 }
-.card .card-front{display:block;object-fit:cover;transform:rotateY(0deg)}
+.card .card-front{display:block;object-fit:cover;transform:rotateY(0deg);transition:transform .55s ease}
 .card .card-back{
  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
  padding:14px;text-align:center;white-space:normal;
  color:#4a3824;background:
  linear-gradient(145deg,#f6edda,#e8d7b8);
- border:1px solid #c8ad7d;transform:rotateY(180deg)
+ border:1px solid #c8ad7d;transform:rotateY(-180deg);transition:transform .55s ease;backface-visibility:hidden;-webkit-backface-visibility:hidden
 }
 .card .card-back strong{font-size:clamp(14px,2vw,19px);color:#604629;line-height:1.2}
 .card .card-back span{font-size:clamp(11px,1.35vw,14px);line-height:1.35;color:#4a3824}
-.card.flipped{transform:rotateY(180deg)!important;border-color:#e7c56d;box-shadow:0 0 0 2px #8c6a2a,0 0 22px #d5ad5570}
-.card.flipped:hover{transform:rotateY(180deg)!important}
+.card.flipped{border-color:#e7c56d;box-shadow:0 0 0 2px #8c6a2a,0 0 22px #d5ad5570}
+.card.flipped .card-front{transform:rotateY(180deg)}
+.card.flipped .card-back{transform:rotateY(0deg)}
 .card .info-bubble{
  position:absolute;z-index:5;left:7px;bottom:7px;width:31px;height:31px;
  display:grid;place-items:center;border-radius:50%;border:2px solid #f7e7b6;
