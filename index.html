@@ -345,9 +345,38 @@ textarea{min-height:70px}
 .settings-toggle:hover{filter:brightness(1.12)}
 @media(max-width:480px){.settings-toggle{top:38%;padding:12px 9px;font-size:12px}}
 
+
+/* Endelig stil: svart tannhjul øverst til høyre */
+.settings-toggle{
+ position:fixed !important;
+ top:16px !important;
+ right:16px !important;
+ left:auto !important;
+ z-index:5000 !important;
+ width:48px !important;
+ height:48px !important;
+ padding:0 !important;
+ display:grid !important;
+ place-items:center !important;
+ border:1px solid #c9a34a !important;
+ border-radius:50% !important;
+ background:#080b10 !important;
+ color:#e2b84d !important;
+ font-size:29px !important;
+ line-height:1 !important;
+ writing-mode:initial !important;
+ letter-spacing:0 !important;
+ box-shadow:0 4px 16px #000b !important;
+ cursor:pointer !important;
+}
+.settings-toggle:hover{background:#151b24 !important;filter:brightness(1.12)}
+@media(max-width:480px){
+ .settings-toggle{top:10px !important;right:10px !important;width:44px !important;height:44px !important;font-size:27px !important}
+}
+
 </style>
 </head><body>
-<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">INNSTILLINGER</button>
+<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
 
 <header>
  <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
