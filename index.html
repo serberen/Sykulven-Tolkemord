@@ -93,6 +93,7 @@ h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
 .card[data-team="Alenelag"]{--team-color:#285b3d}
 .card[data-team="???-laget"]{--team-color:#88733d}
 
+.card{touch-action:pan-y;user-select:none;-webkit-user-select:none;}
 .card .swipe-hint{
  position:absolute;z-index:6;left:7px;bottom:7px;
  display:flex;align-items:center;justify-content:center;gap:1px;
@@ -222,13 +223,11 @@ function lagKortflate(knapp, bilde, alt, rolle){
  back.append(title,team,desc);knapp.append(front,back);
 }
 function visInfoBoble(knapp, rolle){
- const bubble=document.createElement("span");bubble.className="info-bubble";bubble.textContent="i";
- bubble.setAttribute("role","button");bubble.setAttribute("tabindex","0");
- bubble.setAttribute("aria-label","Vis informasjon om "+rolle.navn);
- const flip=(event)=>{event.preventDefault();event.stopPropagation();knapp.classList.add("flipped");knapp.setAttribute("aria-label",rolle.navn+", informasjon. Trykk for å snu kortet tilbake.");};
- bubble.addEventListener("click",flip);
- bubble.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){flip(event);}});
- knapp.append(bubble);
+ const hint=document.createElement("span");
+ hint.className="swipe-hint";
+ hint.textContent="↶  ↷";
+ hint.setAttribute("aria-hidden","true");
+ knapp.append(hint);
 }
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
@@ -238,31 +237,34 @@ function tegnKort(){grid.innerHTML="";
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
   let swipeStart=null,swipeConsumed=false;
+  b.style.touchAction="pan-y";
   b.addEventListener("pointerdown",event=>{
    if(event.pointerType==="mouse"&&event.button!==0)return;
    swipeStart={x:event.clientX,y:event.clientY};
-   swipeConsumed=false;
+   try{b.setPointerCapture(event.pointerId);}catch(_){}
   });
   b.addEventListener("pointerup",event=>{
    if(!swipeStart)return;
    const dx=event.clientX-swipeStart.x,dy=event.clientY-swipeStart.y;
    swipeStart=null;
-   if(Math.abs(dx)>38&&Math.abs(dx)>Math.abs(dy)*1.15){
-    event.preventDefault();swipeConsumed=true;
-    if(b.classList.contains("flipped"))b.classList.remove("flipped");
-    else if(valgt.has(i)){
-     // Close any other open card before bringing this card forward.
-     grid.querySelectorAll(".card.flipped").forEach(card=>card.classList.remove("flipped"));
-     b.classList.add("flipped");
-     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
-    }
+   if(Math.abs(dx)<35||Math.abs(dx)<Math.abs(dy)*1.2)return;
+   swipeConsumed=true;
+   event.preventDefault();
+   event.stopPropagation();
+   if(b.classList.contains("flipped")){
+    b.classList.remove("flipped");
+   }else if(valgt.has(i)){
+    grid.querySelectorAll(".card.flipped").forEach(card=>card.classList.remove("flipped"));
+    b.classList.add("flipped");
+    b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
+   setTimeout(()=>{swipeConsumed=false;},500);
   });
   b.addEventListener("click",event=>{
-   if(swipeConsumed){swipeConsumed=false;event.preventDefault();event.stopImmediatePropagation();}
+   if(swipeConsumed){event.preventDefault();event.stopImmediatePropagation();}
   },true);
 
-  if(valgt.has(i)&&aktivInfoKort===i)visInfoBoble(b,r);
+  if(valgt.has(i))visInfoBoble(b,r);
   b.onclick=()=>{
    if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
    const oppdaterValg=()=>{
