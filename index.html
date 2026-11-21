@@ -333,9 +333,26 @@ textarea{min-height:70px}
 #settingsSide .settings-help{font-size:13px;color:var(--muted);margin:8px 0 0}
 @media(max-width:480px){.settings-toggle{top:10px;right:10px;width:42px;height:42px;font-size:22px}}
 
+
+/* Tydelig tannhjulsknapp – alltid øverst og enkel å treffe */
+.settings-toggle{
+ position:fixed !important;top:14px !important;right:14px !important;
+ z-index:2147483000 !important;width:54px !important;height:54px !important;
+ display:grid !important;place-items:center !important;
+ border-radius:50% !important;border:2px solid #ffe7a3 !important;
+ background:#f4c34e !important;color:#171b24 !important;
+ box-shadow:0 3px 16px #000c,0 0 0 3px #8a641d,0 0 20px #f4c34e88 !important;
+ font-size:34px !important;line-height:1 !important;padding:0 !important;
+ writing-mode:horizontal-tb !important;pointer-events:auto !important;
+ cursor:pointer !important;touch-action:manipulation !important;
+}
+.settings-toggle span{display:block;line-height:1;transform:rotate(0deg)}
+.settings-toggle:active{transform:scale(.94)}
+@media(max-width:480px){.settings-toggle{top:9px !important;right:9px !important;width:48px !important;height:48px !important;font-size:31px !important}}
+
 </style>
 </head><body>
-<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
+<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger" onclick="openSettingsMenu(event)"><span aria-hidden="true">⚙</span></button>
 
 <header>
  <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
@@ -354,7 +371,7 @@ textarea{min-height:70px}
 <h2 style="margin-top:18px">Rediger valgt fase</h2><label for="faseNavn">Fasenavn</label><input id="faseNavn"><label for="faseBeskrivelse">Instruksjon</label><textarea id="faseBeskrivelse"></textarea>
 <div class="actions"><button class="action" id="lagreFaseKnapp">Lagre tekst</button></div></section>
 <section id="settingsSide" class="panel hidden">
-<div class="actions"><button class="action" id="settingsBack">← Tilbake</button></div>
+<div class="actions"><button class="action" id="settingsBack" type="button" onclick="closeSettingsMenu(event)">← Tilbake</button></div>
 <h2>Innstillinger</h2>
 <p class="intro">Tilpass lyd og tempo for spillsekvensen.</p>
 <div class="setting">
@@ -484,20 +501,21 @@ function tegnKort(){grid.innerHTML="";
     
 // Innstillinger vises som en egen side i samme stil som forsidemenyen.
 let sideForInnstillinger="valgSide";
-$("settingsToggle").onclick=()=>{
- const settingsOpen=!$("settingsSide").classList.contains("hidden");
- if(settingsOpen)return;
+function openSettingsMenu(event){
+ if(event){event.preventDefault();event.stopPropagation();}
+ if(!$("settingsSide").classList.contains("hidden"))return;
  sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
  $("valgSide").classList.add("hidden");
  $("spillSide").classList.add("hidden");
  $("settingsSide").classList.remove("hidden");
  $("settingsToggle").classList.add("hidden");
-};
-$("settingsBack").onclick=()=>{
+}
+function closeSettingsMenu(event){
+ if(event){event.preventDefault();event.stopPropagation();}
  $("settingsSide").classList.add("hidden");
  $(sideForInnstillinger).classList.remove("hidden");
  $("settingsToggle").classList.remove("hidden");
-};
+}
 $("backgroundEnabled").onchange=event=>{
  lydinnstillinger.bakgrunnPaa=event.target.checked;
  settBakgrunnsmusikk();
