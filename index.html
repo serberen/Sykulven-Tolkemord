@@ -374,6 +374,18 @@ textarea{min-height:70px}
  .settings-toggle{top:10px !important;right:10px !important;width:44px !important;height:44px !important;font-size:27px !important}
 }
 
+
+.night-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+.night-phase-list{display:grid;gap:12px;margin-top:16px}
+.night-phase{background:#0d192b;border:1px solid var(--line);border-radius:14px;padding:14px}
+.night-phase h3{margin:0 0 7px;color:var(--gold2);font-size:17px}
+.night-phase .voice-text{margin:0 0 10px;color:#f3eee2;white-space:pre-line}
+.night-phase .audio-meta{font-size:12px;color:var(--muted);margin:8px 0}
+.night-phase .audio-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.night-phase input[type=file]{max-width:100%;font-size:13px;padding:7px}
+.night-phase .phase-number{color:var(--gold);font-weight:900;margin-right:7px}
+@media(max-width:520px){.night-phase{padding:11px}.night-phase .audio-controls{align-items:stretch}.night-phase .audio-controls button{flex:1}}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -387,13 +399,23 @@ textarea{min-height:70px}
 <div id="kortRutenett" class="grid"></div>
 <div class="actions"><span id="valgtAntall" class="count">0 av 23 valgt</span></div>
 <div class="actions"><button class="action primary" id="startKnapp" disabled>Start spill →</button></div></section>
-<section id="spillSide" class="panel hidden"><div class="actions"><button class="action" id="tilbakeKnapp">← Til kortvelgeren</button><span id="spillAntall" class="count"></span></div>
-<div class="phasebox"><small id="faseNummer">FASE 1</small><h2 id="faseTittel">Alle lukker øynene</h2><p id="faseTekst">Alle spillerne lukker øynene.</p></div>
-<div class="controls"><button class="action" id="forrigeKnapp">← Forrige</button><button class="action primary" id="spillLydKnapp">▶ Spill instruksjon</button><button class="action" id="nesteKnapp">Neste →</button><button class="action" id="stoppLydKnapp" disabled>■ Stopp lyd</button></div>
-<p id="sekvensStatus" class="small" aria-live="polite">Opplesningen starter automatisk når du trykker Start spill.</p>
-<p id="status" class="status" aria-live="polite"></p><h2>Spillsekvens</h2><div id="faseListe" class="phase-list"></div>
-<h2 style="margin-top:18px">Rediger valgt fase</h2><label for="faseNavn">Fasenavn</label><input id="faseNavn"><label for="faseBeskrivelse">Instruksjon</label><textarea id="faseBeskrivelse"></textarea>
-<div class="actions"><button class="action" id="lagreFaseKnapp">Lagre tekst</button></div></section>
+<section id="spillSide" class="panel hidden">
+<div class="actions"><button class="action" id="tilbakeKnapp">← Til kortvelgeren</button><span id="spillAntall" class="count"></span></div>
+<h2>Nattavspilling</h2>
+<p class="intro">Velg natt, last opp dine egne lydfiler for hver rolleinstruksjon, og spill av hele natten i riktig rekkefølge. Lydfilene lagres i nettleseren på denne enheten.</p>
+<div class="night-tabs" id="nightTabs">
+ <button class="action primary" data-night="0">Natt 1</button>
+ <button class="action" data-night="1">Natt 2</button>
+ <button class="action" data-night="2">Natt 3 og videre</button>
+</div>
+<div class="phasebox"><small id="nightLabel">NATT 1</small><h2 id="nightTitle">Natt 1</h2><p id="nightDescription">Last opp lydklippene til instruksjonene nedenfor.</p></div>
+<div class="actions">
+ <button class="action primary" id="playNightButton">▶ Spill av hele natten</button>
+ <button class="action" id="stopNightButton" disabled>■ Stopp avspilling</button>
+</div>
+<p id="sekvensStatus" class="small" aria-live="polite">Ingen natt spilles av.</p>
+<div id="nightPhaseList" class="night-phase-list"></div>
+</section>
 <section id="settingsSide" class="panel hidden">
 <div class="actions"><button class="action" id="settingsBack" type="button">← Tilbake</button></div>
 <h2>Innstillinger</h2>
@@ -417,7 +439,7 @@ textarea{min-height:70px}
  <p class="settings-help">Velg mellom 5 og 60 sekunder i trinn på 5 sekunder.</p>
 </div>
 </section>
-<div class="foot">Lydinstruksjonene er innebygd i nettsiden og spilles av automatisk ut fra valgte roller.</div></main>
+<div class="foot">Dine opplastede nattklipp lagres lokalt i nettleseren på denne enheten.</div></main>
 <script>
 const roller=[
  {navn:"Røver",bilde:"rover.webp",lag:"Landsbylaget",tekst:"Velg én annen spiller og bytt kort med vedkommende. Se på ditt nye kort. Du tilhører nå laget til den nye rollen din."},
@@ -556,30 +578,47 @@ function tegnKort(){grid.innerHTML="";
  });
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
 }
-let faser=[],faseValgt=0,lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
+
+let lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
+let valgtNatt=0;
+const nattData=[
+ {id:"natt1",navn:"Natt 1",roller:[
+  {id:"vokter",rolle:"Vokter",tekst:"«Vokter, våkn opp. Plasser skjoldet ditt foran en spiller du ønsker å beskytte.»\n«Vokter, lukk øynene igjen.»"},
+  {id:"doppelgjenger",rolle:"Doppelgjenger",tekst:"«Doppelgjenger, våkn opp. Se på kortet til en annen spiller. Du blir denne rollen og følger dens instruksjoner.»\n«Doppelgjenger, lukk øynene igjen.»"},
+  {id:"sykulv",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Se hvem de andre syke ulvene er. Hvis du er alene, kan du se på ett kort i midten.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"handlanger",rolle:"Håndlanger",tekst:"«Håndlanger, våkn opp. Syke ulver, rekk opp tommelen.»\n«Syke ulver, legg ned tomlene. Håndlanger, lukk øynene igjen.»"},
+  {id:"frimurer",rolle:"Frimurer",tekst:"«Frimurere, våkn opp. Se hvem den andre frimureren er.»\n«Frimurere, lukk øynene igjen.»"},
+  {id:"dulter",rolle:"Dulter",tekst:"«Dulter, våkn opp. Velg en spiller og berør skulderen deres.»\n«Dulter, lukk øynene igjen.»"},
+  {id:"synsk",rolle:"Synsk",tekst:"«Synsk, våkn opp. Se på ett spillerkort eller to kort i midten.»\n«Synsk, lukk øynene igjen.»"},
+  {id:"paranormal",rolle:"Paranormal etterforsker",tekst:"«Paranormal etterforsker, våkn opp. Se på kortene til opptil to andre spillere. Hvis du finner en syk ulv eller Emo, må du stoppe.»\n«Paranormal etterforsker, lukk øynene igjen.»"},
+  {id:"rover",rolle:"Røver",tekst:"«Røver, våkn opp. Bytt kort med en annen spiller og se på ditt nye kort.»\n«Røver, lukk øynene igjen.»"},
+  {id:"braakmaker",rolle:"Bråkmaker",tekst:"«Bråkmaker, våkn opp. Bytt kortene til to andre spillere uten å se på dem.»\n«Bråkmaker, lukk øynene igjen.»"},
+  {id:"beruset",rolle:"Beruset",tekst:"«Beruset, våkn opp. Bytt ditt eget kort med et kort i midten uten å se på det.»\n«Beruset, lukk øynene igjen.»"},
+  {id:"sovnlos",rolle:"Søvnløs",tekst:"«Søvnløs, våkn opp. Se på ditt eget kort.»\n«Søvnløs, lukk øynene igjen.»"},
+  {id:"avslutning",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
+ ]},
+ {id:"natt2",navn:"Natt 2",roller:[
+  {id:"beruset_n2",rolle:"Beruset",tekst:"«Beruset, våkn opp. Se på ditt eget kort.»\n«Beruset, lukk øynene igjen.»"},
+  {id:"rimmi_n2",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
+  {id:"sykulv_n2",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"avslutning_n2",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
+ ]},
+ {id:"natt3",navn:"Natt 3 og videre",roller:[
+  {id:"rimmi_n3",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
+  {id:"sykulv_n3",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"avslutning_n3",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
+ ]}
+];
+
 const bakgrunnsmusikk=new Audio("ulvis.mp3");
 bakgrunnsmusikk.loop=true;
 const lydinnstillinger={bakgrunnPaa:true,bakgrunnVolum:0.22,stemmeVolum:1,pauseSekunder:10};
 function kobleLydkontroller(){
  const bg=$("backgroundVolume"),voice=$("voiceVolume"),pause=$("roleInterval"),enabled=$("backgroundEnabled");
- if(bg)bg.addEventListener("input",()=>{
-  lydinnstillinger.bakgrunnVolum=Number(bg.value)/100;
-  $("backgroundVolumeValue").textContent=bg.value+"%";
-  bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
- });
- if(voice)voice.addEventListener("input",()=>{
-  lydinnstillinger.stemmeVolum=Number(voice.value)/100;
-  $("voiceVolumeValue").textContent=voice.value+"%";
-  if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
- });
- if(pause)pause.addEventListener("input",()=>{
-  lydinnstillinger.pauseSekunder=Number(pause.value);
-  $("roleIntervalValue").textContent=pause.value+" sek";
- });
- if(enabled)enabled.addEventListener("change",()=>{
-  lydinnstillinger.bakgrunnPaa=enabled.checked;
-  settBakgrunnsmusikk();
- });
+ if(bg)bg.addEventListener("input",()=>{lydinnstillinger.bakgrunnVolum=Number(bg.value)/100;$("backgroundVolumeValue").textContent=bg.value+"%";bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;});
+ if(voice)voice.addEventListener("input",()=>{lydinnstillinger.stemmeVolum=Number(voice.value)/100;$("voiceVolumeValue").textContent=voice.value+"%";if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;});
+ if(pause)pause.addEventListener("input",()=>{lydinnstillinger.pauseSekunder=Number(pause.value);$("roleIntervalValue").textContent=pause.value+" sek";});
+ if(enabled)enabled.addEventListener("change",()=>{lydinnstillinger.bakgrunnPaa=enabled.checked;settBakgrunnsmusikk();});
 }
 function oppdaterLydinnstillinger(){
  bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
@@ -589,61 +628,87 @@ function oppdaterLydinnstillinger(){
  if(voice){voice.value=Math.round(lydinnstillinger.stemmeVolum*100);$("voiceVolumeValue").textContent=voice.value+"%";}
  if(enabled)enabled.checked=lydinnstillinger.bakgrunnPaa;
 }
-function startBakgrunnsmusikk(){
- bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;
- bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
- if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});
-}
+function startBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});}
 function stoppBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;}
-function settBakgrunnsmusikk(){
- bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
- if(!lydinnstillinger.bakgrunnPaa){bakgrunnsmusikk.pause();return;}
- if(sekvensAktiv&&bakgrunnsmusikk.paused)bakgrunnsmusikk.play().catch(()=>{});
+function settBakgrunnsmusikk(){bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;if(!lydinnstillinger.bakgrunnPaa){bakgrunnsmusikk.pause();return;}if(sekvensAktiv&&bakgrunnsmusikk.paused)bakgrunnsmusikk.play().catch(()=>{});}
+
+// Lydklippene lagres i IndexedDB slik at de fortsatt finnes etter at siden lastes på nytt.
+let lydDatabasePromise=null;
+function hentLydDatabase(){
+ if(!("indexedDB" in window))return Promise.reject(new Error("Nettleseren støtter ikke lokal lagring av lydfiler."));
+ if(!lydDatabasePromise)lydDatabasePromise=new Promise((resolve,reject)=>{
+  const request=indexedDB.open("sykulven-nattlyd",1);
+  request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains("klipp"))db.createObjectStore("klipp",{keyPath:"id"});};
+  request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+ });
+ return lydDatabasePromise;
 }
-const lydfiler={
- "alle":"lyd_00_alle_lukker_oynene.mp3",
- "Syk Ulven":"lyd_01_syk_ulven.mp3",
- "Frimurer":"lyd_02_frimurer.mp3",
- "Håndlanger":"lyd_03_handlanger.mp3",
- "Synsk":"lyd_04_synsk.mp3",
- "Røver":"lyd_05_rover.mp3",
- "Doppelgjenger":"lyd_06_doppelgjenger.mp3",
- "Jeger":"lyd_07_jeger.mp3",
- "Rimmi":"lyd_08_rimmi.mp3",
- "Beruset":"lyd_09_beruset.mp3",
- "Bråkmaker":"lyd_10_braakmaker.mp3",
- "Prins":"lyd_11_prins.mp3",
- "Avslører":"lyd_12_avsloerer.mp3",
- "Sov Ulven":"lyd_13_sov_ulven.mp3",
- "Søvnløs":"lyd_14_sovnlos.mp3",
- "Dulter":"lyd_15_dulter.mp3",
- "Vokter":"lyd_16_vokter.mp3",
- "Paranormal Etterforsker":"lyd_17_paranormal_etterforsker.mp3",
- "Emo":"lyd_18_emo.mp3",
- "slutt":"lyd_19_alle_vakner.mp3"
-};
-function lagFaser(){
- faser=[{id:"alle",navn:"Alle lukker øynene",tekst:"Alle spillerne lukker øynene.",lyd:lydfiler.alle}];
- const rekkefolge=["Syk Ulven","Frimurer","Håndlanger","Synsk","Røver","Doppelgjenger","Jeger","Rimmi","Beruset","Bråkmaker","Prins","Avslører","Sov Ulven","Søvnløs","Dulter","Vokter","Paranormal Etterforsker","Emo"];
- rekkefolge.forEach(n=>{const funnet=roller.find((r,i)=>r.navn===n&&valgt.has(i));if(funnet&&!faser.some(f=>f.id===n))faser.push({id:n,navn:n+" våkner",tekst:funnet.tekst,lyd:lydfiler[n]})});
- faser.push({id:"slutt",navn:"Alle våkner",tekst:"Alle spillerne åpner øynene.",lyd:lydfiler.slutt});faseValgt=0;visFase();
+async function lagreLydklipp(id,file){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readwrite");tx.objectStore("klipp").put({id,navn:file.name,blob:file});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+async function hentLydklipp(id){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readonly"),req=tx.objectStore("klipp").get(id);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});}
+async function slettLydklipp(id){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readwrite");tx.objectStore("klipp").delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+function harValgtRolle(navn){return roller.some((r,i)=>r.navn.toLowerCase()===navn.toLowerCase()&&valgt.has(i));}
+function nattensRoller(natt){
+ return natt.roller.filter(p=>{
+  if(p.rolle==="Avslutning")return true;
+  if(p.rolle==="Syk ulv")return harValgtRolle("Syk Ulven");
+  if(p.rolle==="Paranormal etterforsker")return harValgtRolle("Paranormal Etterforsker");
+  return harValgtRolle(p.rolle);
+ });
 }
-function visFase(){
- const f=faser[faseValgt];$("faseNummer").textContent="FASE "+(faseValgt+1)+" AV "+faser.length;$("faseTittel").textContent=f.navn;$("faseTekst").textContent=f.tekst;
- $("faseNavn").value=f.navn;$("faseBeskrivelse").value=f.tekst;$("forrigeKnapp").disabled=faseValgt===0;$("nesteKnapp").disabled=faseValgt===faser.length-1;
- const list=$("faseListe");list.innerHTML="";
- faser.forEach((x,i)=>{const row=document.createElement("div");row.className="phase-row"+(i===faseValgt?" active":"");const num=document.createElement("span");num.textContent=i+1;const name=document.createElement("span");name.textContent=x.navn;const play=document.createElement("button");play.className="action";play.textContent="▶";play.onclick=()=>{avbrytSekvens("Sekvensen ble avbrutt.");faseValgt=i;visFase();spillFaseLyd()};const choose=document.createElement("button");choose.className="action";choose.textContent="Velg";choose.onclick=()=>{avbrytSekvens("Sekvensen ble avbrutt.");faseValgt=i;visFase()};row.append(num,name,play,choose);list.append(row)});
+function aktivNatt(){return nattData[valgtNatt];}
+function renderNatt(){
+ const natt=aktivNatt();$("nightLabel").textContent=natt.navn.toUpperCase();$("nightTitle").textContent=natt.navn;
+ $("nightDescription").textContent="Last opp ett lydklipp per instruksjon. Klippet bør inneholde både oppvåkningsbeskjeden og beskjeden om å lukke øynene igjen.";
+ document.querySelectorAll("#nightTabs button").forEach(b=>{b.classList.toggle("primary",Number(b.dataset.night)===valgtNatt);});
+ const list=$("nightPhaseList");list.innerHTML="";
+ const phases=nattensRoller(natt);
+ phases.forEach((p,i)=>{
+  const card=document.createElement("article");card.className="night-phase";
+  const heading=document.createElement("h3");heading.innerHTML='<span class="phase-number">'+(i+1)+'.</span>';heading.append(document.createTextNode(p.rolle));
+  const script=document.createElement("p");script.className="voice-text";script.textContent=p.tekst;
+  const meta=document.createElement("p");meta.className="audio-meta";meta.id="meta-"+p.id;meta.textContent="Sjekker om lydfil er lagt inn …";
+  const controls=document.createElement("div");controls.className="audio-controls";
+  const input=document.createElement("input");input.type="file";input.accept="audio/*";input.setAttribute("aria-label","Last opp lydfil for "+p.rolle);
+  input.addEventListener("change",async()=>{const file=input.files&&input.files[0];if(!file)return;try{await lagreLydklipp(p.id,file);meta.textContent="Lydfil lagret: "+file.name;}catch(e){meta.textContent="Kunne ikke lagre lydfilen: "+e.message;}});
+  const play=document.createElement("button");play.className="action";play.type="button";play.textContent="▶ Spill klippet";play.addEventListener("click",()=>spillEnkeltKlipp(p.id,p.rolle));
+  const remove=document.createElement("button");remove.className="action";remove.type="button";remove.textContent="Fjern lydfil";remove.addEventListener("click",async()=>{try{await slettLydklipp(p.id);meta.textContent="Ingen lydfil lagt inn."; }catch(e){meta.textContent="Kunne ikke fjerne lydfilen."; }});
+  controls.append(input,play,remove);card.append(heading,script,meta,controls);list.append(card);
+  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Lydfil lagret: "+file.navn:"Ingen lydfil lagt inn ennå.";}).catch(()=>{if(meta.isConnected)meta.textContent="Lokal lagring er ikke tilgjengelig.";});
+ });
+ if(!phases.length){const p=document.createElement("p");p.className="small";p.textContent="Ingen av rollene i denne natten er valgt i kortvelgeren. Velg rollene du skal bruke, så vises instruksjonene her.";list.append(p);}
 }
-function spillFaseLyd(){
- const f=faser[faseValgt];if(!f||!f.lyd)return;
- if(lyd){lyd.pause();lyd.currentTime=0;}
- lyd=new Audio(f.lyd);lyd.volume=lydinnstillinger.stemmeVolum;lyd.onended=()=>{$("stoppLydKnapp").disabled=true};
- lyd.onerror=()=>{$("sekvensStatus").textContent="Kunne ikke finne lydfilen: "+f.lyd};
- lyd.play().then(()=>{$("stoppLydKnapp").disabled=false;$("sekvensStatus").textContent="Spiller: "+f.navn}).catch(()=>{$("sekvensStatus").textContent="Nettleseren blokkerte avspillingen. Trykk Spill instruksjon."});
+function visNatt(index){avbrytSekvens();valgtNatt=index;renderNatt();}
+function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
+async function spillEnkeltKlipp(id,navn){
+ avbrytSekvens();try{const file=await hentLydklipp(id);if(!file){$("sekvensStatus").textContent="Du må laste opp en lydfil for "+navn+" først.";return;}
+ const url=URL.createObjectURL(file.blob);lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;lyd.onended=()=>{URL.revokeObjectURL(url);$("stopNightButton").disabled=true;};await lyd.play();$("stopNightButton").disabled=false;$("sekvensStatus").textContent="Spiller: "+navn;
+ }catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydklippet: "+e.message;}
 }
 function avbrytSekvens(tekst){
  sekvensAktiv=false;sekvensToken++;if(sekvensTimer){clearInterval(sekvensTimer);sekvensTimer=null;}
- if(lyd){lyd.pause();lyd.currentTime=0;}stoppBakgrunnsmusikk();if(tekst)$("sekvensStatus").textContent=tekst;
+ if(lyd){lyd.pause();lyd.currentTime=0;}stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;if(tekst)$("sekvensStatus").textContent=tekst;
+}
+async function spillHeleNatten(){
+ if(sekvensAktiv)return;const natt=aktivNatt(),phases=nattensRoller(natt),token=++sekvensToken;sekvensAktiv=true;startBakgrunnsmusikk();$("stopNightButton").disabled=false;
+ let spilt=0,skippet=0;
+ for(let i=0;i<phases.length;i++){
+  if(token!==sekvensToken)break;
+  const p=phases[i];let file;
+  try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
+  if(token!==sekvensToken)break;
+  if(!file){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
+  if(lyd){lyd.pause();lyd.currentTime=0;}
+  const url=URL.createObjectURL(file.blob);lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;
+  $("sekvensStatus").textContent="Spiller "+(i+1)+" av "+phases.length+": "+p.rolle;
+  try{await lyd.play();const ok=await ventPaaLyd(lyd);URL.revokeObjectURL(url);if(!ok)throw new Error("Lydfilen kunne ikke spilles av.");}
+  catch(e){URL.revokeObjectURL(url);$("sekvensStatus").textContent="Feil ved avspilling av "+p.rolle+": "+e.message;break;}
+  if(token!==sekvensToken)break;spilt++;
+  if(i<phases.length-1&&lydinnstillinger.pauseSekunder>0){
+   let igjen=lydinnstillinger.pauseSekunder;$("sekvensStatus").textContent="Neste instruksjon om "+igjen+" sekunder …";
+   await new Promise(resolve=>{sekvensTimer=setInterval(()=>{if(token!==sekvensToken){clearInterval(sekvensTimer);sekvensTimer=null;resolve();return;}igjen--;if(igjen>0){$("sekvensStatus").textContent="Neste instruksjon om "+igjen+" sekunder …";}else{clearInterval(sekvensTimer);sekvensTimer=null;resolve();}},1000);});
+  }
+ }
+ if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;$("sekvensStatus").textContent="Natten er ferdig. "+spilt+" lydklipp spilt av"+(skippet?", "+skippet+" uten lydfil hoppet over.":".");}
 }
 // Korte UI-lyder: korttrekk ved valg av kort og et diskret klikk på knapper.
 let uiAudioContext=null;
@@ -691,13 +756,11 @@ async function spillHeleSekvensen(){
  }
  if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stoppLydKnapp").disabled=true;$("sekvensStatus").textContent="Opplesningen er ferdig.";}
 }
-$("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";lagFaser();spillHeleSekvensen()};
+$("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";valgtNatt=0;renderNatt();oppdaterLydinnstillinger();};
 $("tilbakeKnapp").onclick=()=>{avbrytSekvens();$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden")};
-$("forrigeKnapp").onclick=()=>{avbrytSekvens();if(faseValgt>0){faseValgt--;visFase();spillFaseLyd()}};
-$("nesteKnapp").onclick=()=>{avbrytSekvens();if(faseValgt<faser.length-1){faseValgt++;visFase();spillFaseLyd()}};
-$("spillLydKnapp").onclick=spillFaseLyd;
-$("stoppLydKnapp").onclick=()=>{avbrytSekvens("Lydavspillingen er stoppet.");$("stoppLydKnapp").disabled=true};
-$("lagreFaseKnapp").onclick=()=>{faser[faseValgt].navn=$("faseNavn").value;faser[faseValgt].tekst=$("faseBeskrivelse").value;visFase();$("sekvensStatus").textContent="Faseteksten er oppdatert. Lydklippet er fortsatt det innebygde klippet."};
+document.querySelectorAll("#nightTabs button").forEach(button=>button.addEventListener("click",()=>visNatt(Number(button.dataset.night))));
+$("playNightButton").onclick=spillHeleNatten;
+$("stopNightButton").onclick=()=>avbrytSekvens("Avspillingen er stoppet.");
 tegnKort();
 kobleLydkontroller();
 
