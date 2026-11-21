@@ -390,8 +390,13 @@ function tegnKort(){grid.innerHTML="";
   },true);
   b.addEventListener("pointerdown",event=>{
    if(event.pointerType==="mouse"&&event.button!==0)return;
+   // Et nytt fysisk trykk skal alltid få virke, også rett etter en swipe.
+   swipeConsumed=false;
    swipeStart={x:event.clientX,y:event.clientY};
-   try{b.setPointerCapture(event.pointerId);}catch(_){}
+  });
+  b.addEventListener("pointercancel",()=>{
+   swipeStart=null;
+   swipeConsumed=false;
   });
   b.addEventListener("pointerup",event=>{
    if(!swipeStart)return;
@@ -408,7 +413,8 @@ function tegnKort(){grid.innerHTML="";
     b.classList.add("flipped");
     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
-   setTimeout(()=>{swipeConsumed=false;},500);
+   // Behold flagget til nettleserens syntetiske klikk fra swipen er håndtert.
+   // Det nullstilles umiddelbart ved neste pointerdown.
   });
   b.addEventListener("click",event=>{
    if(swipeConsumed){event.preventDefault();event.stopImmediatePropagation();}
