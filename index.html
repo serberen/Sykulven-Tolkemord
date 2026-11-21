@@ -223,6 +223,27 @@ textarea{min-height:70px}
  .card.flipped .card-back .role-description{font-size:6.5px !important;line-height:1.02 !important}
 }
 
+
+@media (max-width:700px){
+ .card.flipped .card-back .role-description{
+  font-size:clamp(8px,2.35vw,10px) !important;
+  line-height:1.12 !important;
+  white-space:normal !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  text-wrap:pretty;
+  hyphens:auto;
+  max-width:100% !important;
+ }
+ .card.flipped .card-back{gap:3px !important;padding:5px 6px !important}
+}
+@media (max-width:390px){
+ .card.flipped .card-back .role-description{
+  font-size:8px !important;
+  line-height:1.1 !important;
+ }
+}
+
 </style>
 </head><body>
 <header>
@@ -407,6 +428,30 @@ function spillKorttrekklyd(){try{const c=uiContext();if(!c)return;const t=c.curr
  const o=c.createOscillator(),g=c.createGain(),filter=c.createBiquadFilter();o.type="sawtooth";o.frequency.setValueAtTime(520,t);o.frequency.exponentialRampToValueAtTime(210,t+.105);filter.type="lowpass";filter.frequency.setValueAtTime(1700,t);filter.frequency.exponentialRampToValueAtTime(650,t+.11);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.055,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+.12);o.connect(filter);filter.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.125);
  const tap=c.createOscillator(),tg=c.createGain();tap.type="sine";tap.frequency.setValueAtTime(1150,t+.075);tg.gain.setValueAtTime(.0001,t);tg.gain.exponentialRampToValueAtTime(.022,t+.078);tg.gain.exponentialRampToValueAtTime(.0001,t+.105);tap.connect(tg);tg.connect(c.destination);tap.start(t+.075);tap.stop(t+.11);
  }catch(e){}}
+
+document.addEventListener("click",event=>{
+ const expanded=event.target.closest(".card.flipped");
+ if(!expanded)return;
+ const base=expanded.getBoundingClientRect();
+ // The transformed card is larger than its original grid slot.
+ const originalW=expanded.offsetWidth, originalH=expanded.offsetHeight;
+ const originalLeft=base.left+(base.width-originalW)/2;
+ const originalTop=base.top+(base.height-originalH)/2;
+ const outsideOriginal=event.clientX<originalLeft || event.clientX>originalLeft+originalW ||
+                       event.clientY<originalTop || event.clientY>originalTop+originalH;
+ if(!outsideOriginal)return;
+ expanded.style.visibility="hidden";
+ const underneath=document.elementFromPoint(event.clientX,event.clientY);
+ expanded.style.visibility="";
+ const nextCard=underneath&&underneath.closest(".card:not(.flipped)");
+ if(nextCard&&nextCard!==expanded){
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  expanded.classList.remove("flipped");
+  nextCard.click();
+ }
+},true);
+
 document.addEventListener("click",event=>{const button=event.target.closest("button");if(!button||button.disabled)return;if(button.classList.contains("card"))spillKorttrekklyd();else spillKlikkelyd();},true);
 function lavtTick(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!sekvensAudioContext)sekvensAudioContext=new C();if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();osc.type="sine";osc.frequency.value=720;gain.gain.setValueAtTime(.0001,sekvensAudioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.018,sekvensAudioContext.currentTime+.006);gain.gain.exponentialRampToValueAtTime(.0001,sekvensAudioContext.currentTime+.045);osc.connect(gain);gain.connect(sekvensAudioContext.destination);osc.start();osc.stop(sekvensAudioContext.currentTime+.05)}catch(e){}}
 function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
