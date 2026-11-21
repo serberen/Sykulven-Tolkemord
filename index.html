@@ -538,7 +538,7 @@ function tegnKort(){grid.innerHTML="";
     grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
-    if(r.navn==="Emo"&&b.classList.contains("selected"))spillEmoOpplesning("emo-info.wav");
+    if(r.navn==="Emo")spillEmoOpplesning("emo-info.wav");
     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
   },{passive:false});
@@ -561,7 +561,7 @@ function tegnKort(){grid.innerHTML="";
     grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
-    if(r.navn==="Emo"&&b.classList.contains("selected"))spillEmoOpplesning("emo-info.wav");
+    if(r.navn==="Emo")spillEmoOpplesning("emo-info.wav");
    }
   },true);
 
@@ -577,7 +577,7 @@ function tegnKort(){grid.innerHTML="";
      valgt.add(i);
      aktivInfoKort=i;
      spillKortValgtLyd();
-     if(r.navn==="Emo")spillEmoOpplesning("emo-rollevalg.wav");
+     if(r.navn==="Emo")spillEmoOpplesning("emo-rollevalg-v2.wav");
     }
    };
    let flipOverlay=null;
