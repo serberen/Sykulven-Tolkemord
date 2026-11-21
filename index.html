@@ -497,7 +497,7 @@ function lagKortflate(knapp, bilde, alt, rolle){
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();}else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
@@ -532,11 +532,13 @@ function tegnKort(){grid.innerHTML="";
    event.preventDefault();
    if(b.classList.contains("flipped")){
     spillKorttrekklyd();
+    if(r.navn==="Emo")stoppEmoOpplesning();
     b.classList.remove("flipped");
    }else{
-    grid.querySelectorAll(".card.flipped").forEach(card=>card.classList.remove("flipped"));
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
+    if(r.navn==="Emo"&&b.classList.contains("selected"))spillEmoOpplesning("emo-info.wav");
     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
   },{passive:false});
@@ -553,25 +555,29 @@ function tegnKort(){grid.innerHTML="";
    b.classList.remove("pc-tilt-left","pc-tilt-right");
    if(b.classList.contains("flipped")){
     spillKorttrekklyd();
+    if(r.navn==="Emo")stoppEmoOpplesning();
     b.classList.remove("flipped");
    }else{
-    grid.querySelectorAll(".card.flipped").forEach(card=>card.classList.remove("flipped"));
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
+    if(r.navn==="Emo"&&b.classList.contains("selected"))spillEmoOpplesning("emo-info.wav");
    }
   },true);
 
   b.onclick=()=>{
-   if(b.classList.contains("flipped")){spillKorttrekklyd();b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
+   if(b.classList.contains("flipped")){spillKorttrekklyd();if(r.navn==="Emo")stoppEmoOpplesning();b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
    const oppdaterValg=()=>{
     if(valgt.has(i)){
      valgt.delete(i);
      if(aktivInfoKort===i)aktivInfoKort=null;
+     if(r.navn==="Emo")stoppEmoOpplesning();
      spillKortFravalgtLyd();
     }else{
      valgt.add(i);
      aktivInfoKort=i;
      spillKortValgtLyd();
+     if(r.navn==="Emo")spillEmoOpplesning("emo-rollevalg.wav");
     }
    };
    let flipOverlay=null;
@@ -788,6 +794,23 @@ const kortFravalgtLyd=new Audio("kort-deselect-ny.wav");
 function spillKorttrekklyd(){try{const klipp=kortFlippingLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
 function spillKortValgtLyd(){try{const klipp=kortValgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
 function spillKortFravalgtLyd(){try{const klipp=kortFravalgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
+
+// Egne stemmeopptak for Emo-kortet. Bare ett Emo-opptak kan spille om gangen.
+let aktivEmoLyd=null;
+function stoppEmoOpplesning(){
+ if(aktivEmoLyd){try{aktivEmoLyd.pause();aktivEmoLyd.currentTime=0;}catch(e){}}
+ aktivEmoLyd=null;
+}
+function spillEmoOpplesning(fil){
+ if(!infoOpplesningAktiv)return;
+ stoppEmoOpplesning();
+ const lydklipp=new Audio(fil);
+ lydklipp.volume=1;
+ aktivEmoLyd=lydklipp;
+ lydklipp.addEventListener("ended",()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;},{once:true});
+ lydklipp.addEventListener("error",()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;},{once:true});
+ lydklipp.play().catch(()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;});
+}
 document.addEventListener("click",event=>{
  const expanded=event.target.closest(".card.flipped");
  if(!expanded)return;
@@ -802,6 +825,7 @@ document.addEventListener("click",event=>{
   event.preventDefault();
   event.stopImmediatePropagation();
   spillKorttrekklyd();
+  if(expanded.dataset.roleIndex!==undefined&&roller[Number(expanded.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();
   expanded.classList.remove("flipped");
   nextCard.click();
  }
@@ -876,6 +900,7 @@ function oppdaterInfoAudioKnapp(){
 }
 infoAudioToggle.addEventListener("click",()=>{
  infoOpplesningAktiv=!infoOpplesningAktiv;
+ if(!infoOpplesningAktiv)stoppEmoOpplesning();
  try{localStorage.setItem("sykulven-info-opplesning",infoOpplesningAktiv?"på":"av");}catch(e){}
  oppdaterInfoAudioKnapp();
 });
@@ -885,5 +910,8 @@ oppdaterInnstillingsikon();
 
 document.addEventListener("click",event=>{
  const openCard=document.querySelector(".card.flipped");
- if(openCard&&!event.target.closest(".card.flipped"))openCard.classList.remove("flipped");
+ if(openCard&&!event.target.closest(".card.flipped")){
+  if(openCard.dataset.roleIndex!==undefined&&roller[Number(openCard.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();
+  openCard.classList.remove("flipped");
+ }
 });</script></body></html>
