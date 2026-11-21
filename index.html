@@ -513,9 +513,11 @@ function tegnKort(){grid.innerHTML="";
    // Hindre bare det syntetiske klikket som ellers følger akkurat denne swipen.
    event.preventDefault();
    if(b.classList.contains("flipped")){
+    spillKorttrekklyd();
     b.classList.remove("flipped");
    }else{
     grid.querySelectorAll(".card.flipped").forEach(card=>card.classList.remove("flipped"));
+    spillKorttrekklyd();
     b.classList.add("flipped");
     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
@@ -532,15 +534,17 @@ function tegnKort(){grid.innerHTML="";
    event.stopImmediatePropagation();
    b.classList.remove("pc-tilt-left","pc-tilt-right");
    if(b.classList.contains("flipped")){
+    spillKorttrekklyd();
     b.classList.remove("flipped");
    }else{
     grid.querySelectorAll(".card.flipped").forEach(card=>card.classList.remove("flipped"));
+    spillKorttrekklyd();
     b.classList.add("flipped");
    }
   },true);
 
   b.onclick=()=>{
-   if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
+   if(b.classList.contains("flipped")){spillKorttrekklyd();b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
    const oppdaterValg=()=>{
     if(valgt.has(i)){valgt.delete(i);if(aktivInfoKort===i)aktivInfoKort=null;}
     else{valgt.add(i);aktivInfoKort=i;}
@@ -757,12 +761,13 @@ document.addEventListener("click",event=>{
  if(nextCard&&nextCard!==expanded){
   event.preventDefault();
   event.stopImmediatePropagation();
+  spillKorttrekklyd();
   expanded.classList.remove("flipped");
   nextCard.click();
  }
 },true);
 
-document.addEventListener("click",event=>{const button=event.target.closest("button");if(!button||button.disabled)return;if(button.classList.contains("card"))spillKorttrekklyd();else spillKlikkelyd();},true);
+document.addEventListener("click",event=>{const button=event.target.closest("button");if(!button||button.disabled||button.classList.contains("card"))return;spillKlikkelyd();},true);
 function lavtTick(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!sekvensAudioContext)sekvensAudioContext=new C();if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();osc.type="sine";osc.frequency.value=720;gain.gain.setValueAtTime(.0001,sekvensAudioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.018,sekvensAudioContext.currentTime+.006);gain.gain.exponentialRampToValueAtTime(.0001,sekvensAudioContext.currentTime+.045);osc.connect(gain);gain.connect(sekvensAudioContext.destination);osc.start();osc.stop(sekvensAudioContext.currentTime+.05)}catch(e){}}
 function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
 async function spillHeleSekvensen(){
