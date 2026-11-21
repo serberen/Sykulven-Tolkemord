@@ -533,12 +533,14 @@ function tegnKort(){grid.innerHTML="";
    if(b.classList.contains("flipped")){
     spillKorttrekklyd();
     if(r.navn==="Emo")stoppEmoOpplesning();
+    if(r.navn==="Vokter")stoppVokterOpplesning();
     b.classList.remove("flipped");
    }else{
-    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Vokter")stoppVokterOpplesning();card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
     if(r.navn==="Emo")spillEmoOpplesning("./emo-info-v2.wav?rev=2");
+    if(r.navn==="Vokter")spillVokterOpplesning("vokter-info.wav");
     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
   },{passive:false});
@@ -556,28 +558,33 @@ function tegnKort(){grid.innerHTML="";
    if(b.classList.contains("flipped")){
     spillKorttrekklyd();
     if(r.navn==="Emo")stoppEmoOpplesning();
+    if(r.navn==="Vokter")stoppVokterOpplesning();
     b.classList.remove("flipped");
    }else{
-    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Vokter")stoppVokterOpplesning();card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
     if(r.navn==="Emo")spillEmoOpplesning("./emo-info-v2.wav?rev=2");
+    if(r.navn==="Vokter")spillVokterOpplesning("vokter-info.wav");
    }
   },true);
 
   b.onclick=()=>{
-   if(b.classList.contains("flipped")){spillKorttrekklyd();if(r.navn==="Emo")stoppEmoOpplesning();b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
+   if(b.classList.contains("flipped")){spillKorttrekklyd();if(r.navn==="Emo")stoppEmoOpplesning();
+    if(r.navn==="Vokter")stoppVokterOpplesning();b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
    const oppdaterValg=()=>{
     if(valgt.has(i)){
      valgt.delete(i);
      if(aktivInfoKort===i)aktivInfoKort=null;
      if(r.navn==="Emo")stoppEmoOpplesning();
+    if(r.navn==="Vokter")stoppVokterOpplesning();
      spillKortFravalgtLyd();
     }else{
      valgt.add(i);
      aktivInfoKort=i;
      spillKortValgtLyd();
      if(r.navn==="Emo")spillEmoOpplesning("emo-rollevalg-v2.wav");
+     if(r.navn==="Vokter")spillVokterOpplesning("vokter-rollevalg.wav");
     }
    };
    let flipOverlay=null;
@@ -770,6 +777,9 @@ async function spillHeleNatten(){
   const p=phases[i];let file;
   try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
   if(token!==sekvensToken)break;
+  if(!file && p.id==="vokter"){
+   file={url:"vokter-nattinstruksjon.wav"};
+  }
   if(!file){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
   const ok=await spillFil(file,p.rolle);if(!ok)break;
   if(token!==sekvensToken)break;spilt++;
@@ -811,6 +821,22 @@ function spillEmoOpplesning(fil){
  lydklipp.addEventListener("error",()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;},{once:true});
  lydklipp.play().catch(()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;});
 }
+// Egne stemmeopptak for Vokter: info ved flipping, tittel ved valg.
+let aktivVokterLyd=null;
+function stoppVokterOpplesning(){
+ if(aktivVokterLyd){try{aktivVokterLyd.pause();aktivVokterLyd.currentTime=0;}catch(e){}}
+ aktivVokterLyd=null;
+}
+function spillVokterOpplesning(fil){
+ if(!infoOpplesningAktiv)return;
+ stoppVokterOpplesning();
+ const lydklipp=new Audio(fil);
+ lydklipp.volume=1;
+ aktivVokterLyd=lydklipp;
+ lydklipp.addEventListener("ended",()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;},{once:true});
+ lydklipp.addEventListener("error",()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;},{once:true});
+ lydklipp.play().catch(()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;});
+}
 document.addEventListener("click",event=>{
  const expanded=event.target.closest(".card.flipped");
  if(!expanded)return;
@@ -826,6 +852,7 @@ document.addEventListener("click",event=>{
   event.stopImmediatePropagation();
   spillKorttrekklyd();
   if(expanded.dataset.roleIndex!==undefined&&roller[Number(expanded.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();
+  if(expanded.dataset.roleIndex!==undefined&&roller[Number(expanded.dataset.roleIndex)]?.navn==="Vokter")stoppVokterOpplesning();
   expanded.classList.remove("flipped");
   nextCard.click();
  }
@@ -900,7 +927,7 @@ function oppdaterInfoAudioKnapp(){
 }
 infoAudioToggle.addEventListener("click",()=>{
  infoOpplesningAktiv=!infoOpplesningAktiv;
- if(!infoOpplesningAktiv)stoppEmoOpplesning();
+ if(!infoOpplesningAktiv){stoppEmoOpplesning();stoppVokterOpplesning();}
  try{localStorage.setItem("sykulven-info-opplesning",infoOpplesningAktiv?"på":"av");}catch(e){}
  oppdaterInfoAudioKnapp();
 });
