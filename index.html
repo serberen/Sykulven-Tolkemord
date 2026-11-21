@@ -76,20 +76,16 @@ h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
 
 .card{perspective:1000px}
 .card .card-front,.card .card-back{
- position:absolute;inset:0;width:100%;height:100%;backface-visibility:hidden;
- -webkit-backface-visibility:hidden;border-radius:12px;overflow:hidden
-}
-.card .card-front{display:block;object-fit:cover;transform:rotateY(0deg);transition:transform .55s ease}
-.card .card-back{
- display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;
- padding:8px 7px;text-align:center;white-space:normal;
+ display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:9px;
+ padding:12px 11px;text-align:left;white-space:normal;
  color:#4a3824;background:linear-gradient(145deg,#f6edda,#e8d7b8);
  border:2px solid var(--team-color,#c8ad7d);transform:rotateY(-180deg);transition:transform .55s ease;backface-visibility:hidden;-webkit-backface-visibility:hidden
 }
-.card .card-back strong{font-size:clamp(10px,1.25vw,14px);color:#604629;line-height:1.1;flex:0 0 auto}
-.card .card-back .team-tag{font-size:clamp(7px,.9vw,10px);line-height:1.1;font-weight:900;letter-spacing:.02em;padding:3px 5px;border-radius:6px;color:#fff;background:var(--team-color);flex:0 0 auto}
-.card .card-back .role-description{font-size:clamp(7px,.92vw,10px);line-height:1.16;color:#4a3824;flex:1 1 auto;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere}
-.card.flipped{border-color:#e7c56d;box-shadow:0 0 0 2px #8c6a2a,0 0 22px #d5ad5570}
+.card .card-back strong{font-size:clamp(12px,1.35vw,16px);color:#604629;line-height:1.12;flex:0 0 auto;text-align:center}
+.card .card-back .team-tag{align-self:center;font-size:clamp(9px,1vw,12px);line-height:1.1;font-weight:900;letter-spacing:.02em;padding:4px 7px;border-radius:6px;color:#fff;background:var(--team-color);flex:0 0 auto}
+.card .card-back .role-description{font-size:clamp(9px,1.05vw,13px);line-height:1.25;color:#352719;flex:0 0 auto;min-height:0;overflow:visible;display:block;text-align:left;overflow-wrap:anywhere}
+.card.flipped{z-index:1000;border-color:#e7c56d;box-shadow:0 0 0 3px #8c6a2a,0 18px 55px #000e,0 0 35px #d5ad5590;transform:scale(2) translateZ(100px);transform-origin:center}
+.card.flipped.selected:after{display:none}
 .card.flipped .card-front{transform:rotateY(180deg)}
 .card.flipped .card-back{transform:rotateY(0deg)}
 .card[data-team="Ulvelaget"]{--team-color:#783f36}
