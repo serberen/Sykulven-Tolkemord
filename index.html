@@ -334,25 +334,20 @@ textarea{min-height:70px}
 @media(max-width:480px){.settings-toggle{top:10px;right:10px;width:42px;height:42px;font-size:22px}}
 
 
-/* Tydelig tannhjulsknapp – alltid øverst og enkel å treffe */
+/* Innstillingsknapp – tilbake til den smale sideknappen */
 .settings-toggle{
- position:fixed !important;top:14px !important;right:14px !important;
- z-index:2147483000 !important;width:54px !important;height:54px !important;
- display:grid !important;place-items:center !important;
- border-radius:50% !important;border:2px solid #ffe7a3 !important;
- background:#f4c34e !important;color:#171b24 !important;
- box-shadow:0 3px 16px #000c,0 0 0 3px #8a641d,0 0 20px #f4c34e88 !important;
- font-size:34px !important;line-height:1 !important;padding:0 !important;
- writing-mode:horizontal-tb !important;pointer-events:auto !important;
- cursor:pointer !important;touch-action:manipulation !important;
+ position:fixed;right:0;top:42%;z-index:5000;
+ border:1px solid #d7b45e;border-right:0;border-radius:12px 0 0 12px;
+ padding:13px 11px;background:linear-gradient(145deg,#b98a2f,#e2b84d);
+ color:#171b24;font-weight:900;cursor:pointer;writing-mode:vertical-rl;
+ box-shadow:0 5px 20px #0009;font-size:13px;letter-spacing:1px;
 }
-.settings-toggle span{display:block;line-height:1;transform:rotate(0deg)}
-.settings-toggle:active{transform:scale(.94)}
-@media(max-width:480px){.settings-toggle{top:9px !important;right:9px !important;width:48px !important;height:48px !important;font-size:31px !important}}
+.settings-toggle:hover{filter:brightness(1.12)}
+@media(max-width:480px){.settings-toggle{top:38%;padding:12px 9px;font-size:12px}}
 
 </style>
 </head><body>
-<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger"><span aria-hidden="true">⚙️</span></button>
+<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">INNSTILLINGER</button>
 
 <header>
  <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
@@ -371,7 +366,7 @@ textarea{min-height:70px}
 <h2 style="margin-top:18px">Rediger valgt fase</h2><label for="faseNavn">Fasenavn</label><input id="faseNavn"><label for="faseBeskrivelse">Instruksjon</label><textarea id="faseBeskrivelse"></textarea>
 <div class="actions"><button class="action" id="lagreFaseKnapp">Lagre tekst</button></div></section>
 <section id="settingsSide" class="panel hidden">
-<div class="actions"><button class="action" id="settingsBack" type="button" onclick="closeSettingsMenu(event)">← Tilbake</button></div>
+<div class="actions"><button class="action" id="settingsBack" type="button">← Tilbake</button></div>
 <h2>Innstillinger</h2>
 <p class="intro">Tilpass lyd og tempo for spillsekvensen.</p>
 <div class="setting">
@@ -515,6 +510,10 @@ function tegnKort(){grid.innerHTML="";
     }
    }
    oppdaterValg();
+   b.classList.toggle("selected",valgt.has(i));
+   b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
+   $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
+   $("startKnapp").disabled=valgt.size===0;
    if(flipOverlay){
     requestAnimationFrame(()=>{
      flipOverlay.style.transition="transform .16s ease-out,border-color .16s ease-out,box-shadow .16s ease-out";
@@ -532,6 +531,27 @@ let faser=[],faseValgt=0,lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer
 const bakgrunnsmusikk=new Audio("ulvis.mp3");
 bakgrunnsmusikk.loop=true;
 const lydinnstillinger={bakgrunnPaa:true,bakgrunnVolum:0.22,stemmeVolum:1,pauseSekunder:10};
+function kobleLydkontroller(){
+ const bg=$("backgroundVolume"),voice=$("voiceVolume"),pause=$("roleInterval"),enabled=$("backgroundEnabled");
+ if(bg)bg.addEventListener("input",()=>{
+  lydinnstillinger.bakgrunnVolum=Number(bg.value)/100;
+  $("backgroundVolumeValue").textContent=bg.value+"%";
+  bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
+ });
+ if(voice)voice.addEventListener("input",()=>{
+  lydinnstillinger.stemmeVolum=Number(voice.value)/100;
+  $("voiceVolumeValue").textContent=voice.value+"%";
+  if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
+ });
+ if(pause)pause.addEventListener("input",()=>{
+  lydinnstillinger.pauseSekunder=Number(pause.value);
+  $("roleIntervalValue").textContent=pause.value+" sek";
+ });
+ if(enabled)enabled.addEventListener("change",()=>{
+  lydinnstillinger.bakgrunnPaa=enabled.checked;
+  settBakgrunnsmusikk();
+ });
+}
 function oppdaterLydinnstillinger(){
  bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
  if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
@@ -650,6 +670,7 @@ $("spillLydKnapp").onclick=spillFaseLyd;
 $("stoppLydKnapp").onclick=()=>{avbrytSekvens("Lydavspillingen er stoppet.");$("stoppLydKnapp").disabled=true};
 $("lagreFaseKnapp").onclick=()=>{faser[faseValgt].navn=$("faseNavn").value;faser[faseValgt].tekst=$("faseBeskrivelse").value;visFase();$("sekvensStatus").textContent="Faseteksten er oppdatert. Lydklippet er fortsatt det innebygde klippet."};
 tegnKort();
+kobleLydkontroller();
 
 // Innstillingsmenyen – registreres på toppnivå etter at alle elementene er opprettet.
 let sideForInnstillinger="valgSide";
