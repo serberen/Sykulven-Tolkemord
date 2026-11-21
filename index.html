@@ -82,13 +82,13 @@ h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
 .card .card-front{display:block;object-fit:cover;transform:rotateY(0deg);transition:transform .55s ease}
 .card .card-back{
  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;
- padding:10px 9px;text-align:center;white-space:normal;
+ padding:8px 7px;text-align:center;white-space:normal;
  color:#4a3824;background:linear-gradient(145deg,#f6edda,#e8d7b8);
  border:2px solid var(--team-color,#c8ad7d);transform:rotateY(-180deg);transition:transform .55s ease;backface-visibility:hidden;-webkit-backface-visibility:hidden
 }
-.card .card-back strong{font-size:clamp(11px,1.45vw,16px);color:#604629;line-height:1.15}
-.card .card-back .team-tag{font-size:clamp(8px,1vw,11px);line-height:1.15;font-weight:900;letter-spacing:.04em;padding:4px 6px;border-radius:7px;color:#fff;background:var(--team-color)}
-.card .card-back .role-description{font-size:clamp(9px,1.08vw,12px);line-height:1.28;color:#4a3824;overflow-y:auto;max-height:68%}
+.card .card-back strong{font-size:clamp(10px,1.25vw,14px);color:#604629;line-height:1.1;flex:0 0 auto}
+.card .card-back .team-tag{font-size:clamp(7px,.9vw,10px);line-height:1.1;font-weight:900;letter-spacing:.02em;padding:3px 5px;border-radius:6px;color:#fff;background:var(--team-color);flex:0 0 auto}
+.card .card-back .role-description{font-size:clamp(7px,.92vw,10px);line-height:1.16;color:#4a3824;flex:1 1 auto;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center;overflow-wrap:anywhere}
 .card.flipped{border-color:#e7c56d;box-shadow:0 0 0 2px #8c6a2a,0 0 22px #d5ad5570}
 .card.flipped .card-front{transform:rotateY(180deg)}
 .card.flipped .card-back{transform:rotateY(0deg)}
@@ -200,7 +200,6 @@ const roller=[
 ];
 const valgt=new Set(),grid=document.getElementById("kortRutenett"),$=id=>document.getElementById(id);
 let aktivInfoKort = null;
-let kortFlipTimer = null;
 function lagKortflate(knapp, bilde, alt, rolle){
  const front=document.createElement("img");front.className="card-front";front.src=bilde;front.alt=alt;front.loading="lazy";
  const back=document.createElement("span");back.className="card-back";back.setAttribute("aria-hidden","true");
@@ -233,16 +232,27 @@ function tegnKort(){grid.innerHTML="";
     else{valgt.add(i);aktivInfoKort=i;}
     tegnKort();
    };
+   let flipOverlay=null;
    if(aktivInfoKort!==null&&aktivInfoKort!==i){
     const forrige=grid.querySelector('.card[data-role-index="'+aktivInfoKort+'"]');
     if(forrige&&forrige.classList.contains("flipped")){
-     forrige.classList.remove("flipped");
-     if(kortFlipTimer)clearTimeout(kortFlipTimer);
-     kortFlipTimer=setTimeout(()=>{kortFlipTimer=null;oppdaterValg();},580);
-     return;
+     const rect=forrige.getBoundingClientRect();
+     flipOverlay=forrige.cloneNode(true);
+     flipOverlay.style.position="fixed";flipOverlay.style.left=rect.left+"px";flipOverlay.style.top=rect.top+"px";
+     flipOverlay.style.width=rect.width+"px";flipOverlay.style.height=rect.height+"px";
+     flipOverlay.style.margin="0";flipOverlay.style.zIndex="9999";flipOverlay.style.pointerEvents="none";
+     flipOverlay.style.transition="none";document.body.append(flipOverlay);
     }
    }
    oppdaterValg();
+   if(flipOverlay){
+    requestAnimationFrame(()=>{
+     flipOverlay.style.transition="transform .55s ease,border-color .55s ease,box-shadow .55s ease";
+     flipOverlay.classList.remove("flipped");
+    });
+    flipOverlay.addEventListener("transitionend",()=>flipOverlay.remove(),{once:true});
+    setTimeout(()=>flipOverlay.remove(),650);
+   }
   };
   grid.append(b)
  });
