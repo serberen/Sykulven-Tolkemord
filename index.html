@@ -238,6 +238,8 @@ function tegnKort(){grid.innerHTML="";
     if(forrige&&forrige.classList.contains("flipped")){
      const rect=forrige.getBoundingClientRect();
      flipOverlay=forrige.cloneNode(true);
+     // Info-ikonet skal bare finnes på det aktive, valgte kortet – aldri på flip-klonen.
+     flipOverlay.querySelectorAll(".info-bubble").forEach(ikon=>ikon.remove());
      flipOverlay.style.position="fixed";flipOverlay.style.left=rect.left+"px";flipOverlay.style.top=rect.top+"px";
      flipOverlay.style.width=rect.width+"px";flipOverlay.style.height=rect.height+"px";
      flipOverlay.style.margin="0";flipOverlay.style.zIndex="9999";flipOverlay.style.pointerEvents="none";
