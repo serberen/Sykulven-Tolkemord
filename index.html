@@ -149,6 +149,22 @@ textarea{min-height:70px}
  .panel{padding:12px;border-radius:15px}
  .card.selected:after{width:22px;height:22px;right:4px;bottom:4px;top:auto}
 }
+
+/* Fix card faces: front visible by default, beige back stacked above it */
+.card{position:relative;isolation:isolate;overflow:visible}
+.card .card-front{
+ position:absolute;inset:0;width:100%;height:100%;
+ display:block;padding:0;border:0;border-radius:inherit;
+ background:none;object-fit:cover;transform:rotateY(0deg);
+}
+.card .card-back{
+ position:absolute;inset:0;width:100%;height:100%;
+ overflow:hidden;border-radius:inherit;transform:rotateY(-180deg);
+}
+.card.flipped .card-front{transform:rotateY(180deg)}
+.card.flipped .card-back{transform:rotateY(0deg)}
+.card.all .card-front{object-fit:cover}
+
 </style>
 </head><body>
 <header>
