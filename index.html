@@ -244,6 +244,22 @@ textarea{min-height:70px}
  }
 }
 
+
+@media (hover:hover) and (pointer:fine){
+ .card.pc-tilt-left:not(.flipped){
+  transform:perspective(900px) rotateY(8deg) translateY(-2px);
+  transform-origin:left center;
+  box-shadow:0 12px 26px #0009;
+ }
+ .card.pc-tilt-right:not(.flipped){
+  transform:perspective(900px) rotateY(-8deg) translateY(-2px);
+  transform-origin:right center;
+  box-shadow:0 12px 26px #0009;
+ }
+ .card:not(.flipped){transition:transform .2s ease,border-color .18s,box-shadow .2s ease}
+ .card.pc-tilt-left:not(.flipped),.card.pc-tilt-right:not(.flipped){cursor:ew-resize}
+}
+
 </style>
 </head><body>
 <header>
@@ -308,6 +324,32 @@ function tegnKort(){grid.innerHTML="";
   lagKortflate(b,r.bilde,r.navn,r);
   let swipeStart=null,swipeConsumed=false;
   b.style.touchAction="pan-y";
+  // PC: tilt toward the side under the pointer; clicking either outer edge flips the card.
+  b.addEventListener("pointermove",event=>{
+   if(event.pointerType!=="mouse" || b.classList.contains("flipped"))return;
+   const rect=b.getBoundingClientRect();
+   const x=(event.clientX-rect.left)/rect.width;
+   b.classList.toggle("pc-tilt-left",x<0.28);
+   b.classList.toggle("pc-tilt-right",x>0.72);
+  });
+  b.addEventListener("pointerleave",()=>{
+   b.classList.remove("pc-tilt-left","pc-tilt-right");
+  });
+  b.addEventListener("click",event=>{
+   if(event.detail===0 || !window.matchMedia("(hover: hover) and (pointer: fine)").matches)return;
+   const rect=b.getBoundingClientRect();
+   const x=(event.clientX-rect.left)/rect.width;
+   if(x>0.22 && x<0.78)return;
+   event.preventDefault();
+   event.stopImmediatePropagation();
+   b.classList.remove("pc-tilt-left","pc-tilt-right");
+   if(b.classList.contains("flipped")){
+    b.classList.remove("flipped");
+   }else{
+    grid.querySelectorAll(".card.flipped").forEach(card=>card.classList.remove("flipped"));
+    b.classList.add("flipped");
+   }
+  },true);
   b.addEventListener("pointerdown",event=>{
    if(event.pointerType==="mouse"&&event.button!==0)return;
    swipeStart={x:event.clientX,y:event.clientY};
