@@ -196,6 +196,7 @@ const roller=[
 ];
 const valgt=new Set(),grid=document.getElementById("kortRutenett"),$=id=>document.getElementById(id);
 let aktivInfoKort = null;
+let kortFlipTimer = null;
 function lagKortflate(knapp, bilde, alt, navn, tekst){
  const front=document.createElement("img");front.className="card-front";front.src=bilde;front.alt=alt;front.loading="lazy";
  const back=document.createElement("span");back.className="card-back";back.setAttribute("aria-hidden","true");
@@ -217,10 +218,27 @@ function tegnKort(){grid.innerHTML="";
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort","Alle","Velg eller fjern alle rollekort samtidig.");
  alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
  roller.forEach((r,i)=>{
-  const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
+  const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r.navn,r.tekst);
   if(valgt.has(i)&&aktivInfoKort===i)visInfoBoble(b,r);
-  b.onclick=()=>{if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}if(valgt.has(i)){valgt.delete(i);if(aktivInfoKort===i)aktivInfoKort=null;}else{valgt.add(i);aktivInfoKort=i;}tegnKort()};
+  b.onclick=()=>{
+   if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
+   const oppdaterValg=()=>{
+    if(valgt.has(i)){valgt.delete(i);if(aktivInfoKort===i)aktivInfoKort=null;}
+    else{valgt.add(i);aktivInfoKort=i;}
+    tegnKort();
+   };
+   if(aktivInfoKort!==null&&aktivInfoKort!==i){
+    const forrige=grid.querySelector('.card[data-role-index="'+aktivInfoKort+'"]');
+    if(forrige&&forrige.classList.contains("flipped")){
+     forrige.classList.remove("flipped");
+     if(kortFlipTimer)clearTimeout(kortFlipTimer);
+     kortFlipTimer=setTimeout(()=>{kortFlipTimer=null;oppdaterValg();},580);
+     return;
+    }
+   }
+   oppdaterValg();
+  };
   grid.append(b)
  });
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
