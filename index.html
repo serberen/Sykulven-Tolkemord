@@ -157,6 +157,72 @@ textarea{min-height:70px}
 .card.flipped .card-back{transform:rotateY(0deg)}
 .card.all .card-front{object-fit:cover}
 
+
+/* Info-flip: unselected cards keep neutral edges; compact back text fits one face */
+.card.flipped:not(.selected){
+ border-color:#465b76 !important;
+ box-shadow:0 14px 42px #000d,0 0 22px #0008 !important;
+ outline:none !important;
+}
+.card.flipped .card-back{
+ gap:5px !important;
+ padding:8px 8px !important;
+ overflow:hidden !important;
+}
+.card.flipped .card-back strong{
+ font-size:clamp(10px,1.05vw,14px) !important;
+ line-height:1.05 !important;
+}
+.card.flipped .card-back .team-tag{
+ font-size:clamp(8px,.78vw,10px) !important;
+ padding:3px 6px !important;
+ line-height:1 !important;
+}
+.card.flipped .card-back .role-description{
+ font-size:clamp(8px,.88vw,11px) !important;
+ line-height:1.12 !important;
+ overflow:hidden !important;
+}
+@media (max-width:700px){
+ .card.flipped .card-back{
+  display:flex !important;
+  justify-content:flex-start !important;
+  align-items:stretch !important;
+  gap:2px !important;
+  padding:4px 5px !important;
+  overflow:hidden !important;
+ }
+ .card.flipped .card-back strong{
+  font-size:clamp(8px,2.25vw,10px) !important;
+  line-height:1 !important;
+  margin:0 !important;
+ }
+ .card.flipped .card-back .team-tag{
+  align-self:center !important;
+  font-size:clamp(6px,1.7vw,8px) !important;
+  padding:2px 4px !important;
+  margin:0 !important;
+ }
+ .card.flipped .card-back .role-description{
+  font-size:clamp(6.5px,1.95vw,8.5px) !important;
+  line-height:1.04 !important;
+  margin:0 !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+  text-align:left !important;
+ }
+}
+
+
+@media (max-width:390px){
+ .card.flipped .card-back{padding:3px 4px !important;gap:1px !important}
+ .card.flipped .card-back strong{font-size:7.5px !important}
+ .card.flipped .card-back .team-tag{font-size:6px !important;padding:1px 3px !important}
+ .card.flipped .card-back .role-description{font-size:6.5px !important;line-height:1.02 !important}
+}
+
 </style>
 </head><body>
 <header>
