@@ -447,8 +447,8 @@ const roller=[
  {navn:"Frimurer",bilde:"frimurer_2.webp",lag:"Landsbylaget",tekst:"Våkn opp sammen med de andre frimurerne. Se hvem som har Frimurer-rollen. Hvis du er den eneste frimureren, får du vite at ingen andre våknet sammen med deg."},
  {navn:"Synsk",bilde:"synsk.webp",lag:"Landsbylaget",tekst:"Velg én spiller og se kortet deres, eller velg to kort fra midten og se på dem. Legg kortene tilbake på samme plass."},
  {navn:"Håndlanger",bilde:"handlanger.webp",lag:"Ulvelaget",tekst:"Våkn opp etter ulvene og få vite hvem de er. Du er på ulvenes lag, men ulvene vet ikke hvem du er."},
- {navn:"Syk Ulven",bilde:"syk-ulven.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres."},
- {navn:"Syk Ulven",bilde:"syk-ulven_2.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres."},
+ {navn:"Syk Ulven",bilde:"syk-ulven.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres. Når Håndlanger våkner, rekker du opp tommelen."},
+ {navn:"Syk Ulven",bilde:"syk-ulven_2.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres. Når Håndlanger våkner, rekker du opp tommelen."},
  {navn:"Emo",bilde:"emo.webp",lag:"Alenelag",tekst:"Du spiller på ditt eget lag. Hvis du blir drept i avstemningen, vinner du alene. Du må prøve å få de andre til å stemme på deg."},
  {navn:"Doppelgjenger",bilde:"doppelgjenger.webp",lag:"???-laget",tekst:"Velg én annen spiller og se kortet deres. Du kopierer rollen og lagtilhørigheten deres. Hvis rollen har en nattlig handling, utfører du den også."},
  {navn:"Jeger",bilde:"jeger.webp",lag:"Landsbylaget",tekst:"Hvis du blir drept i avstemningen, blir også spilleren du stemte på drept."},
@@ -460,7 +460,7 @@ const roller=[
  {navn:"Bråkmaker",bilde:"brakmaker.webp",lag:"Landsbylaget",tekst:"Velg to andre spillere og bytt kortene deres uten å se på dem. Spillerne får ikke vite at kortene deres er byttet."},
  {navn:"Prins",bilde:"prins.webp",lag:"Landsbylaget",tekst:"Hvis du får flest stemmer, overlever du avstemningen. Spilleren med nest flest stemmer blir drept i stedet."},
  {navn:"Avslører",bilde:"avslo-rer.webp",lag:"Landsbylaget",tekst:"Velg én spiller og snu kortet deres. Hvis det er Syk Ulven, Sov Ulven eller Emo, snur du det tilbake. Alle andre kort blir liggende synlige for alle."},
- {navn:"Sov Ulven",bilde:"sov-ulven.webp",lag:"Ulvelaget",tekst:"Du er på ulvelaget, men får ikke se hvem de andre ulvene er."},
+ {navn:"Sov Ulven",bilde:"sov-ulven.webp",lag:"Ulvelaget",tekst:"Du er på ulvelaget, men får ikke se hvem de andre ulvene er. Når Syk Ulv våkner, rekker du opp tommelen. Når Håndlanger våkner, rekker du opp tommelen sammen med Syk Ulv."},
  {navn:"Søvnløs",bilde:"sovnlos.webp",lag:"Landsbylaget",tekst:"Våkn opp helt til slutt, før alle våkner. Se på ditt eget kort for å kontrollere om rollen din har blitt byttet i løpet av natten."},
  {navn:"Dulter",bilde:"dulter.webp",lag:"Landsbylaget",tekst:"Berør skulderen til spilleren til høyre eller venstre"},
  {navn:"Vokter",bilde:"vokter.webp",lag:"Landsbylaget",tekst:"Våkn opp først av alle. Velg én annen spiller å beskytte. Kortet deres kan ikke sees på eller flyttes i løpet av natten. Du kan ikke beskytte deg selv."},
@@ -585,8 +585,8 @@ const nattData=[
  {id:"natt1",navn:"Natt 1",roller:[
   {id:"vokter",rolle:"Vokter",tekst:"«Vokter, våkn opp. Plasser skjoldet ditt foran en spiller du ønsker å beskytte.»\n«Vokter, lukk øynene igjen.»"},
   {id:"doppelgjenger",rolle:"Doppelgjenger",tekst:"«Doppelgjenger, våkn opp. Se på kortet til en annen spiller. Du blir denne rollen og følger dens instruksjoner.»\n«Doppelgjenger, lukk øynene igjen.»"},
-  {id:"sykulv",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Se hvem de andre syke ulvene er. Hvis du er alene, kan du se på ett kort i midten.»\n«Syk ulv, lukk øynene igjen.»"},
-  {id:"handlanger",rolle:"Håndlanger",tekst:"«Håndlanger, våkn opp. Syke ulver, rekk opp tommelen.»\n«Syke ulver, legg ned tomlene. Håndlanger, lukk øynene igjen.»"},
+  {id:"sykulv",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Se hvem de andre syke ulvene er. Hvis du er alene, kan du se på ett kort i midten. Sov Ulv, rekk opp tommelen.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"handlanger",rolle:"Håndlanger",tekst:"«Håndlanger, våkn opp. Syk Ulv og Sov Ulv, rekk opp tommelen.»\n«Syk Ulv og Sov Ulv, legg ned tomlene. Håndlanger, lukk øynene igjen.»"},
   {id:"frimurer",rolle:"Frimurer",tekst:"«Frimurere, våkn opp. Se hvem den andre frimureren er.»\n«Frimurere, lukk øynene igjen.»"},
   {id:"dulter",rolle:"Dulter",tekst:"«Dulter, våkn opp. Velg en spiller og berør skulderen deres.»\n«Dulter, lukk øynene igjen.»"},
   {id:"synsk",rolle:"Synsk",tekst:"«Synsk, våkn opp. Se på ett spillerkort eller to kort i midten.»\n«Synsk, lukk øynene igjen.»"},
@@ -600,12 +600,12 @@ const nattData=[
  {id:"natt2",navn:"Natt 2",roller:[
   {id:"beruset_n2",rolle:"Beruset",tekst:"«Beruset, våkn opp. Se på ditt eget kort.»\n«Beruset, lukk øynene igjen.»"},
   {id:"rimmi_n2",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
-  {id:"sykulv_n2",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"sykulv_n2",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Sov Ulv, rekk opp tommelen. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
   {id:"avslutning_n2",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
  ]},
  {id:"natt3",navn:"Natt 3 og videre",roller:[
   {id:"rimmi_n3",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
-  {id:"sykulv_n3",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"sykulv_n3",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Sov Ulv, rekk opp tommelen. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
   {id:"avslutning_n3",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
  ]}
 ];
