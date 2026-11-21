@@ -261,22 +261,22 @@ textarea{min-height:70px}
 }
 
 
-/* Desktop info card sizing and vertical placement */
+/* Desktop info card: keep the back layout identical while opening and closing */
 @media (min-width:701px){
- .card.flipped .card-back{
+ .card .card-back{
   justify-content:center !important;
   gap:10px !important;
   padding:16px 14px !important;
  }
- .card.flipped .card-back strong{
+ .card .card-back strong{
   font-size:clamp(13px,1.25vw,17px) !important;
   line-height:1.12 !important;
  }
- .card.flipped .card-back .team-tag{
+ .card .card-back .team-tag{
   font-size:clamp(10px,.95vw,12px) !important;
   padding:4px 8px !important;
  }
- .card.flipped .card-back .role-description{
+ .card .card-back .role-description{
   font-size:clamp(11px,1.05vw,14px) !important;
   line-height:1.22 !important;
   overflow:visible !important;
