@@ -261,6 +261,21 @@ textarea{min-height:70px}
 }
 
 
+
+/* Longer role descriptions: reduce type slightly so the complete text fits */
+@media (min-width:701px){
+ .card .card-back .role-description.long{
+  font-size:clamp(10px,.92vw,12px) !important;
+  line-height:1.16 !important;
+ }
+}
+@media (max-width:700px){
+ .card .card-back .role-description.long{
+  font-size:clamp(7px,1.8vw,8.5px) !important;
+  line-height:1.06 !important;
+ }
+}
+
 /* Desktop info card: keep the back layout identical while opening and closing */
 @media (min-width:701px){
  .card .card-back{
@@ -324,7 +339,7 @@ const roller=[
  {navn:"Avslører",bilde:"avslo-rer.webp",lag:"Landsbylaget",tekst:"Velg én spiller og snu kortet deres. Hvis det er Syk Ulven, Sov Ulven eller Emo, snur du det tilbake. Alle andre kort blir liggende synlige for alle."},
  {navn:"Sov Ulven",bilde:"sov-ulven.webp",lag:"Ulvelaget",tekst:"Du er på ulvelaget, men får ikke se hvem de andre ulvene er."},
  {navn:"Søvnløs",bilde:"sovnlos.webp",lag:"Landsbylaget",tekst:"Våkn opp helt til slutt, før alle våkner. Se på ditt eget kort for å kontrollere om rollen din har blitt byttet i løpet av natten."},
- {navn:"Dulter",bilde:"dulter.webp",lag:"Landsbylaget",tekst:"Ta på skulderen til personen enten til venstre eller høyre."},
+ {navn:"Dulter",bilde:"dulter.webp",lag:"Landsbylaget",tekst:"Velg én spiller. Spilleren må bytte plass med spilleren til høyre, men kortene blir liggende."},
  {navn:"Vokter",bilde:"vokter.webp",lag:"Landsbylaget",tekst:"Våkn opp først av alle. Velg én annen spiller å beskytte. Kortet deres kan ikke sees på eller flyttes i løpet av natten. Du kan ikke beskytte deg selv."},
  {navn:"Paranormal Etterforsker",bilde:"paranormal-etterforsker.webp",lag:"Landsbylaget",tekst:"Våkn opp og se på opptil to andre spilleres kort, ett om gangen. Hvis du finner en rolle som ikke tilhører landsbylaget, må du stoppe og overta rollen og lagtilhørigheten deres. Du våkner ikke igjen senere."}
 ];
@@ -335,7 +350,7 @@ function lagKortflate(knapp, bilde, alt, rolle){
  const back=document.createElement("span");back.className="card-back";back.setAttribute("aria-hidden","true");
  const title=document.createElement("strong");title.textContent=rolle.navn;
  const team=document.createElement("span");team.className="team-tag";team.textContent=rolle.lag;
- const desc=document.createElement("span");desc.className="role-description";desc.textContent=rolle.tekst;
+ const desc=document.createElement("span");desc.className="role-description"+(rolle.tekst.length>115?" long":"");desc.textContent=rolle.tekst;
  back.append(title,team,desc);knapp.append(front,back);
 }
 function tegnKort(){grid.innerHTML="";
@@ -497,14 +512,9 @@ function spillKorttrekklyd(){try{const c=uiContext();if(!c)return;const t=c.curr
 document.addEventListener("click",event=>{
  const expanded=event.target.closest(".card.flipped");
  if(!expanded)return;
- const base=expanded.getBoundingClientRect();
- // The transformed card is larger than its original grid slot.
- const originalW=expanded.offsetWidth, originalH=expanded.offsetHeight;
- const originalLeft=base.left+(base.width-originalW)/2;
- const originalTop=base.top+(base.height-originalH)/2;
- const outsideOriginal=event.clientX<originalLeft || event.clientX>originalLeft+originalW ||
-                       event.clientY<originalTop || event.clientY>originalTop+originalH;
- if(!outsideOriginal)return;
+ // Finn hvilket kort som ligger under trykkpunktet, også når det er dekket
+ // av den forstørrede baksiden. Dette gjør at første trykk på et overlappet
+ // nabokort registreres på mobil i stedet for å bli spist av det åpne kortet.
  expanded.style.visibility="hidden";
  const underneath=document.elementFromPoint(event.clientX,event.clientY);
  expanded.style.visibility="";
