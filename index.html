@@ -610,7 +610,7 @@ let lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioCon
 let valgtNatt=0;
 const nattData=[
  {id:"natt1",navn:"Natt 1",roller:[
-  {id:"start_natt1",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
+  {id:"start_lukk_natt1",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
   {id:"vokter",rolle:"Vokter",tekst:"«Vokter, våkn opp. Plasser skjoldet ditt foran en spiller du ønsker å beskytte.»\n«Vokter, lukk øynene igjen.»"},
   {id:"doppelgjenger",rolle:"Doppelgjenger",tekst:"«Doppelgjenger, våkn opp. Se på kortet til en annen spiller. Du blir denne rollen og følger dens instruksjoner.»\n«Doppelgjenger, lukk øynene igjen.»"},
   {id:"sykulv",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Se hvem de andre syke ulvene er. Hvis du er alene, kan du se på ett kort i midten. Sov Ulv, rekk opp tommelen.»\n«Syk ulv, lukk øynene igjen.»"},
@@ -623,20 +623,20 @@ const nattData=[
   {id:"braakmaker",rolle:"Bråkmaker",tekst:"«Bråkmaker, våkn opp. Bytt kortene til to andre spillere uten å se på dem.»\n«Bråkmaker, lukk øynene igjen.»"},
   {id:"beruset",rolle:"Beruset",tekst:"«Beruset, våkn opp. Bytt ditt eget kort med et kort i midten uten å se på det.»\n«Beruset, lukk øynene igjen.»"},
   {id:"sovnlos",rolle:"Søvnløs",tekst:"«Søvnløs, våkn opp. Se på ditt eget kort.»\n«Søvnløs, lukk øynene igjen.»"},
-  {id:"avslutning",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
+  {id:"slutt_natt1",rolle:"Sluttbeskjed",tekst:"«Alle sammen, våkn opp.»",endfase:true}
  ]},
  {id:"natt2",navn:"Natt 2",roller:[
-  {id:"start_natt2",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
+  {id:"start_lukk_natt2",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
   {id:"beruset_n2",rolle:"Beruset",tekst:"«Beruset, våkn opp. Se på ditt eget kort.»\n«Beruset, lukk øynene igjen.»"},
   {id:"rimmi_n2",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
   {id:"sykulv_n2",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Sov Ulv, rekk opp tommelen. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
-  {id:"avslutning_n2",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
+  {id:"slutt_natt2",rolle:"Sluttbeskjed",tekst:"«Alle sammen, våkn opp.»",endfase:true}
  ]},
  {id:"natt3",navn:"Natt 3 og videre",roller:[
-  {id:"start_natt3",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
+  {id:"start_lukk_natt3",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
   {id:"rimmi_n3",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
   {id:"sykulv_n3",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Sov Ulv, rekk opp tommelen. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
-  {id:"avslutning_n3",rolle:"Avslutning",tekst:"«Alle kan åpne øynene.»"}
+  {id:"slutt_natt3",rolle:"Sluttbeskjed",tekst:"«Alle sammen, våkn opp.»",endfase:true}
  ]}
 ];
 
@@ -675,11 +675,19 @@ function hentLydDatabase(){
 }
 async function lagreLydklipp(id,file){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readwrite");tx.objectStore("klipp").put({id,navn:file.name,blob:file});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
 async function hentLydklipp(id){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readonly"),req=tx.objectStore("klipp").get(id);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});}
+async function hentFaseLydklipp(id){
+ const lagret=await hentLydklipp(id);if(lagret)return lagret;
+ const standard={
+  start_lukk_natt1:"natt-start-lukk-oynene.mp3",start_lukk_natt2:"natt-start-lukk-oynene.mp3",start_lukk_natt3:"natt-start-lukk-oynene.mp3",
+  slutt_natt1:"natt-slutt-vakn-opp.mp3",slutt_natt2:"natt-slutt-vakn-opp.mp3",slutt_natt3:"natt-slutt-vakn-opp.mp3"
+ };
+ return standard[id]?{url:standard[id],navn:standard[id]}:null;
+}
 async function slettLydklipp(id){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readwrite");tx.objectStore("klipp").delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
 function harValgtRolle(navn){return roller.some((r,i)=>r.navn.toLowerCase()===navn.toLowerCase()&&valgt.has(i));}
 function nattensRoller(natt){
  return natt.roller.filter(p=>{
-  if(p.startfase||p.rolle==="Avslutning")return true;
+  if(p.startfase||p.endfase)return true;
   if(p.rolle==="Syk ulv")return harValgtRolle("Syk Ulven");
   if(p.rolle==="Paranormal etterforsker")return harValgtRolle("Paranormal Etterforsker");
   return harValgtRolle(p.rolle);
@@ -688,15 +696,16 @@ function nattensRoller(natt){
 function aktivNatt(){return nattData[valgtNatt];}
 function renderNatt(){
  const natt=aktivNatt();$("nightLabel").textContent=natt.navn.toUpperCase();$("nightTitle").textContent=natt.navn;
- $("nightDescription").textContent="Last opp ett lydklipp per instruksjon. Startbeskjeden spilles først hver natt. Last opp «Alle lukker øynene» her. Etter startbeskjeden er det alltid 5 sekunder stille før instruksjon 1. Rolleklippene bør inneholde både oppvåkningsbeskjeden og beskjeden om å lukke øynene igjen.";
+ $("nightDescription").textContent="Startlyden «Alle sammen, lukk øynene» spilles først. Deretter er det alltid 5 sekunder stille før instruksjon 1. Sluttlyden «Alle sammen, våkn opp» spilles etter siste rolle. Du kan laste opp egne lydfiler for å erstatte standardlydene. Rolleklippene bør inneholde både oppvåkningsbeskjeden og beskjeden om å lukke øynene igjen.";
  document.querySelectorAll("#nightTabs button").forEach(b=>{b.classList.toggle("primary",Number(b.dataset.night)===valgtNatt);});
  const list=$("nightPhaseList");list.innerHTML="";
  const phases=nattensRoller(natt);
  phases.forEach((p,i)=>{
   const card=document.createElement("article");card.className="night-phase";
   const heading=document.createElement("h3");
-  if(p.startfase){heading.textContent="Startbeskjed – før instruksjon 1";}
-  else{const nummer=phases.slice(0,i).filter(x=>!x.startfase).length+1;heading.innerHTML='<span class="phase-number">'+nummer+'.</span>';heading.append(document.createTextNode(p.rolle));}
+  if(p.startfase){heading.textContent="Startlyd – Alle sammen, lukk øynene";}
+  else if(p.endfase){heading.textContent="Sluttlyd – Alle sammen, våkn opp";}
+  else{const nummer=phases.slice(0,i).filter(x=>!x.startfase&&!x.endfase).length+1;heading.innerHTML='<span class="phase-number">'+nummer+'.</span>';heading.append(document.createTextNode(p.rolle));}
   const script=document.createElement("p");script.className="voice-text";script.textContent=p.tekst;
   const meta=document.createElement("p");meta.className="audio-meta";meta.id="meta-"+p.id;meta.textContent="Sjekker om lydfil er lagt inn …";
   const controls=document.createElement("div");controls.className="audio-controls";
@@ -705,14 +714,14 @@ function renderNatt(){
   const play=document.createElement("button");play.className="action";play.type="button";play.textContent="▶ Spill klippet";play.addEventListener("click",()=>spillEnkeltKlipp(p.id,p.rolle));
   const remove=document.createElement("button");remove.className="action";remove.type="button";remove.textContent="Fjern lydfil";remove.addEventListener("click",async()=>{try{await slettLydklipp(p.id);meta.textContent="Ingen lydfil lagt inn."; }catch(e){meta.textContent="Kunne ikke fjerne lydfilen."; }});
   controls.append(input,play,remove);card.append(heading,script,meta,controls);list.append(card);
-  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Lydfil lagret: "+file.navn:"Ingen lydfil lagt inn ennå.";}).catch(()=>{if(meta.isConnected)meta.textContent="Lokal lagring er ikke tilgjengelig.";});
+  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":"Lokal lagring er ikke tilgjengelig.";});
  });
  if(!phases.length){const p=document.createElement("p");p.className="small";p.textContent="Ingen av rollene i denne natten er valgt i kortvelgeren. Velg rollene du skal bruke, så vises instruksjonene her.";list.append(p);}
 }
 function visNatt(index){avbrytSekvens();valgtNatt=index;renderNatt();}
 function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
 async function spillEnkeltKlipp(id,navn){
- avbrytSekvens();try{const file=await hentLydklipp(id);if(!file){$("sekvensStatus").textContent="Du må laste opp en lydfil for "+navn+" først.";return;}
+ avbrytSekvens();try{const file=await hentFaseLydklipp(id);if(!file){$("sekvensStatus").textContent="Du må laste opp en lydfil for "+navn+" først.";return;}
  const url=URL.createObjectURL(file.blob);lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;lyd.onended=()=>{URL.revokeObjectURL(url);$("stopNightButton").disabled=true;};await lyd.play();$("stopNightButton").disabled=false;$("sekvensStatus").textContent="Spiller: "+navn;
  }catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydklippet: "+e.message;}
 }
@@ -733,18 +742,18 @@ async function ventSekunder(sekunder,token,tekst){
 }
 async function spillFil(file,navn){
  if(lyd){lyd.pause();lyd.currentTime=0;}
- const url=URL.createObjectURL(file.blob);lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;
+ const url=file.url||URL.createObjectURL(file.blob);const egenUrl=!!file.url;lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;
  $("sekvensStatus").textContent="Spiller: "+navn;
- try{await lyd.play();const ok=await ventPaaLyd(lyd);URL.revokeObjectURL(url);if(!ok)throw new Error("Lydfilen kunne ikke spilles av.");return true;}
- catch(e){URL.revokeObjectURL(url);$("sekvensStatus").textContent="Feil ved avspilling av "+navn+": "+e.message;return false;}
+ try{await lyd.play();const ok=await ventPaaLyd(lyd);if(!egenUrl)URL.revokeObjectURL(url);if(!ok)throw new Error("Lydfilen kunne ikke spilles av.");return true;}
+ catch(e){if(!egenUrl)URL.revokeObjectURL(url);$("sekvensStatus").textContent="Feil ved avspilling av "+navn+": "+e.message;return false;}
 }
 async function spillHeleNatten(){
- if(sekvensAktiv)return;const natt=aktivNatt(),alleFaser=nattensRoller(natt),startfase=alleFaser.find(p=>p.startfase),phases=alleFaser.filter(p=>!p.startfase),token=++sekvensToken;sekvensAktiv=true;startBakgrunnsmusikk();$("stopNightButton").disabled=false;
+ if(sekvensAktiv)return;const natt=aktivNatt(),alleFaser=nattensRoller(natt),startfase=alleFaser.find(p=>p.startfase),sluttfase=alleFaser.find(p=>p.endfase),phases=alleFaser.filter(p=>!p.startfase&&!p.endfase),token=++sekvensToken;sekvensAktiv=true;startBakgrunnsmusikk();$("stopNightButton").disabled=false;
  let spilt=0,skippet=0;
  if(startfase){
-  let startfil=null;try{startfil=await hentLydklipp(startfase.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente startbeskjeden.";}
+  let startfil=null;try{startfil=await hentFaseLydklipp(startfase.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente startbeskjeden.";}
   if(token!==sekvensToken)return;
-  if(startfil){const ok=await spillFil(startfil,"Startbeskjed – Alle lukker øynene");if(!ok){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;return;}spilt++;}
+  if(startfil){const ok=await spillFil(startfil,"Alle sammen, lukk øynene");if(!ok){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;return;}spilt++;}
   else{$("sekvensStatus").textContent="Ingen lydfil for startbeskjeden. Venter før instruksjon 1.";skippet++;}
   if(token!==sekvensToken)return;
   const ventet=await ventSekunder(5,token,"Stille i {sek} sekunder før instruksjon 1 …");
@@ -762,6 +771,10 @@ async function spillHeleNatten(){
    const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Neste instruksjon om {sek} sekunder …");
    if(!ventet)break;
   }
+ }
+ if(token===sekvensToken&&sluttfase){
+  let sluttfil=null;try{sluttfil=await hentFaseLydklipp(sluttfase.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente sluttbeskjeden.";}
+  if(token===sekvensToken&&sluttfil){const ok=await spillFil(sluttfil,"Alle sammen, våkn opp");if(ok)spilt++;else skippet++;}
  }
  if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;$("sekvensStatus").textContent="Natten er ferdig. "+spilt+" lydklipp spilt av"+(skippet?", "+skippet+" uten lydfil hoppet over.":".");}
 }
