@@ -81,17 +81,21 @@ h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
 }
 .card .card-front{display:block;object-fit:cover;transform:rotateY(0deg);transition:transform .55s ease}
 .card .card-back{
- display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
- padding:14px;text-align:center;white-space:normal;
- color:#4a3824;background:
- linear-gradient(145deg,#f6edda,#e8d7b8);
- border:1px solid #c8ad7d;transform:rotateY(-180deg);transition:transform .55s ease;backface-visibility:hidden;-webkit-backface-visibility:hidden
+ display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;
+ padding:10px 9px;text-align:center;white-space:normal;
+ color:#4a3824;background:linear-gradient(145deg,#f6edda,#e8d7b8);
+ border:2px solid var(--team-color,#c8ad7d);transform:rotateY(-180deg);transition:transform .55s ease;backface-visibility:hidden;-webkit-backface-visibility:hidden
 }
-.card .card-back strong{font-size:clamp(14px,2vw,19px);color:#604629;line-height:1.2}
-.card .card-back span{font-size:clamp(11px,1.35vw,14px);line-height:1.35;color:#4a3824}
+.card .card-back strong{font-size:clamp(11px,1.45vw,16px);color:#604629;line-height:1.15}
+.card .card-back .team-tag{font-size:clamp(8px,1vw,11px);line-height:1.15;font-weight:900;letter-spacing:.04em;padding:4px 6px;border-radius:7px;color:#fff;background:var(--team-color)}
+.card .card-back .role-description{font-size:clamp(9px,1.08vw,12px);line-height:1.28;color:#4a3824;overflow-y:auto;max-height:68%}
 .card.flipped{border-color:#e7c56d;box-shadow:0 0 0 2px #8c6a2a,0 0 22px #d5ad5570}
 .card.flipped .card-front{transform:rotateY(180deg)}
 .card.flipped .card-back{transform:rotateY(0deg)}
+.card[data-team="Ulvelaget"]{--team-color:#783f36}
+.card[data-team="Landsbylaget"]{--team-color:#176b78}
+.card[data-team="Alenelag"]{--team-color:#285b3d}
+.card[data-team="???-laget"]{--team-color:#88733d}
 .card .info-bubble{
  position:absolute;z-index:5;left:7px;bottom:7px;width:31px;height:31px;
  display:grid;place-items:center;border-radius:50%;border:2px solid #f7e7b6;
@@ -170,39 +174,40 @@ textarea{min-height:70px}
 <div class="foot">Lydinstruksjonene er innebygd i nettsiden og spilles av automatisk ut fra valgte roller.</div></main>
 <script>
 const roller=[
- {navn:"Røver",bilde:"rover.webp",tekst:"Røveren våkner og velger hvem han vil bytte rolle med."},
- {navn:"Frimurer",bilde:"frimurer.webp",tekst:"Frimurerne våkner og kjenner igjen hverandre."},
- {navn:"Frimurer",bilde:"frimurer_2.webp",tekst:"Frimurerne våkner og kjenner igjen hverandre."},
- {navn:"Synsk",bilde:"synsk.webp",tekst:"Den synske våkner og undersøker én spiller."},
- {navn:"Håndlanger",bilde:"handlanger.webp",tekst:"Håndlangeren våkner og får vite hvem varulvene er."},
- {navn:"Syk Ulven",bilde:"syk-ulven.webp",tekst:"Den syke ulven våkner sammen med varulvene."},
- {navn:"Syk Ulven",bilde:"syk-ulven_2.webp",tekst:"Den syke ulven våkner sammen med varulvene."},
- {navn:"Emo",bilde:"emo.webp",tekst:"Emo våkner og følger sin spesielle rolle."},
- {navn:"Doppelgjenger",bilde:"doppelgjenger.webp",tekst:"Doppelgjengeren våkner og velger en spiller å kopiere."},
- {navn:"Jeger",bilde:"jeger.webp",tekst:"Jegeren våkner og følger sin rollehandling."},
- {navn:"Landsbyboer",bilde:"landsbyboer.webp",tekst:"Landsbyboeren har ingen nattlig handling."},
- {navn:"Landsbyboer",bilde:"landsbyboer_2.webp",tekst:"Landsbyboeren har ingen nattlig handling."},
- {navn:"Landsbyboer",bilde:"landsbyboer_3.webp",tekst:"Landsbyboeren har ingen nattlig handling."},
- {navn:"Rimmi",bilde:"rimmi.webp",tekst:"Rimmi våkner og følger sin rollehandling."},
- {navn:"Beruset",bilde:"beruset.webp",tekst:"Den berusede følger sin rollehandling."},
- {navn:"Bråkmaker",bilde:"brakmaker.webp",tekst:"Bråkmakeren våkner og bytter kort mellom to spillere."},
- {navn:"Prins",bilde:"prins.webp",tekst:"Prinsen har ingen nattlig handling."},
- {navn:"Avslører",bilde:"avslo-rer.webp",tekst:"Avsløreren våkner og bruker sin rollehandling."},
- {navn:"Sov Ulven",bilde:"sov-ulven.webp",tekst:"Sovulven følger sin rollehandling."},
- {navn:"Søvnløs",bilde:"sovnlos.webp",tekst:"Søvnløse følger sin rollehandling."},
- {navn:"Dulter",bilde:"dulter.webp",tekst:"Dulteren våkner og følger sin rollehandling."},
- {navn:"Vokter",bilde:"vokter.webp",tekst:"Vokteren våkner og velger hvem som skal beskyttes."},
- {navn:"Paranormal Etterforsker",bilde:"paranormal-etterforsker.webp",tekst:"Den paranormale etterforskeren våkner og undersøker."}
+ {navn:"Røver",bilde:"rover.webp",lag:"Landsbylaget",tekst:"Velg én annen spiller og bytt kort med vedkommende. Se på ditt nye kort. Du tilhører nå laget til den nye rollen din."},
+ {navn:"Frimurer",bilde:"frimurer.webp",lag:"Landsbylaget",tekst:"Våkn opp sammen med de andre frimurerne. Se hvem som har Frimurer-rollen. Hvis du er den eneste frimureren, får du vite at ingen andre våknet sammen med deg."},
+ {navn:"Frimurer",bilde:"frimurer_2.webp",lag:"Landsbylaget",tekst:"Våkn opp sammen med de andre frimurerne. Se hvem som har Frimurer-rollen. Hvis du er den eneste frimureren, får du vite at ingen andre våknet sammen med deg."},
+ {navn:"Synsk",bilde:"synsk.webp",lag:"Landsbylaget",tekst:"Velg én spiller og se kortet deres, eller velg to kort fra midten og se på dem. Legg kortene tilbake på samme plass."},
+ {navn:"Håndlanger",bilde:"handlanger.webp",lag:"Ulvelaget",tekst:"Våkn opp etter ulvene og få vite hvem de er. Du er på ulvenes lag, men ulvene vet ikke hvem du er."},
+ {navn:"Syk Ulven",bilde:"syk-ulven.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres."},
+ {navn:"Syk Ulven",bilde:"syk-ulven_2.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres."},
+ {navn:"Emo",bilde:"emo.webp",lag:"Alenelag",tekst:"Du spiller på ditt eget lag. Hvis du blir drept i avstemningen, vinner du alene. Du må prøve å få de andre til å stemme på deg."},
+ {navn:"Doppelgjenger",bilde:"doppelgjenger.webp",lag:"???-laget",tekst:"Velg én annen spiller og se kortet deres. Du kopierer rollen og lagtilhørigheten deres. Hvis rollen har en nattlig handling, utfører du den også."},
+ {navn:"Jeger",bilde:"jeger.webp",lag:"Landsbylaget",tekst:"Hvis du blir drept i avstemningen, blir også spilleren du stemte på drept."},
+ {navn:"Landsbyboer",bilde:"landsbyboer.webp",lag:"Landsbylaget",tekst:"Du har ingen nattlig handling. Bruk diskusjonen til å finne ut hvem ulvene er."},
+ {navn:"Landsbyboer",bilde:"landsbyboer_2.webp",lag:"Landsbylaget",tekst:"Du har ingen nattlig handling. Bruk diskusjonen til å finne ut hvem ulvene er."},
+ {navn:"Landsbyboer",bilde:"landsbyboer_3.webp",lag:"Landsbylaget",tekst:"Du har ingen nattlig handling. Bruk diskusjonen til å finne ut hvem ulvene er."},
+ {navn:"Rimmi",bilde:"rimmi.webp",lag:"???-laget",tekst:"Du må bytte rollekort med den første som blir stemt ut. Du kopierer rollen og lagtilhørigheten deres. Hvis rollen har en nattlig handling, utfører du den samme natt."},
+ {navn:"Beruset",bilde:"beruset.webp",lag:"???-laget",tekst:"Velg ett av kortene i midten og bytt det med ditt eget kort. Du får ikke se hvilket kort du ender opp med før neste natt."},
+ {navn:"Bråkmaker",bilde:"brakmaker.webp",lag:"Landsbylaget",tekst:"Velg to andre spillere og bytt kortene deres uten å se på dem. Spillerne får ikke vite at kortene deres er byttet."},
+ {navn:"Prins",bilde:"prins.webp",lag:"Landsbylaget",tekst:"Hvis du får flest stemmer, overlever du avstemningen. Spilleren med nest flest stemmer blir drept i stedet."},
+ {navn:"Avslører",bilde:"avslo-rer.webp",lag:"Landsbylaget",tekst:"Velg én spiller og snu kortet deres. Hvis det er Syk Ulven, Sov Ulven eller Emo, snur du det tilbake. Alle andre kort blir liggende synlige for alle."},
+ {navn:"Sov Ulven",bilde:"sov-ulven.webp",lag:"Ulvelaget",tekst:"Du er på ulvelaget, men får ikke se hvem de andre ulvene er."},
+ {navn:"Søvnløs",bilde:"sovnlos.webp",lag:"Landsbylaget",tekst:"Våkn opp helt til slutt, før alle våkner. Se på ditt eget kort for å kontrollere om rollen din har blitt byttet i løpet av natten."},
+ {navn:"Dulter",bilde:"dulter.webp",lag:"Landsbylaget",tekst:"Ta på skulderen til personen enten til venstre eller høyre."},
+ {navn:"Vokter",bilde:"vokter.webp",lag:"Landsbylaget",tekst:"Våkn opp først av alle. Velg én annen spiller å beskytte. Kortet deres kan ikke sees på eller flyttes i løpet av natten. Du kan ikke beskytte deg selv."},
+ {navn:"Paranormal Etterforsker",bilde:"paranormal-etterforsker.webp",lag:"Landsbylaget",tekst:"Våkn opp og se på opptil to andre spilleres kort, ett om gangen. Hvis du finner en rolle som ikke tilhører landsbylaget, må du stoppe og overta rollen og lagtilhørigheten deres. Du våkner ikke igjen senere."}
 ];
 const valgt=new Set(),grid=document.getElementById("kortRutenett"),$=id=>document.getElementById(id);
 let aktivInfoKort = null;
 let kortFlipTimer = null;
-function lagKortflate(knapp, bilde, alt, navn, tekst){
+function lagKortflate(knapp, bilde, alt, rolle){
  const front=document.createElement("img");front.className="card-front";front.src=bilde;front.alt=alt;front.loading="lazy";
  const back=document.createElement("span");back.className="card-back";back.setAttribute("aria-hidden","true");
- const title=document.createElement("strong");title.textContent=navn;
- const desc=document.createElement("span");desc.textContent="(tekst)";
- back.append(title,desc);knapp.append(front,back);
+ const title=document.createElement("strong");title.textContent=rolle.navn;
+ const team=document.createElement("span");team.className="team-tag";team.textContent=rolle.lag;
+ const desc=document.createElement("span");desc.className="role-description";desc.textContent=rolle.tekst;
+ back.append(title,team,desc);knapp.append(front,back);
 }
 function visInfoBoble(knapp, rolle){
  const bubble=document.createElement("span");bubble.className="info-bubble";bubble.textContent="i";
@@ -215,11 +220,11 @@ function visInfoBoble(knapp, rolle){
 }
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
- lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort","Alle","Velg eller fjern alle rollekort samtidig.");
+ lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
  alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length)valgt.clear();else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
  roller.forEach((r,i)=>{
-  const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
-  lagKortflate(b,r.bilde,r.navn,r.navn,r.tekst);
+  const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
+  lagKortflate(b,r.bilde,r.navn,r);
   if(valgt.has(i)&&aktivInfoKort===i)visInfoBoble(b,r);
   b.onclick=()=>{
    if(b.classList.contains("flipped")){b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
