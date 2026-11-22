@@ -534,6 +534,8 @@ function spillAlleSjokkbølge(baklengs=false,velg=false){
    kort.setAttribute("aria-label",roller[i].navn+(velg?", valgt":", ikke valgt"));
    $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
    $("startKnapp").disabled=valgt.size===0;
+   const alleKort=grid.querySelector(".card.all");
+   if(alleKort)alleKort.classList.toggle("selected",roller.every((_,j)=>valgt.has(j)));
    const alle=grid.querySelector(".card.all");
    if(alle)alle.classList.toggle("selected",roller.every((_,j)=>valgt.has(j)));
   },forsinkelse);
@@ -848,8 +850,8 @@ async function spillHeleNatten(){
    ok=await spillFil(file,p.rolle);if(!ok)break;
   }
   if(token!==sekvensToken)break;spilt++;
-  if(i<phases.length-1&&lydinnstillinger.pauseSekunder>0){
-   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Neste instruksjon om {sek} sekunder …");
+  if(i<phases.length-1){
+   const ventet=await ventSekunder(5,token,"Stille etter lukk-øynene-beskjeden. Neste instruksjon om {sek} sekunder …");
    if(!ventet)break;
   }
  }
