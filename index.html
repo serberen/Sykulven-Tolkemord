@@ -1547,8 +1547,35 @@ document.addEventListener("click",event=>{
    player.position.z+Math.cos(yaw)*horizontal
   );
   camera.lookAt(lookTarget);
-  for(const n of redHoods){if(n.userData.lure){const vx=player.position.x-n.position.x,vz=player.position.z-n.position.z,d=Math.hypot(vx,vz);if(d>2){n.position.x+=vx/d*dt*1.8;n.position.z+=vz/d*dt*1.8;n.position.y=terrainHeight(n.position.x,n.position.z);}}n.position.y=terrainHeight(n.position.x,n.position.z)+Math.sin(time*.004+n.userData.phase)*.035;}
-  for(const d of drops){if(progression.magnet&&player.position.distanceTo(d.position)<8)collectDrop(d);}
+  for(const n of redHoods){
+   let tx=n.userData.roamX,tz=n.userData.roamZ,walkSpeed=.85;
+   if(n.userData.lure&&player.position.distanceTo(n.position)<48){tx=player.position.x;tz=player.position.z;walkSpeed=1.45;}
+   let dx=tx-n.position.x,dz=tz-n.position.z,dist=Math.hypot(dx,dz);
+   if(dist<1.2){
+    if(n.userData.lure&&player.position.distanceTo(n.position)<48){n.userData.lure=false;}
+    n.userData.roamWait-=dt;
+    if(n.userData.roamWait<=0){
+     n.userData.roamX=n.position.x+(Math.random()-.5)*26;
+     n.userData.roamZ=n.position.z+(Math.random()-.5)*26;
+     n.userData.roamWait=1.5+Math.random()*4;
+    }
+   }else{
+    const step=Math.min(dist,walkSpeed*dt);
+    n.position.x+=dx/dist*step;n.position.z+=dz/dist*step;
+    n.rotation.y=Math.atan2(dx,dz);
+   }
+   n.position.y=terrainHeight(n.position.x,n.position.z)+Math.sin(time*.004+n.userData.phase)*.025;
+   const bob=Math.sin(time*.012+n.userData.walkPhase)*.035;
+   n.children[0].position.y=.8+bob;
+   if(n.userData.labelCanvas)n.children[n.children.length-1].position.y=2.55+bob;
+  }
+  for(const d of [...drops]){
+   if(progression.magnet&&progression.inventory<100){
+    const dx=player.position.x-d.position.x,dz=player.position.z-d.position.z,dist=Math.hypot(dx,dz);
+    if(dist<18){d.userData.magnetizing=true;const pull=Math.min(1,dt*(4+12/(dist+.5)));d.position.x+=dx*pull;d.position.z+=dz*pull;d.position.y=terrainHeight(d.position.x,d.position.z)+.45+Math.sin(time*.012)*.12;}
+    if(dist<1.35)collectDrop(d);
+   }
+  }
   for(const p of remotePlayers.values()){
    p.model.position.x+=(p.targetX-p.model.position.x)*Math.min(1,dt*12);
    p.model.position.z+=(p.targetZ-p.model.position.z)*Math.min(1,dt*12);
@@ -1673,14 +1700,38 @@ document.addEventListener("click",event=>{
  const sound=(freq=220,duration=.09,type="sine")=>{try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.08,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+duration);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+duration);o.onended=()=>c.close();}catch(e){}};
  function toast(msg){const el=document.getElementById("ulveToast");if(!el)return;el.textContent=msg;el.style.display="block";clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display="none",2100);}
  function refreshHUD(){document.getElementById("ulvePoeng").textContent=progression.points;document.getElementById("ulveInventory").textContent=progression.inventory;}
+
+ function updateHoodLabel(npc){
+  const c=npc.userData.labelCanvas,ctx=c.getContext("2d");
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.textAlign="center";ctx.shadowColor="#000";ctx.shadowBlur=5;
+  ctx.font="bold 38px Arial";ctx.fillStyle="#fff";ctx.fillText("Rødhette",128,37);
+  ctx.font="bold 30px Arial";ctx.fillStyle="#ff626b";ctx.fillText(npc.userData.hp+" ♥",128,76);
+  npc.userData.labelTexture.needsUpdate=true;
+ }
+ function makeHoodLabel(npc){
+  const c=document.createElement("canvas");c.width=256;c.height=96;
+  const tex=new THREE.CanvasTexture(c);
+  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  sprite.scale.set(1.8,.68,1);sprite.position.set(0,2.55,0);npc.add(sprite);
+  npc.userData.labelCanvas=c;npc.userData.labelTexture=tex;updateHoodLabel(npc);
+ }
  function makeHood(x,z){
   const g=new THREE.Group(),red=mat(0x8f171d),cloak=mat(0x6c1119),skin=mat(0xe6b995),dark=mat(0x241b1b);
   const body=new THREE.Mesh(new THREE.CylinderGeometry(.27,.34,.85,8),cloak);body.position.y=.8;g.add(body);
   const head=new THREE.Mesh(new THREE.SphereGeometry(.27,12,10),skin);head.position.y=1.45;g.add(head);
+  const eyeWhite=mat(0xf7f2e8),eyeDark=mat(0x211b19),cheek=mat(0xd98278);
+  for(const ex of [-.105,.105]){
+   const eye=new THREE.Mesh(new THREE.SphereGeometry(.052,8,8),eyeWhite);eye.position.set(ex,1.49,.244);g.add(eye);
+   const pupil=new THREE.Mesh(new THREE.SphereGeometry(.025,8,8),eyeDark);pupil.position.set(ex+.012,1.49,.288);g.add(pupil);
+   const blush=new THREE.Mesh(new THREE.SphereGeometry(.045,8,8),cheek);blush.scale.set(1,.55,.3);blush.position.set(ex*1.9,1.385,.245);g.add(blush);
+  }
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.035,8,8),mat(0x9d6253));nose.position.set(0,1.415,.29);g.add(nose);
+  const mouth=new THREE.Mesh(new THREE.TorusGeometry(.055,.012,5,12,Math.PI),eyeDark);mouth.position.set(0,1.345,.272);mouth.rotation.z=Math.PI;g.add(mouth);
   const hood=new THREE.Mesh(new THREE.SphereGeometry(.34,12,10,0,Math.PI*2,0,Math.PI*.72),red);hood.position.y=1.53;g.add(hood);
   const cape=new THREE.Mesh(new THREE.ConeGeometry(.48,.9,8),red);cape.position.y=.72;g.add(cape);
   const basket=new THREE.Mesh(new THREE.BoxGeometry(.25,.2,.2),mat(0x9a6937));basket.position.set(.35,.75,.05);g.add(basket);
-  g.position.set(x,terrainHeight(x,z),z);scene.add(g);g.userData.hp=20;g.userData.maxHp=20;g.userData.alive=true;g.userData.phase=Math.random()*6;return g;
+  g.position.set(x,terrainHeight(x,z),z);scene.add(g);g.userData.hp=20;g.userData.maxHp=20;g.userData.alive=true;g.userData.phase=Math.random()*6;g.userData.roamX=x+(Math.random()-.5)*22;g.userData.roamZ=z+(Math.random()-.5)*22;g.userData.roamWait=1+Math.random()*3;g.userData.walkPhase=Math.random()*6;makeHoodLabel(g);return g;
  }
  function makeHouse(){
   houseGroup=new THREE.Group();const wood=mat(0x503322),wall=mat(0x9a7650),roof=mat(0x382b29);
@@ -1739,9 +1790,8 @@ document.addEventListener("click",event=>{
  function defeatHood(npc){
   npc.userData.alive=false;scene.remove(npc);redHoods=redHoods.filter(n=>n!==npc);sound(95,.18,"triangle");
   if(progression.autoDeliver){addPoints(progression.doublePoints?20:10);toast("Rødhette sendt til ulven!");return;}
-  if(progression.inventory>=100){toast("Inventory er fullt!");return;}
-  if(progression.magnet){progression.inventory++;refreshHUD();toast("Rødhette plukket opp automatisk!");return;}
-  const drop=new THREE.Group();const token=new THREE.Mesh(new THREE.BoxGeometry(.45,.18,.35),mat(0x9b2027));token.position.y=.12;drop.add(token);drop.position.copy(npc.position);scene.add(drop);drop.userData.active=true;drops.push(drop);
+  const drop=new THREE.Group();const token=new THREE.Mesh(new THREE.BoxGeometry(.45,.18,.35),mat(0x9b2027));token.position.y=.12;drop.add(token);drop.position.copy(npc.position);scene.add(drop);drop.userData.active=true;drop.userData.magnetizing=false;drops.push(drop);
+  if(progression.inventory>=100)toast("Inventory er fullt! Lever Rødhettene til ulven.");
  }
  function nearestTarget(){
   let best=null,dist=progression.magnet?5.5:3.7;
@@ -1751,7 +1801,7 @@ document.addEventListener("click",event=>{
  function attack(){
   if(drivingCar){toast("Gå ut av bilen for å slåss.");return;}
   if(attackCooldown>0)return;const n=nearestTarget();if(!n){toast("Kom nærmere en Rødhette for å slå.");return;}
-  attackCooldown=.38;const damage=[1,5,10,20][progression.weapon]||1;n.userData.hp-=damage;
+  attackCooldown=.38;const damage=[1,5,10,20][progression.weapon]||1;n.userData.hp-=damage;updateHoodLabel(n);
   n.rotation.y=player.rotation.y;const arm=player.userData.armR;if(arm){arm.rotation.x=-1.5;arm.rotation.z=-.4;}
   sound(150+damage*8,.1,"sawtooth");
   if(n.userData.hp<=0)defeatHood(n);else toast("Treff! "+n.userData.hp+" liv igjen.");
