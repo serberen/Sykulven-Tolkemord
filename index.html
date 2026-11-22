@@ -385,6 +385,11 @@ textarea{min-height:70px}
  cursor:pointer !important;
 }
 .settings-toggle:hover{background:#151b24 !important;filter:brightness(1.12)}
+.settings-toggle .settings-back-icon{
+ width:27px;height:27px;display:block;
+ fill:none;stroke:currentColor;stroke-width:3.2;
+ stroke-linecap:round;stroke-linejoin:round;
+}
 @media(max-width:480px){
  .settings-toggle{top:10px !important;right:10px !important;width:44px !important;height:44px !important;font-size:27px !important}
 }
@@ -1002,7 +1007,9 @@ let sideForInnstillinger="valgSide";
 const settingsToggle=$("settingsToggle");
 function oppdaterInnstillingsikon(){
  const iInnstillinger=!$("settingsSide").classList.contains("hidden");
- settingsToggle.textContent=iInnstillinger?"←":"⚙";
+ settingsToggle.innerHTML=iInnstillinger
+  ? '<svg class="settings-back-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'
+  : "⚙";
  settingsToggle.setAttribute("aria-label",iInnstillinger?"Tilbake":"Åpne innstillinger");
  settingsToggle.title=iInnstillinger?"Tilbake":"Innstillinger";
 }
