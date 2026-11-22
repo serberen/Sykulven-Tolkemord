@@ -1287,11 +1287,20 @@ document.addEventListener("click",event=>{
   });
   return window.__skogThreePromise;
  }
- function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,roughness});}
+ 
+function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,roughness});}
+ const texLoader=new THREE.TextureLoader();
+ const tex={};
+ function loadTex(key,file,repeatX=1,repeatY=1){
+  const t=texLoader.load("./"+file);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(repeatX,repeatY);t.encoding=THREE.sRGBEncoding;tex[key]=t;return t;
+ }
+ function textured(color,key,roughness=1){return new THREE.MeshStandardMaterial({color,map:tex[key]||null,roughness});}
+
  const treeColliders=[];
  function makeTree(x,z,scale){
   const trunkRadius=.34*scale;
-  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*scale,.34*scale,3.8*scale,9),mat(0x211a17));
+  const trunkMat=tex.bark?textured(0xffffff,"bark",1):mat(0x211a17);
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*scale,.34*scale,3.8*scale,9),trunkMat);
   trunk.position.set(x,1.9*scale,z);scene.add(trunk);
   treeColliders.push({x,z,r:trunkRadius+.42});
   for(let layer=0;layer<4;layer++){
@@ -1474,6 +1483,15 @@ document.addEventListener("click",event=>{
  }
  function buildWorld(role){
   treeColliders.length=0;redHoods=[];drops=[];
+  tex.grass=loadTex("grass","grass-texture.jpg",24,24);
+  tex.bark=loadTex("bark","bark-texture.jpg",1,1);
+  tex.wall=loadTex("wall","wall-texture.jpg",2,1);
+  tex.roof=loadTex("roof","roof-texture.jpg",3,2);
+  tex.door=loadTex("door","door-texture.jpg",1,1);
+  tex.wolf=loadTex("wolf","wolf-fur-texture.jpg",2,2);
+  tex.redhood=loadTex("redhood","redhood-texture.png",1,1);
+  tex.sky=loadTex("sky","night-sky.jpg",1,1);
+  tex.moon=loadTex("moon","moon-texture.png",1,1);
   scene=new THREE.Scene();scene.background=new THREE.Color(0x07101b);scene.fog=new THREE.FogExp2(0x07101b,.021);
   camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,220);
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
@@ -1481,7 +1499,9 @@ document.addEventListener("click",event=>{
   renderer.outputEncoding=THREE.sRGBEncoding;
   scene.add(new THREE.HemisphereLight(0x9aabc4,0x10140f,1.0));
   const moonLight=new THREE.DirectionalLight(0x9cb8dc,1.15);moonLight.position.set(-25,35,18);scene.add(moonLight);
-  const moon=new THREE.Mesh(new THREE.SphereGeometry(5,24,18),new THREE.MeshBasicMaterial({color:0xd7dfdc}));
+  const skyDome=new THREE.Mesh(new THREE.SphereGeometry(205,32,20),new THREE.MeshBasicMaterial({map:tex.sky,side:THREE.BackSide,color:0x8b9bb0,depthWrite:false}));
+  skyDome.position.set(0,0,0);skyDome.renderOrder=-2;scene.add(skyDome);
+  const moon=new THREE.Mesh(new THREE.SphereGeometry(5,32,24),new THREE.MeshBasicMaterial({map:tex.moon,transparent:true,side:THREE.DoubleSide}));
   moon.position.set(-35,42,-75);scene.add(moon);
   const starGeo=new THREE.BufferGeometry(),starPositions=[];
   for(let i=0;i<900;i++){const a=randomStar(),b=randomStar();starPositions.push((a-.5)*390,28+b*115,(b-.5)*390);}
@@ -1492,7 +1512,7 @@ document.addEventListener("click",event=>{
   const pos=groundGeo.attributes.position;
   for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=-pos.getY(i);pos.setZ(i,terrainHeight(x,z));}
   groundGeo.computeVertexNormals();
-  const ground=new THREE.Mesh(groundGeo,mat(0x101a16));ground.rotation.x=-Math.PI/2;ground.position.y=0;scene.add(ground);
+  const ground=new THREE.Mesh(groundGeo,tex.grass?textured(0x8b9a83,"grass",1):mat(0x101a16));ground.rotation.x=-Math.PI/2;ground.position.y=0;scene.add(ground);
   const random=(()=>{let seed=918273;return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};})();
   for(let i=0;i<430;i++){
    let x=(random()-.5)*360,z=(random()-.5)*360;
@@ -1740,23 +1760,27 @@ document.addEventListener("click",event=>{
   const nose=new THREE.Mesh(new THREE.SphereGeometry(.035,8,8),mat(0x9d6253));nose.position.set(0,1.415,.29);g.add(nose);
   const mouth=new THREE.Mesh(new THREE.TorusGeometry(.055,.012,5,12,Math.PI),eyeDark);mouth.position.set(0,1.345,.272);mouth.rotation.z=Math.PI;g.add(mouth);
   const hood=new THREE.Mesh(new THREE.SphereGeometry(.34,12,10,0,Math.PI*2,0,Math.PI*.72),red);hood.position.y=1.53;g.add(hood);
+  if(tex.redhood){const portrait=new THREE.Mesh(new THREE.PlaneGeometry(1.22,1.72),new THREE.MeshBasicMaterial({map:tex.redhood,transparent:true,depthWrite:false,side:THREE.DoubleSide}));portrait.position.set(0,1.02,.39);g.add(portrait);}
   const cape=new THREE.Mesh(new THREE.ConeGeometry(.48,.9,8),red);cape.position.y=.72;g.add(cape);
   const basket=new THREE.Mesh(new THREE.BoxGeometry(.25,.2,.2),mat(0x9a6937));basket.position.set(.35,.75,.05);g.add(basket);
   g.position.set(x,terrainHeight(x,z),z);scene.add(g);g.userData.hp=20;g.userData.maxHp=20;g.userData.alive=true;g.userData.phase=Math.random()*6;g.userData.roamX=x+(Math.random()-.5)*22;g.userData.roamZ=z+(Math.random()-.5)*22;g.userData.roamWait=1+Math.random()*3;g.userData.walkPhase=Math.random()*6;makeHoodLabel(g);return g;
  }
  function makeHouse(){
-  houseGroup=new THREE.Group();const wood=mat(0x503322),wall=mat(0x9a7650),roof=mat(0x382b29);
+  houseGroup=new THREE.Group();const wood=tex.door?textured(0xffffff,"door",1):mat(0x503322),wall=tex.wall?textured(0xffffff,"wall",1):mat(0x9a7650),roof=tex.roof?textured(0xffffff,"roof",1):mat(0x382b29);
   const base=new THREE.Mesh(new THREE.BoxGeometry(8,4.2,6),wall);base.position.y=2.1;houseGroup.add(base);
   const roofMesh=new THREE.Mesh(new THREE.ConeGeometry(5.5,3.2,4),roof);roofMesh.rotation.y=Math.PI/4;roofMesh.position.y=5.65;houseGroup.add(roofMesh);
   const door=new THREE.Mesh(new THREE.BoxGeometry(1.2,2.5,.15),wood);door.position.set(0,1.25,3.08);houseGroup.add(door);
   for(const x of [-2.4,2.4]){const win=new THREE.Mesh(new THREE.BoxGeometry(1.05,1,.12),mat(0x7798a2));win.position.set(x,2.65,3.08);houseGroup.add(win);}
   houseGroup.position.set(0,terrainHeight(0,-11),-11);scene.add(houseGroup);
-  wolfGroup=new THREE.Group();const fur=mat(0x77736d),blanket=mat(0x8b2930),pillow=mat(0xe6d9bd);
+  wolfGroup=new THREE.Group();const fur=tex.wolf?textured(0xffffff,"wolf",.92):mat(0x77736d),blanket=mat(0x8b2930),pillow=mat(0xe6d9bd);
   const bed=new THREE.Mesh(new THREE.BoxGeometry(4.1,.45,2.6),wood);bed.position.y=.55;wolfGroup.add(bed);
   const mattress=new THREE.Mesh(new THREE.BoxGeometry(3.8,.25,2.35),pillow);mattress.position.y=.9;wolfGroup.add(mattress);
   const quilt=new THREE.Mesh(new THREE.BoxGeometry(2.4,.3,2.2),blanket);quilt.position.set(.55,1.12,0);wolfGroup.add(quilt);
   const torso=new THREE.Mesh(new THREE.SphereGeometry(.7,14,10),fur);torso.scale.set(1.35,.65,.8);torso.position.set(-.55,1.45,0);wolfGroup.add(torso);
   const head=new THREE.Mesh(new THREE.SphereGeometry(.42,14,12),fur);head.position.set(-1.45,1.55,0);wolfGroup.add(head);
+  const muzzle=new THREE.Mesh(new THREE.SphereGeometry(.22,12,9),mat(0xb7b0a4));muzzle.scale.set(1.25,.62,.8);muzzle.position.set(-1.72,1.38,.08);wolfGroup.add(muzzle);
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),mat(0x17191c));nose.position.set(-1.91,1.43,.1);wolfGroup.add(nose);
+  for(const z of [-.25,.25]){const eye=new THREE.Mesh(new THREE.SphereGeometry(.055,10,8),mat(0xd4c99b));eye.position.set(-1.58,1.65,z+.23);wolfGroup.add(eye);const pupil=new THREE.Mesh(new THREE.SphereGeometry(.025,8,8),mat(0x151515));pupil.position.set(-1.60,1.65,z+.27);wolfGroup.add(pupil);}
   for(const z of [-.25,.25]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.13,.42,7),fur);ear.position.set(-1.55,1.95,z);wolfGroup.add(ear);}
   wolfGroup.position.set(0,terrainHeight(0,-11),-11);scene.add(wolfGroup);
  }
