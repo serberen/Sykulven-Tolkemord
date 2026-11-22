@@ -795,7 +795,7 @@ function renderNatt(){
   const play=document.createElement("button");play.className="action";play.type="button";play.textContent="▶ Spill klippet";play.addEventListener("click",()=>spillEnkeltKlipp(p.id,p.rolle));
   const remove=document.createElement("button");remove.className="action";remove.type="button";remove.textContent="Fjern lydfil";remove.addEventListener("click",async()=>{try{await slettLydklipp(p.id);meta.textContent="Ingen lydfil lagt inn."; }catch(e){meta.textContent="Kunne ikke fjerne lydfilen."; }});
   controls.append(input,play,remove);card.append(heading,script,meta,controls);list.append(card);
-  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":"Lokal lagring er ikke tilgjengelig.";});
+  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":"Lokal lagring er ikke tilgjengelig.";});
  });
  if(!phases.length){const p=document.createElement("p");p.className="small";p.textContent="Ingen av rollene i denne natten er valgt i kortvelgeren. Velg rollene du skal bruke, så vises instruksjonene her.";list.append(p);}
 }
@@ -845,10 +845,19 @@ async function spillHeleNatten(){
   const p=phases[i];let file;
   try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
   if(token!==sekvensToken)break;
-  if(!file&&p.id==="vokter")file={url:"./vokter-nattinstruksjon.wav"};
-  if(!file&&p.id!=="frimurer"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
+  if(!file&&p.id!=="frimurer"&&p.id!=="vokter"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
   let ok=true;
-  if(p.id==="frimurer"){
+  if(p.id==="vokter"){
+   const instruction={url:"./vokter-nattinstruksjon.wav"};
+   ok=await spillFil(instruction,"Vokter – instruksjon");
+   if(!ok)break;
+   if(token!==sekvensToken)break;
+   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Vokter utfører handlingen. Lukk øynene om {sek} sekunder …");
+   if(!ventet)break;
+   const close={url:"./vokter-lukk-oynene.wav"};
+   ok=await spillFil(close,"Vokter – lukk øynene igjen");
+   if(!ok)break;
+  }else if(p.id==="frimurer"){
    const wake=new Audio("./frimurer-vakne.wav");wake.volume=lydinnstillinger.stemmeVolum;
    try{await wake.play();ok=await ventPaaLyd(wake);}catch(e){ok=false;}
    if(!ok)break;
