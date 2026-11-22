@@ -510,32 +510,55 @@ function lagKortflate(knapp, bilde, alt, rolle){
  back.append(title,team,desc);knapp.append(front,back);
 }
 
-function spillAlleSjokkbølge(baklengs=false){
- // Velg alle: Røver til Paranormal Etterforsker. Fravelg alle: motsatt vei.
+function spillAlleSjokkbølge(baklengs=false,velg=false){
+ // Grønnmarkeringen følger sjokkbølgen kort for kort.
  const fra=roller.findIndex(r=>r.navn==="Røver");
  const til=roller.findIndex(r=>r.navn==="Paranormal Etterforsker");
  if(fra<0||til<fra)return;
  const start=baklengs?til:fra;
  const slutt=baklengs?fra:til;
  const steg=baklengs?-1:1;
+ const berørte=new Set();
  for(let i=start,rekkefølge=0;baklengs?i>=slutt:i<=slutt;i+=steg,rekkefølge++){
+  berørte.add(i);
   const kort=grid.querySelector('.card[data-role-index="'+i+'"]');
   if(!kort)continue;
+  const forsinkelse=rekkefølge*32;
   kort.classList.remove("sjokkbølge");
-  kort.style.setProperty("--sjokk-forsinkelse",(rekkefølge*32)+"ms");
+  kort.style.setProperty("--sjokk-forsinkelse",forsinkelse+"ms");
   void kort.offsetWidth;
   kort.classList.add("sjokkbølge");
+  setTimeout(()=>{
+   if(velg)valgt.add(i);else valgt.delete(i);
+   kort.classList.toggle("selected",velg);
+   kort.setAttribute("aria-label",roller[i].navn+(velg?", valgt":", ikke valgt"));
+   $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
+   $("startKnapp").disabled=valgt.size===0;
+   const alle=grid.querySelector(".card.all");
+   if(alle)alle.classList.toggle("selected",valgt.size===roller.length);
+  },forsinkelse);
   kort.addEventListener("animationend",()=>{
    kort.classList.remove("sjokkbølge");
    kort.style.removeProperty("--sjokk-forsinkelse");
   },{once:true});
  }
+ // Kort utenfor bølgeområdet følger ALLE-knappen umiddelbart.
+ roller.forEach((_,i)=>{
+  if(berørte.has(i))return;
+  if(velg)valgt.add(i);else valgt.delete(i);
+  const kort=grid.querySelector('.card[data-role-index="'+i+'"]');
+  if(kort){
+   kort.classList.toggle("selected",velg);
+   kort.setAttribute("aria-label",roller[i].navn+(velg?", valgt":", ikke valgt"));
+  }
+ });
+ $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
+ $("startKnapp").disabled=valgt.size===0;
 }
-
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();spillAlleFravalgtLyd();}else{roller.forEach((_,i)=>valgt.add(i));spillAlleValgtLyd();}tegnKort();spillAlleSjokkbølge(valgt.size===0)};grid.append(alle);
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;const fravelg=valgt.size===roller.length;if(fravelg){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();spillAlleFravalgtLyd();}else{spillAlleValgtLyd();}spillAlleSjokkbølge(fravelg,!fravelg)};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
