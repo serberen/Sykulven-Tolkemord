@@ -431,6 +431,13 @@ textarea{min-height:70px}
 #skogHjelp{display:none}
 #skogInteract{position:absolute;right:24px;bottom:26px;width:58px;height:58px;border:1px solid #d8c28a;border-radius:12px;background:#68717b88;color:#fff;font-size:28px;font-weight:800;box-shadow:0 3px 18px #0008;cursor:pointer;touch-action:manipulation}
 #skogInteract:active{background:#9b8b65bb;transform:scale(.96)}
+#skogAbility{position:absolute;right:94px;bottom:26px;width:58px;height:58px;border:1px solid #e7a5ff;border-radius:14px;background:linear-gradient(145deg,#40205fdd,#101a2ddd);color:#ffe2ff;font-size:29px;box-shadow:0 0 16px #a34bff88;cursor:pointer;touch-action:manipulation}
+#skogAbility:disabled{opacity:.45;filter:grayscale(.7)}
+#skogAbilityCooldown{position:absolute;right:94px;bottom:88px;color:#f4dcff;font-size:11px;font-weight:900;text-shadow:0 1px 4px #000}
+#roleAbilityPicker{position:absolute;inset:0;z-index:30;background:#050914ed;display:none;align-items:center;justify-content:center;padding:20px}
+#roleAbilityPicker .pickerPanel{max-width:520px;width:100%;max-height:80%;overflow:auto;background:#121c2c;border:1px solid #d7bd7c;border-radius:16px;padding:18px;color:white}
+#roleAbilityPicker button{margin:4px;padding:9px 12px;border:1px solid #a98a4c;border-radius:9px;background:#26334a;color:white}
+#abilityStatus{position:absolute;left:50%;top:70px;transform:translateX(-50%);z-index:8;color:#fff;background:#171027dd;border:1px solid #b47ce4;border-radius:10px;padding:7px 12px;font-size:12px;display:none;pointer-events:none}
 .skog-tag{font-family:Arial,sans-serif}
 #skogKryss{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#e9dfc6;box-shadow:0 0 5px #fff;transform:translate(-50%,-50%);pointer-events:none}
 #skogJoystick{position:absolute;left:24px;bottom:28px;width:116px;height:116px;border:2px solid #d7bd7c88;border-radius:50%;background:#101b2b88;display:none;touch-action:none}
@@ -1161,6 +1168,8 @@ document.addEventListener("click",event=>{
  </section>
  <div id="skogKryss"></div>
  <button id="skogInteract" type="button" aria-label="Interagér" title="Interagér">i</button>
+ <button id="skogAbility" type="button" aria-label="Bruk rolle-ability" title="Rolle-ability">🔥</button><div id="skogAbilityCooldown"></div><div id="abilityStatus"></div>
+ <div id="roleAbilityPicker"><div class="pickerPanel"><h2>Velg rolle i 30 sekunder</h2><p>Du blir Doppelgjenger igjen når tiden er ute.</p><div id="roleAbilityChoices"></div><button id="roleAbilityCancel">Avbryt</button></div></div>
  <div id="skogHjelp">WASD for å gå · Mus for å se rundt · ESC for å låse opp musen</div>
  <div id="skogJoystick"><div id="skogJoystickKnott"></div></div>
 </div>
@@ -1229,7 +1238,7 @@ document.addEventListener("click",event=>{
   model.add(makeNameTag(state.nickname||"Spiller",role.navn));
   model.position.set(Number(state.x)||0,terrainHeight(Number(state.x)||0,Number(state.z)||0),Number(state.z)||0);
   scene.add(model);
-  remotePlayers.set(id,{model,nickname:state.nickname||"Spiller",targetX:model.position.x,targetZ:model.position.z,targetYaw:0});
+  remotePlayers.set(id,{model,nickname:state.nickname||"Spiller",targetX:model.position.x,targetZ:model.position.z,targetYaw:0,points:Number(state.points)||0,role:state.role||role.navn});
  }
  function syncRemotePresence(){
   if(!room)return;
@@ -1246,17 +1255,23 @@ document.addEventListener("click",event=>{
   await loadSupabase();
   room=sb.channel("sykulven-dark-forest",{config:{presence:{key:mySession},broadcast:{self:false}}});
   room.on("presence",{event:"sync"},syncRemotePresence);
+  room.on("broadcast",{event:"ability"},({payload})=>{
+   if(!payload||payload.target!==mySession)return;
+   if(payload.action==="deduct"){progression.points=Math.max(0,progression.points-(Number(payload.amount)||0));refreshHUD();toast("En spiller stjal ulvepoeng fra deg!");}
+   if(payload.action==="credit"){addPoints(Number(payload.amount)||0);toast("Du fikk ulvepoeng fra en spiller!");}
+   if(payload.action==="push"&&player){const dx=player.position.x-(payload.extra?.x||0),dz=player.position.z-(payload.extra?.z||0),d=Math.hypot(dx,dz)||1;player.position.x+=dx/d*3;player.position.z+=dz/d*3;toast("Bråkmakeren dyttet deg!");}
+  });
   room.on("broadcast",{event:"move"},({payload})=>{
    if(!payload||payload.session===mySession)return;
    let p=remotePlayers.get(payload.session);
    if(!p){makeRemote(payload.session,payload);p=remotePlayers.get(payload.session);}
    if(!p)return;
-   p.targetX=Number(payload.x)||0;p.targetZ=Number(payload.z)||0;p.targetYaw=Number(payload.yaw)||0;
+   p.targetX=Number(payload.x)||0;p.targetZ=Number(payload.z)||0;p.targetYaw=Number(payload.yaw)||0;p.points=Number(payload.points)||0;p.role=payload.role||p.role;
   });
   await new Promise((resolve,reject)=>{
    room.subscribe(async status=>{
     if(status==="SUBSCRIBED"){
-     await room.track({session:mySession,nickname:myNickname,role:role.navn,x:0,z:0});
+     await room.track({session:mySession,nickname:myNickname,role:currentRoleName||role.navn,x:0,z:0});
      resolve();
     }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")reject(new Error("Kunne ikke koble til multiplayer-rommet."));
    });
@@ -1266,7 +1281,7 @@ document.addEventListener("click",event=>{
   },15000);
   broadcastTimer=setInterval(()=>{
    if(!room||!player)return;
-   room.send({type:"broadcast",event:"move",payload:{session:mySession,nickname:myNickname,role:role.navn,x:player.position.x,z:player.position.z,yaw:player.rotation.y}});
+   room.send({type:"broadcast",event:"move",payload:{session:mySession,nickname:myNickname,role:currentRoleName,x:player.position.x,z:player.position.z,yaw:player.rotation.y,points:progression.points}});
   },120);
  }
  async function enterGameWithNickname(role,index){
@@ -1313,20 +1328,21 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
 
  const treeColliders=[];
  function makeTree(x,z,scale){
+  const treeGroup=new THREE.Group();scene.add(treeGroup);
   const trunkRadius=.34*scale;
   const trunkMat=tex.bark?textured(0xffffff,"bark",1):mat(0x211a17);
   const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.22*scale,.34*scale,3.8*scale,9),trunkMat);
-  trunk.position.set(x,1.9*scale,z);scene.add(trunk);
-  treeColliders.push({x,z,r:trunkRadius+.42});
+  trunk.position.set(x,1.9*scale,z);treeGroup.add(trunk);
+  treeColliders.push({x,z,r:trunkRadius+.42,object:treeGroup});
   for(let layer=0;layer<4;layer++){
    const h=(3.5-layer*.55)*scale,r=(1.75-layer*.25)*scale;
    const crown=new THREE.Mesh(new THREE.ConeGeometry(r,h,9),mat(layer%2?0x142720:0x101f1b));
-   crown.position.set(x,(3.1+layer*.92)*scale,z);scene.add(crown);
+   crown.position.set(x,(3.1+layer*.92)*scale,z);treeGroup.add(crown);
   }
   for(let k=0;k<4;k++){
    const branch=new THREE.Mesh(new THREE.CylinderGeometry(.045*scale,.09*scale,1.15*scale,6),mat(0x30251d));
    branch.position.set(x+(k%2?1:-1)*.65*scale,2.15*scale+(k%2)*.35*scale,z+(k<2?.4:-.4)*scale);
-   branch.rotation.z=(k%2?-.7:.7);scene.add(branch);
+   branch.rotation.z=(k%2?-.7:.7);treeGroup.add(branch);
   }
  }
  function buildPlayer(role,parentScene=scene){
@@ -1548,7 +1564,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   makeHouse();makeAgeCar();spawnRedHoods();spawnAttackers();
   player=buildPlayer(role);
   player.add(makeNameTag(myNickname,role.navn));
-  refreshHUD();updateHeldWeapon();
+  refreshHUD();updateHeldWeapon();updateAbilityButton();
   camera.position.set(0,2.45,5);
  }
  function resize(){
@@ -1565,9 +1581,10 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   if(attackCooldown>0)attackCooldown=Math.max(0,attackCooldown-dt);
   updateImpactBursts(dt);
   updateAttackers(dt,time);
+  tickAbilityEffects(dt);
   if(progression.passive&&Math.random()<dt){addPoints(1);}
   if(progression.breadcrumbs){crumbTimer+=dt;if(crumbTimer>5){crumbTimer=0;dropBreadcrumbs();}}
-  const speed=drivingCar?13.5:(progression.speed?7.2:5.0);
+  const speed=drivingCar?(Date.now()<abilityEffects.drunkUntil?27:13.5):(progression.speed?7.2:5.0);
   const dx=(-Math.sin(yaw)*forward+Math.cos(yaw)*side)*speed*dt;
   const dz=(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*speed*dt;
   const nextX=player.position.x+dx,nextZ=player.position.z+dz;
@@ -1579,6 +1596,15 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
    carGroup.position.set(player.position.x,player.position.y,player.position.z);carGroup.rotation.y=player.rotation.y;
    for(const n of [...redHoods]){if(Math.hypot(n.position.x-player.position.x,n.position.z-player.position.z)<2.65)carHitHood(n);}
    for(const enemy of [...attackers]){if(Math.hypot(enemy.sprite.position.x-player.position.x,enemy.sprite.position.z-player.position.z)<2.65)carHitAttacker(enemy);}
+   if(Date.now()<abilityEffects.drunkUntil){
+    for(const tree of [...treeColliders]){
+     if(Math.hypot(tree.x-player.position.x,tree.z-player.position.z)<tree.r+1.8){
+      if(tree.object)tree.object.visible=false;
+      treeColliders.splice(treeColliders.indexOf(tree),1);
+      setTimeout(()=>{if(scene&&tree.object){tree.object.visible=true;treeColliders.push(tree);}},10000);
+     }
+    }
+   }
   }
   if(length>.05&&!blocked)player.rotation.y=Math.atan2(dx,dz);
   if(length>.05){
@@ -1601,6 +1627,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   camera.lookAt(lookTarget);
   for(const n of redHoods){
    let tx=n.userData.roamX,tz=n.userData.roamZ,walkSpeed=.85;
+   if(performance.now()<(n.userData.stunnedUntil||0)){n.position.y=terrainHeight(n.position.x,n.position.z)+.12;continue;}
    const panicking=performance.now()<(n.userData.panicUntil||0);
    if(panicking){
     const awayX=n.position.x-player.position.x,awayZ=n.position.z-player.position.z,len=Math.hypot(awayX,awayZ)||1;
@@ -1658,11 +1685,12 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   document.body.style.overflow="hidden";
  }
  async function startWorld(role,index){
+  currentRoleName=role.navn;effectiveRoleName=role.navn;abilityCooldownUntil=0;abilityEffects={};
   skogMusikk.currentTime=0;
   skogMusikk.play().catch(()=>{help.textContent="Trykk én gang i spillet for å starte bakgrunnsmusikken.";});
   await loadThree();
   if(!root.classList.contains("aktiv"))return;
-  buildWorld(role);playerHP=100;refreshHealth();resize();lastTime=performance.now();loop(lastTime);pointerLock();
+  buildWorld(role);playerHP=100;refreshHealth();updateAbilityButton();resize();lastTime=performance.now();loop(lastTime);pointerLock();
  }
  async function stopGame(){
   skogMusikk.pause();skogMusikk.currentTime=0;setCarDrivingAudio(false);
@@ -1685,7 +1713,9 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   if(role)enterGameWithNickname(role,Number(root.dataset.roleIndex));
  });
  document.getElementById("skogNavnInput").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("skogNavnStart").click();});
- document.getElementById("skogInteract").addEventListener("click",()=>{
+ document.getElementById("skogAbility").addEventListener("click",useAbility);
+ document.getElementById("roleAbilityCancel").addEventListener("click",()=>document.getElementById("roleAbilityPicker").style.display="none");
+  document.getElementById("skogInteract").addEventListener("click",()=>{
   help.style.display="block";help.textContent="Du utforsker Mørkeskogen. Flere interaksjoner kommer senere.";
   setTimeout(()=>{help.style.display="none";},2200);
  });
@@ -1735,7 +1765,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
 
  // --- Rødhette-eventyret: lokal progresjon og 3D-objekter ---
  const progression={points:0,inventory:0,weapon:0,speed:false,breadcrumbs:false,dash:false,magnet:false,autoDeliver:false,doublePoints:false,passive:false,ageCar:false};
- let redHoods=[],drops=[],attackers=[],playerHP=100,houseGroup=null,wolfGroup=null,carGroup=null,drivingCar=false,shopTab="våpen",lastTap=0,dashUntil=0,crumbTimer=0,attackCooldown=0;
+ let redHoods=[],drops=[],attackers=[],playerHP=100,currentRoleName="",effectiveRoleName="",abilityCooldownUntil=0,abilityEffects={},abilityLastTick=0,abilityStationary=0,abilityMoving=0,abilityShieldMesh=null,houseGroup=null,wolfGroup=null,carGroup=null,drivingCar=false,shopTab="våpen",lastTap=0,dashUntil=0,crumbTimer=0,attackCooldown=0;
  const shopData={
   "våpen":[
    {id:"stick",name:"Trestokk",price:50,desc:"5 skade per slag."},
@@ -1796,7 +1826,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
 
  function spawnAttackers(){
   attackers=[];
-  for(let i=0;i<12;i++){
+  for(let i=0;i<15;i++){
    let x,z;do{x=(Math.random()-.5)*340;z=(Math.random()-.5)*340;}while(Math.hypot(x,z)<24);
    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex.enemyCharacter,transparent:true,depthWrite:false,alphaTest:.08}));
    const scale=.95+Math.random()*.55;sprite.scale.set(1.25*scale,1.65*scale,1);
@@ -1804,10 +1834,17 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
    attackers.push({sprite,hp:10,phase:Math.random()*6,attackCooldown:0,hopSpeed:3+Math.random()*1.5,roamX:x,roamZ:z,roamWait:Math.random()*3});
   }
  }
+ function spawnOneAttacker(){
+  if(attackers.length>=20||!scene)return;
+  let x,z;do{x=(Math.random()-.5)*340;z=(Math.random()-.5)*340;}while(Math.hypot(x,z)<24);
+  const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex.enemyCharacter,transparent:true,depthWrite:false,alphaTest:.08}));
+  const scale=.95+Math.random()*.55;sprite.scale.set(1.25*scale,1.65*scale,1);sprite.position.set(x,terrainHeight(x,z)+.95,z);scene.add(sprite);
+  attackers.push({sprite,hp:10,phase:Math.random()*6,attackCooldown:0,hopSpeed:3+Math.random()*1.5,roamX:x,roamZ:z,roamWait:Math.random()*3});
+ }
  function carHitAttacker(enemy){
   if(!enemy)return;
   const pos=enemy.sprite.position.clone();redImpactParticles(pos);
-  scene.remove(enemy.sprite);attackers=attackers.filter(a=>a!==enemy);
+  scene.remove(enemy.sprite);attackers=attackers.filter(a=>a!==enemy);setTimeout(()=>{if(scene&&attackers.length<20)spawnOneAttacker();},1800);
   sound(115,.18,"triangle");
  }
  function updateAttackers(dt,time){
@@ -1883,8 +1920,15 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
  }
  function spawnRedHoods(){
   redHoods=[];
-  for(let i=0;i<38;i++){let x,z;do{x=(Math.random()-.5)*330;z=(Math.random()-.5)*330;}while(Math.hypot(x,z)<17);redHoods.push(makeHood(x,z,false));}
-  for(let i=0;i<4;i++){let x,z;do{x=(Math.random()-.5)*330;z=(Math.random()-.5)*330;}while(Math.hypot(x,z)<35);redHoods.push(makeHood(x,z,true));}
+  for(let i=0;i<25;i++){let x,z;do{x=(Math.random()-.5)*330;z=(Math.random()-.5)*330;}while(Math.hypot(x,z)<17);redHoods.push(makeHood(x,z,false));}
+  for(let i=0;i<5;i++){let x,z;do{x=(Math.random()-.5)*330;z=(Math.random()-.5)*330;}while(Math.hypot(x,z)<35);redHoods.push(makeHood(x,z,true));}
+ }
+ function spawnOneRedHood(rare=false){
+  if(redHoods.length>=30)return;
+  const rareCount=redHoods.filter(n=>n.userData.rare).length;
+  if(rare&&rareCount>=5)rare=false;
+  let x,z;do{x=(Math.random()-.5)*330;z=(Math.random()-.5)*330;}while(Math.hypot(x,z)<22);
+  redHoods.push(makeHood(x,z,rare));
  }
 
  function updateHeldWeapon(){
@@ -1918,7 +1962,11 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   box.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",()=>buyUpgrade(b.dataset.buy)));
   document.querySelectorAll("#ulveShopTabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===shopTab));
  }
- function addPoints(n){progression.points=Math.min(5000,progression.points+n);refreshHUD();}
+ function addPoints(n){
+  let amount=n;
+  if(abilityEffects.villageUntil>Date.now())amount*=4;
+  progression.points=Math.min(5000,progression.points+amount);refreshHUD();
+ }
  function refreshHealth(){
   const fill=document.getElementById("playerHealthFill"),value=document.getElementById("playerHealthValue");
   if(fill)fill.style.width=Math.max(0,playerHP)+"%";
@@ -1929,13 +1977,13 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   if(playerHP>before){refreshHealth();toast("+"+(playerHP-before)+" HP");}
  }
  function damagePlayer(amount){
-  if(playerHP<=0||drivingCar)return;
+  if(playerHP<=0||drivingCar||abilityEffects.shieldUntil>Date.now())return;
   playerHP=Math.max(0,playerHP-amount);refreshHealth();sound(90,.16,"triangle");
   if(playerHP<=0)playerDied();
  }
  function playerDied(){
   setCarDrivingAudio(false);
-  progression.points=0;refreshHUD();playerHP=100;refreshHealth();drivingCar=false;
+  if(Date.now()>=abilityEffects.emoUntil){progression.points=0;refreshHUD();}playerHP=100;refreshHealth();drivingCar=false;
   if(carGroup)carGroup.visible=!!progression.ageCar;
   if(player){player.visible=true;player.position.set(0,terrainHeight(0,0),0);player.rotation.y=0;}
   toast("Du ble slått ut! Du mistet alle ulvepoengene, men beholdt resten.");
@@ -1970,6 +2018,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
 
  function defeatHood(npc,byCar=false){
   npc.userData.alive=false;scene.remove(npc);redHoods=redHoods.filter(n=>n!==npc);sound(95,.18,"triangle");
+  setTimeout(()=>{if(scene&&redHoods.length<30)spawnOneRedHood(Math.random()<.08&&redHoods.filter(n=>n.userData.rare).length<5);},2200);
   if(progression.autoDeliver){addPoints(progression.doublePoints?20:10);healPlayer(10);toast("Rødhette sendt til ulven!");return;}
   const drop=new THREE.Group();const token=new THREE.Mesh(new THREE.BoxGeometry(.45,.18,.35),mat(0x9b2027));token.position.y=.12;drop.add(token);drop.position.copy(npc.position);scene.add(drop);drop.userData.active=true;drop.userData.magnetizing=false;drops.push(drop);
   if(progression.inventory>=100)toast("Inventory er fullt! Lever Rødhettene til ulven.");
@@ -1993,9 +2042,151 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
    src.onended=()=>c.close();
   }catch(e){}
  }
+
+ const abilityRoleNames=["Røver","Frimurer","Synsk","Håndlanger","Syk Ulven","Emo","Doppelgjenger","Jeger","Landsbyboer","Rimmi","Beruset","Bråkmaker","Prins","Avslører","Sov Ulven","Søvnløs","Dulter","Vokter","Paranormal Etterforsker"];
+ function showAbilityStatus(msg,ms=2400){const el=document.getElementById("abilityStatus");el.textContent=msg;el.style.display="block";clearTimeout(showAbilityStatus.t);showAbilityStatus.t=setTimeout(()=>el.style.display="none",ms);}
+ function nearestRemote(){
+  let best=null,dist=Infinity;
+  for(const [id,r] of remotePlayers){const d=Math.hypot(r.model.position.x-player.position.x,r.model.position.z-player.position.z);if(d<dist){dist=d;best={id,...r,distance:d};}}
+  return best;
+ }
+ function sendAbilityEvent(action,target,amount=0,extra={}){
+  if(room)room.send({type:"broadcast",event:"ability",payload:{session:mySession,action,target,amount,extra}});
+ }
+ function setRoleForAbility(name,duration=30000){
+  effectiveRoleName=name;showAbilityStatus("Rolle: "+name+" ("+Math.ceil(duration/1000)+" sek)");
+  abilityEffects.roleUntil=Date.now()+duration;
+  clearTimeout(abilityEffects.roleTimer);
+  abilityEffects.roleTimer=setTimeout(()=>{effectiveRoleName="Doppelgjenger";showAbilityStatus("Du er Doppelgjenger igjen.");},duration);
+ }
+ function useAbility(){
+  if(!player)return;
+  const now=Date.now();
+  if(now<abilityCooldownUntil){showAbilityStatus("Ability klar om "+Math.ceil((abilityCooldownUntil-now)/1000)+" sek.");return;}
+  abilityCooldownUntil=now+60000;
+  const role=effectiveRoleName;
+  let msg="Ability aktivert!";
+  switch(role){
+   case "Røver":{
+    const target=nearestRemote();
+    if(!target||target.distance>12||target.points<=progression.points){msg="Ingen nær spiller har flere ulvepoeng enn deg.";break;}
+    const stolen=Math.floor(target.points/2);
+    addPoints(stolen);sendAbilityEvent("deduct",target.id,stolen);msg="Du stjal "+stolen+" ulvepoeng fra "+target.nickname+"!";break;
+   }
+   case "Frimurer":{
+    abilityEffects.shieldUntil=now+30000;
+    if(abilityShieldMesh)scene.remove(abilityShieldMesh);
+    abilityShieldMesh=new THREE.Mesh(new THREE.SphereGeometry(1.45,20,16),new THREE.MeshBasicMaterial({color:0x6ddcff,wireframe:true,transparent:true,opacity:.5}));
+    abilityShieldMesh.position.copy(player.position);abilityShieldMesh.position.y+=1;scene.add(abilityShieldMesh);
+    msg="Kraftskjold aktivt i 30 sekunder.";break;
+   }
+   case "Synsk":{
+    abilityEffects.seerUntil=now+20000;
+    redHoods.forEach(n=>{n.userData.seerUntil=now+20000;});
+    msg="Alle Rødhetter er markert i 20 sekunder.";break;
+   }
+   case "Håndlanger":{
+    const original=progression.points;progression.points=Math.min(5000,progression.points+original);
+    const transfer=Math.floor(original/2),target=nearestRemote();
+    if(target&&target.distance<60){progression.points=Math.max(0,progression.points-transfer);sendAbilityEvent("credit",target.id,transfer);msg="Du doblet poengene og ga "+transfer+" til "+target.nickname+".";}
+    else msg="Poengene dine ble doblet. Ingen spiller var nær nok til å motta halvparten.";
+    refreshHUD();break;
+   }
+   case "Syk Ulven":abilityEffects.wolfUntil=now+20000;msg="Ulveform aktiv i 20 sekunder. Rødhetter nær deg blir spist automatisk.";break;
+   case "Emo":abilityEffects.emoUntil=now+20000;msg="Dødsbeskyttelse aktiv i 20 sekunder.";break;
+   case "Doppelgjenger":{
+    const picker=document.getElementById("roleAbilityPicker"),choices=document.getElementById("roleAbilityChoices");
+    choices.innerHTML="";
+    [...new Set(abilityRoleNames.filter(n=>n!=="Doppelgjenger"))].forEach(n=>{const b=document.createElement("button");b.textContent=n;b.onclick=()=>{picker.style.display="none";setRoleForAbility(n,30000);};choices.appendChild(b);});
+    picker.style.display="flex";msg="Velg en rolle.";break;
+   }
+   case "Jeger":msg="Jegermodus aktiv. Ett håndslag beseirer en angripende skapning.";abilityEffects.hunterUntil=now+20000;break;
+   case "Landsbyboer":abilityEffects.villageUntil=now+10000;msg="4x ulvepoeng i 10 sekunder.";break;
+   case "Rimmi":abilityEffects.rimmiUntil=now+10000;msg="Rimmi-modus: stå ved ulven og sank 10 poeng i sekundet.";break;
+   case "Beruset":if(!drivingCar){msg="Sett deg i Åge Bil først.";abilityCooldownUntil=now;break;}abilityEffects.drunkUntil=now+20000;msg="Fyllekjøring aktiv: dobbel fart i 20 sekunder.";break;
+   case "Bråkmaker":abilityEffects.brawlerUntil=now+10000;msg="Bråkmaker kan slå spillere i 10 sekunder.";break;
+   case "Prins":{
+    let count=0;
+    for(const [id,r] of remotePlayers){if((r.points||0)>=20){sendAbilityEvent("deduct",id,20);count++;}}
+    addPoints(count*20);msg="Du tok 20 poeng fra "+count+" spillere.";break;
+   }
+   case "Avslører":{
+    const target=nearestRemote();
+    if(target&&target.points>progression.points){const gain=target.points-progression.points;progression.points=Math.min(5000,target.points);refreshHUD();msg="Du kopierte poengsummen til "+target.nickname+".";}
+    else msg="Ingen nær spiller har flere poeng enn deg.";
+    abilityEffects.revealerUntil=now+60000;break;
+   }
+   case "Sov Ulven":abilityEffects.sleepUntil=now+10000;abilityEffects.sleepStart={x:player.position.x,z:player.position.z};abilityEffects.sleepTick=0;msg="Stå stille i 10 sekunder for å samle Rødhetter.";break;
+   case "Søvnløs":abilityEffects.walkUntil=now+20000;abilityEffects.walkTick=0;abilityEffects.walkStart={x:player.position.x,z:player.position.z};msg="Beveg deg for å tjene 5 poeng per sekund i 20 sekunder.";break;
+   case "Dulter":abilityEffects.stunUntil=now+40000;redHoods.forEach(n=>n.userData.stunnedUntil=now+40000);msg="Rødhettene er slått ut av balanse i 40 sekunder.";break;
+   case "Vokter":abilityEffects.guardUntil=now+10000;msg="Voktermodus: nær Rødhetter med fullt liv for å tjene poeng.";break;
+   case "Paranormal Etterforsker":abilityEffects.paranormalUntil=now+10000;msg="Nær Syk Ulven eller Sov Ulven for å tjene poeng.";break;
+   default:msg="Ingen ability for denne rollen.";
+  }
+  showAbilityStatus(msg,3600);updateAbilityButton();
+ }
+ function updateAbilityButton(){
+  const btn=document.getElementById("skogAbility"),label=document.getElementById("skogAbilityCooldown");
+  if(!btn)return;
+  const left=Math.max(0,Math.ceil((abilityCooldownUntil-Date.now())/1000));
+  btn.disabled=left>0;label.textContent=left?left+"s":"";
+  btn.title="Ability – "+(effectiveRoleName||currentRoleName);
+ }
+ function tickAbilityEffects(dt){
+  if(!player)return;const now=Date.now();
+  if(abilityShieldMesh){abilityShieldMesh.position.copy(player.position);abilityShieldMesh.position.y+=1;if(now>=abilityEffects.shieldUntil){scene.remove(abilityShieldMesh);abilityShieldMesh=null;}}
+  if(abilityEffects.seerUntil>now){redHoods.forEach(n=>{if(!n.userData.seerMarker){const marker=new THREE.Mesh(new THREE.SphereGeometry(.28,8,6),new THREE.MeshBasicMaterial({color:0xff1b32,transparent:true,opacity:.92}));marker.position.y=3.2;n.add(marker);n.userData.seerMarker=marker;}});}
+  else redHoods.forEach(n=>{if(n.userData.seerMarker){n.remove(n.userData.seerMarker);n.userData.seerMarker=null;}});
+  if(abilityEffects.wolfUntil>now){
+   for(const n of [...redHoods])if(player.position.distanceTo(n.position)<4){
+    n.userData.alive=false;scene.remove(n);redHoods=redHoods.filter(v=>v!==n);
+    addPoints(progression.doublePoints?20:10);healPlayer(10);
+    setTimeout(()=>{if(scene&&redHoods.length<30)spawnOneRedHood(Math.random()<.08&&redHoods.filter(v=>v.userData.rare).length<5);},1800);
+   }
+  }
+  if(abilityEffects.rimmiUntil>now&&player.position.distanceTo(wolfGroup.position)<6){
+   abilityEffects.rimmiTick=(abilityEffects.rimmiTick||0)+dt;
+   if(abilityEffects.rimmiTick>=1){abilityEffects.rimmiTick-=1;addPoints(10);}
+   abilityEffects.mudSpawn=(abilityEffects.mudSpawn||0)-dt;
+   if(abilityEffects.mudSpawn<=0){
+    abilityEffects.mudSpawn=.12;
+    const mud=new THREE.Mesh(new THREE.SphereGeometry(.07+Math.random()*.08,6,5),new THREE.MeshBasicMaterial({color:0x76502e,transparent:true,opacity:.85}));
+    mud.position.set(wolfGroup.position.x+(Math.random()-.5)*3,wolfGroup.position.y+1+Math.random()*2,wolfGroup.position.z+(Math.random()-.5)*3);
+    scene.add(mud);setTimeout(()=>scene?.remove(mud),1300);
+   }
+  }
+  if(abilityEffects.sleepUntil>now){
+   const still=Math.hypot(player.position.x-abilityEffects.sleepStart.x,player.position.z-abilityEffects.sleepStart.z)<.25;
+   if(!still)abilityEffects.sleepStart={x:player.position.x,z:player.position.z};
+   else{abilityEffects.sleepTick+=dt;if(abilityEffects.sleepTick>=1){abilityEffects.sleepTick-=1;progression.inventory=Math.min(100,progression.inventory+10);refreshHUD();}}
+  }
+  if(abilityEffects.walkUntil>now){
+   const moved=Math.hypot(player.position.x-abilityEffects.walkStart.x,player.position.z-abilityEffects.walkStart.z)>.005;
+   if(moved){abilityEffects.walkTick+=dt;abilityEffects.walkStart={x:player.position.x,z:player.position.z};if(abilityEffects.walkTick>=1){abilityEffects.walkTick-=1;addPoints(5);}}
+  }
+  if(abilityEffects.guardUntil>now){
+   abilityEffects.guardTick=(abilityEffects.guardTick||0)+dt;
+   if(abilityEffects.guardTick>=1){abilityEffects.guardTick-=1;if(redHoods.some(n=>n.userData.hp===n.userData.maxHp&&player.position.distanceTo(n.position)<7))addPoints(10);}
+  }
+  if(abilityEffects.paranormalUntil>now){
+   const nearby=[...remotePlayers.values()].some(r=>["Syk Ulven","Sov Ulven"].includes(r.role)&&Math.hypot(r.model.position.x-player.position.x,r.model.position.z-player.position.z)<9);
+   abilityEffects.paranormalTick=(abilityEffects.paranormalTick||0)+dt;
+   if(nearby&&abilityEffects.paranormalTick>=1){abilityEffects.paranormalTick-=1;addPoints(20);}
+  }
+  if(abilityEffects.drunkUntil>now&&drivingCar){/* speed multiplier applied in movement loop */}
+  if(effectiveRoleName==="Avslører"||abilityEffects.revealerUntil>Date.now()){
+   for(const r of remotePlayers.values()){if(!r.scoreTag){r.scoreTag=makeNameTag(r.nickname,String(r.points||0)+" ulvepoeng");r.model.add(r.scoreTag);}else{r.model.remove(r.scoreTag);r.scoreTag=makeNameTag(r.nickname,String(r.points||0)+" ulvepoeng");r.model.add(r.scoreTag);}}
+  }
+  updateAbilityButton();
+ }
+
  function attack(){
   if(drivingCar){toast("Gå ut av bilen for å slåss.");return;}
-  if(attackCooldown>0)return;const n=nearestTarget();if(!n){toast("Kom nærmere en Rødhette for å slå.");return;}
+  if(Date.now()<abilityEffects.brawlerUntil){const target=nearestRemote();if(target&&target.distance<4){sendAbilityEvent("push",target.id,0,{x:player.position.x,z:player.position.z});attackCooldown=.5;showAbilityStatus("Du dyttet "+target.nickname+"!");return;}}
+  if(attackCooldown>0)return;
+  const enemy=attackers.find(a=>player.position.distanceTo(a.sprite.position)<3.6);
+  if(enemy&&effectiveRoleName==="Jeger"){attackCooldown=.38;redImpactParticles(enemy.sprite.position);scene.remove(enemy.sprite);attackers=attackers.filter(a=>a!==enemy);setTimeout(()=>{if(scene&&attackers.length<20)spawnOneAttacker();},2200);fightSound();toast("Jegeren beseiret en skapning!");return;}
+  const n=nearestTarget();if(!n){toast("Kom nærmere en Rødhette for å slå.");return;}
   attackCooldown=.38;const damage=[1,5,10,20][progression.weapon]||1;n.userData.hp-=damage;if(n.userData.rare)n.userData.hp=Math.max(1,n.userData.hp);n.userData.panicUntil=performance.now()+10000;updateHoodLabel(n);
   n.rotation.y=player.rotation.y;const arm=player.userData.armR;if(arm){arm.rotation.x=-1.5;arm.rotation.z=-.4;}
   fightSound();
