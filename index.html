@@ -470,6 +470,10 @@ textarea{min-height:70px}
 
 #ulveLeverHint{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:7;padding:10px 16px;border:1px solid #d7bd7c;border-radius:12px;background:#07111de8;color:#fff;font-weight:800;text-align:center;pointer-events:none;display:none;max-width:85%;text-shadow:0 1px 2px #000}
 
+
+#ulveTestPoints{position:absolute;top:66px;left:105px;z-index:6;border:1px dashed #f2d27d;border-radius:10px;background:#493b1bea;color:#ffe6a3;padding:10px 12px;font-weight:900;cursor:pointer}
+@media(max-width:600px){#ulveTestPoints{top:116px;left:105px;padding:10px 9px;font-size:12px}}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -1137,6 +1141,7 @@ document.addEventListener("click",event=>{
  <div id="skogTopp"><div id="skogTittel">MØRKESKOGEN · <span id="skogRolle">ROLLE</span> <small id="skogOnline">0 online</small></div><button id="skogAvslutt" type="button">← Til kortene</button></div>
 
  <button id="ulveShopOpen" type="button">SHOP</button>
+ <button id="ulveTestPoints" type="button" title="Midlertidig testknapp">+1000 🐺 TEST</button>
  <div id="ulveHUD"><span>🐺 <b id="ulvePoeng">0</b> ulvepoeng</span><small>🎒 <b id="ulveInventory">0</b>/100 Rødhetter</small></div>
  <div id="ulveToast"></div>
  <div id="ulveLeverHint">Trykk <b>I</b> for å gi Rødhettene til ulven</div>
@@ -1875,6 +1880,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   redHoods.forEach(n=>{if(n.position.distanceTo(player.position)<45)n.userData.lure=true;});
  }
  document.getElementById("ulveShopOpen").addEventListener("click",()=>{document.getElementById("ulveShop").style.display="block";renderShop();});
+ document.getElementById("ulveTestPoints").addEventListener("click",()=>{addPoints(1000);toast("+1000 ulvepoeng (test)");sound(720,.12);renderShop();});
  document.getElementById("ulveShopClose").addEventListener("click",()=>document.getElementById("ulveShop").style.display="none");
  document.querySelectorAll("#ulveShopTabs button").forEach(b=>b.addEventListener("click",()=>{shopTab=b.dataset.tab;renderShop();}));
  document.getElementById("skogInteract").addEventListener("click",interact);
