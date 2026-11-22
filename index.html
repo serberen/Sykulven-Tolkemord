@@ -1983,10 +1983,16 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
  }
  function playerDied(){
   setCarDrivingAudio(false);
-  if(Date.now()>=abilityEffects.emoUntil){progression.points=0;refreshHUD();}playerHP=100;refreshHealth();drivingCar=false;
+  if(effectiveRoleName==="Emo"){
+   progression.points=Math.min(5000,progression.points*2);
+   refreshHUD();
+  }else{
+   progression.points=0;refreshHUD();
+  }
+  playerHP=100;refreshHealth();drivingCar=false;
   if(carGroup)carGroup.visible=!!progression.ageCar;
   if(player){player.visible=true;player.position.set(0,terrainHeight(0,0),0);player.rotation.y=0;}
-  toast("Du ble slått ut! Du mistet alle ulvepoengene, men beholdt resten.");
+  toast(effectiveRoleName==="Emo"?"Emo: Du beholdt og doblet ulvepoengene dine!":"Du ble slått ut! Du mistet alle ulvepoengene, men beholdt resten.");
  }
 
  function collectDrop(drop){
@@ -2093,7 +2099,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
     refreshHUD();break;
    }
    case "Syk Ulven":abilityEffects.wolfUntil=now+20000;msg="Ulveform aktiv i 20 sekunder. Rødhetter nær deg blir spist automatisk.";break;
-   case "Emo":abilityEffects.emoUntil=now+20000;msg="Dødsbeskyttelse aktiv i 20 sekunder.";break;
+   case "Emo":msg="Emo-ability: Du tar 50 skade på deg selv.";damagePlayer(50);break;
    case "Doppelgjenger":{
     const picker=document.getElementById("roleAbilityPicker"),choices=document.getElementById("roleAbilityChoices");
     choices.innerHTML="";
