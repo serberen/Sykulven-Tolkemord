@@ -1578,6 +1578,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   if(drivingCar&&carGroup){
    carGroup.position.set(player.position.x,player.position.y,player.position.z);carGroup.rotation.y=player.rotation.y;
    for(const n of [...redHoods]){if(Math.hypot(n.position.x-player.position.x,n.position.z-player.position.z)<2.65)carHitHood(n);}
+   for(const enemy of [...attackers]){if(Math.hypot(enemy.sprite.position.x-player.position.x,enemy.sprite.position.z-player.position.z)<2.65)carHitAttacker(enemy);}
   }
   if(length>.05&&!blocked)player.rotation.y=Math.atan2(dx,dz);
   if(length>.05){
@@ -1664,7 +1665,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   buildWorld(role);playerHP=100;refreshHealth();resize();lastTime=performance.now();loop(lastTime);pointerLock();
  }
  async function stopGame(){
-  skogMusikk.pause();skogMusikk.currentTime=0;
+  skogMusikk.pause();skogMusikk.currentTime=0;setCarDrivingAudio(false);
   root.classList.remove("aktiv","feil");document.body.style.overflow="";document.getElementById("ulveShop").style.display="none";
   if(heartbeatTimer)clearInterval(heartbeatTimer);heartbeatTimer=null;
   if(broadcastTimer)clearInterval(broadcastTimer);broadcastTimer=null;
@@ -1803,8 +1804,14 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
    attackers.push({sprite,hp:10,phase:Math.random()*6,attackCooldown:0,hopSpeed:3+Math.random()*1.5,roamX:x,roamZ:z,roamWait:Math.random()*3});
   }
  }
+ function carHitAttacker(enemy){
+  if(!enemy)return;
+  const pos=enemy.sprite.position.clone();redImpactParticles(pos);
+  scene.remove(enemy.sprite);attackers=attackers.filter(a=>a!==enemy);
+  sound(115,.18,"triangle");
+ }
  function updateAttackers(dt,time){
-  for(const enemy of attackers){
+  for(const enemy of [...attackers]){
    const dx=player.position.x-enemy.sprite.position.x,dz=player.position.z-enemy.sprite.position.z,dist=Math.hypot(dx,dz);
    let vx=0,vz=0;
    if(dist<30&&dist>1.25){vx=dx/dist;vz=dz/dist;}
@@ -1927,6 +1934,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   if(playerHP<=0)playerDied();
  }
  function playerDied(){
+  setCarDrivingAudio(false);
   progression.points=0;refreshHUD();playerHP=100;refreshHealth();drivingCar=false;
   if(carGroup)carGroup.visible=!!progression.ageCar;
   if(player){player.visible=true;player.position.set(0,terrainHeight(0,0),0);player.rotation.y=0;}
@@ -1940,6 +1948,8 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
  }
 
  const carScream=new Audio("./barneplage-demo_AiVtXetA.mp3");carScream.preload="auto";carScream.volume=.78;
+ const carDrivingAudio=new Audio("./Car Driving Sound Effect.mp3");carDrivingAudio.preload="auto";carDrivingAudio.loop=true;carDrivingAudio.volume=.62;
+ function setCarDrivingAudio(on){if(on){carDrivingAudio.play().catch(()=>{});}else{carDrivingAudio.pause();carDrivingAudio.currentTime=0;}}
  function redImpactParticles(pos){
   const group=new THREE.Group();const redMat=mat(0xd51f35,.65);
   for(let i=0;i<18;i++){const m=new THREE.Mesh(new THREE.SphereGeometry(.07+Math.random()*.09,6,5),redMat);m.position.set((Math.random()-.5)*.5,.5+Math.random()*.7,(Math.random()-.5)*.5);m.userData.v=new THREE.Vector3((Math.random()-.5)*4,1+Math.random()*3,(Math.random()-.5)*4);group.add(m);}
@@ -1993,7 +2003,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
  }
  function interact(){
   if(!player)return;
-  if(progression.ageCar&&carGroup&&player.position.distanceTo(carGroup.position)<4){drivingCar=!drivingCar;player.visible=!drivingCar;toast(drivingCar?"Du satte deg inn i Åge Bil! Trykk E igjen for å gå ut.":"Du gikk ut av Åge Bil.");sound(300,.12);return;}
+  if(progression.ageCar&&carGroup&&player.position.distanceTo(carGroup.position)<4){drivingCar=!drivingCar;player.visible=!drivingCar;setCarDrivingAudio(drivingCar);toast(drivingCar?"Du satte deg inn i Åge Bil! Trykk E igjen for å gå ut.":"Du gikk ut av Åge Bil.");sound(300,.12);return;}
   if(player.position.distanceTo(wolfGroup.position)<5){
    if(progression.inventory>0){const amount=progression.inventory;progression.inventory=0;addPoints(amount*(progression.doublePoints?20:10));healPlayer(amount*10);toast("Ulven fikk "+amount+" Rødhetter!");sound(520,.22);refreshHUD();}
    else toast("Den syke ulven trenger Rødhetter. Finn noen i skogen!");
