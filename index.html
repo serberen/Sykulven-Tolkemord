@@ -142,6 +142,21 @@ textarea{min-height:70px}
  .card.selected:after{width:22px;height:22px;right:4px;bottom:4px;top:auto}
 }
 
+
+/* Rask sjokkbølge når ALLE-knappen brukes */
+@keyframes kortSjokkbølge{
+  0%,100%{translate:0 0}
+  38%{translate:0 -9px}
+  68%{translate:0 -2px}
+}
+.card.sjokkbølge{
+  animation:kortSjokkbølge .24s cubic-bezier(.2,.75,.25,1) both;
+  animation-delay:var(--sjokk-forsinkelse,0ms);
+}
+@media(prefers-reduced-motion:reduce){
+  .card.sjokkbølge{animation:none}
+}
+
 /* Fix card faces: front visible by default, beige back stacked above it */
 .card{position:relative;isolation:isolate;overflow:visible}
 .card .card-front{
@@ -494,10 +509,30 @@ function lagKortflate(knapp, bilde, alt, rolle){
  const desc=document.createElement("span");desc.className="role-description"+(rolle.tekst.length>115?" long":"");desc.textContent=rolle.tekst;
  back.append(title,team,desc);knapp.append(front,back);
 }
+
+function spillAlleSjokkbølge(){
+ // Bølg fra Røver og videre ned til Paranormal Etterforsker i kortrekkefølgen.
+ const fra=roller.findIndex(r=>r.navn==="Røver");
+ const til=roller.findIndex(r=>r.navn==="Paranormal Etterforsker");
+ if(fra<0||til<fra)return;
+ for(let i=fra;i<=til;i++){
+  const kort=grid.querySelector('.card[data-role-index="'+i+'"]');
+  if(!kort)continue;
+  kort.classList.remove("sjokkbølge");
+  kort.style.setProperty("--sjokk-forsinkelse",((i-fra)*32)+"ms");
+  void kort.offsetWidth;
+  kort.classList.add("sjokkbølge");
+  kort.addEventListener("animationend",()=>{
+   kort.classList.remove("sjokkbølge");
+   kort.style.removeProperty("--sjokk-forsinkelse");
+  },{once:true});
+ }
+}
+
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();spillAlleFravalgtLyd();}else{roller.forEach((_,i)=>valgt.add(i));spillAlleValgtLyd();}tegnKort()};grid.append(alle);
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();spillAlleFravalgtLyd();}else{roller.forEach((_,i)=>valgt.add(i));spillAlleValgtLyd();}tegnKort();spillAlleSjokkbølge()};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
