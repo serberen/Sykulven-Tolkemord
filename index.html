@@ -876,11 +876,30 @@ const kortValgtLyd=new Audio("kort-select-ny.wav");
 const kortFravalgtLyd=new Audio("kort-deselect-ny.wav");
 const alleValgtLyd=new Audio("alle-select.wav");
 const alleFravalgtLyd=new Audio("alle-deselect.wav");
-function spillKorttrekklyd(){try{const klipp=kortFlippingLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
-function spillKortValgtLyd(){try{const klipp=kortValgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
-function spillKortFravalgtLyd(){try{const klipp=kortFravalgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
-function spillAlleValgtLyd(){try{const klipp=alleValgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
-function spillAlleFravalgtLyd(){try{const klipp=alleFravalgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
+const aktiveStartmenyLyder=new Set();
+function spillStartmenyLyd(kilde){
+ try{
+  const klipp=kilde.cloneNode();klipp.volume=0.8;
+  aktiveStartmenyLyder.add(klipp);
+  const rydd=()=>aktiveStartmenyLyder.delete(klipp);
+  klipp.addEventListener("ended",rydd,{once:true});
+  klipp.addEventListener("error",rydd,{once:true});
+  klipp.play().catch(rydd);
+ }catch(e){}
+}
+function stoppAlleStartmenyLyder(){
+ stoppEmoOpplesning();
+ stoppVokterOpplesning();
+ for(const klipp of aktiveStartmenyLyder){
+  try{klipp.pause();klipp.currentTime=0;}catch(e){}
+ }
+ aktiveStartmenyLyder.clear();
+}
+function spillKorttrekklyd(){spillStartmenyLyd(kortFlippingLyd);}
+function spillKortValgtLyd(){spillStartmenyLyd(kortValgtLyd);}
+function spillKortFravalgtLyd(){spillStartmenyLyd(kortFravalgtLyd);}
+function spillAlleValgtLyd(){spillStartmenyLyd(alleValgtLyd);}
+function spillAlleFravalgtLyd(){spillStartmenyLyd(alleFravalgtLyd);}
 
 // Egne stemmeopptak for Emo-kortet. Bare ett Emo-opptak kan spille om gangen.
 let aktivEmoLyd=null;
@@ -994,6 +1013,8 @@ settingsToggle.addEventListener("click",event=>{
   $("spillSide").classList.add("hidden");
   $("valgSide").classList.remove("hidden");
  }else{
+  // Når kortvelgeren forlates, stopp alle opplesninger og UI-lyder fra startmenyen.
+  stoppAlleStartmenyLyder();
   sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
   $("valgSide").classList.add("hidden");
   $("spillSide").classList.add("hidden");
