@@ -839,6 +839,7 @@ async function spillHeleNatten(){
   const p=phases[i];let file;
   try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
   if(token!==sekvensToken)break;
+  if(!file&&p.id==="vokter")file={url:"./vokter-nattinstruksjon.wav"};
   if(!file&&p.id!=="frimurer"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
   let ok=true;
   if(p.id==="frimurer"){
@@ -901,14 +902,33 @@ function spillFrimurerOpplesning(type){
  const filer={info:"./frimurer-info.wav",rolle:"./frimurer-rolle.wav"};
  spillEmoOpplesning(filer[type]);
 }
+// Egne stemmeopptak for Vokter: rollevalg og baksideinfo.
+let aktivVokterLyd=null;
+function stoppVokterOpplesning(){
+ if(aktivVokterLyd){try{aktivVokterLyd.pause();aktivVokterLyd.currentTime=0;}catch(e){}}
+ aktivVokterLyd=null;
+}
+function spillVokterOpplesning(fil){
+ if(!infoOpplesningAktiv)return;
+ stoppVokterOpplesning();
+ const lydklipp=new Audio(fil);
+ lydklipp.volume=1;
+ aktivVokterLyd=lydklipp;
+ lydklipp.addEventListener("ended",()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;},{once:true});
+ lydklipp.addEventListener("error",()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;},{once:true});
+ lydklipp.play().catch(()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;});
+}
 function stoppRolleopplesning(navn){
  if(navn==="Emo"||navn==="Frimurer")stoppEmoOpplesning();
+ if(navn==="Vokter")stoppVokterOpplesning();
 }
 function spillKortrolleopplesning(navn,type){
  if(navn==="Emo"){
   spillEmoOpplesning(type==="info"?"./emo-info-v2.wav?rev=2":"./emo-rollevalg-v2.wav");
  }else if(navn==="Frimurer"){
   spillFrimurerOpplesning(type);
+ }else if(navn==="Vokter"){
+  spillVokterOpplesning(type==="info"?"./vokter-info.wav":"./vokter-rollevalg.wav");
  }
 }
 document.addEventListener("click",event=>{
