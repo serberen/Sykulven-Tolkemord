@@ -474,6 +474,14 @@ textarea{min-height:70px}
 #ulveTestPoints{position:absolute;top:66px;left:105px;z-index:6;border:1px dashed #f2d27d;border-radius:10px;background:#493b1bea;color:#ffe6a3;padding:10px 12px;font-weight:900;cursor:pointer}
 @media(max-width:600px){#ulveTestPoints{top:116px;left:105px;padding:10px 9px;font-size:12px}}
 
+
+#playerHealthHUD{position:absolute;top:66px;left:50%;transform:translateX(-50%);z-index:6;width:min(260px,38vw);padding:7px 10px;border:1px solid #8c9a9c;border-radius:10px;background:#07111de8;color:#fff;text-align:center;pointer-events:none}
+#playerHealthHUD strong{display:block;font-size:12px;margin-bottom:4px}
+#playerHealthTrack{height:12px;background:#401d25;border-radius:20px;overflow:hidden;border:1px solid #8d555a}
+#playerHealthFill{height:100%;width:100%;background:linear-gradient(90deg,#a91f36,#e64d5f);transition:width .16s}
+#playerHealthValue{font-size:11px;color:#f6d9d9;margin-top:3px}
+@media(max-width:600px){#playerHealthHUD{top:166px;width:42vw}}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -1142,6 +1150,7 @@ document.addEventListener("click",event=>{
 
  <button id="ulveShopOpen" type="button">SHOP</button>
  <button id="ulveTestPoints" type="button" title="Midlertidig testknapp">+1000 🐺 TEST</button>
+ <div id="playerHealthHUD"><strong>SPILLERENS LIV</strong><div id="playerHealthTrack"><div id="playerHealthFill"></div></div><div id="playerHealthValue">100 / 100 HP</div></div>
  <div id="ulveHUD"><span>🐺 <b id="ulvePoeng">0</b> ulvepoeng</span><small>🎒 <b id="ulveInventory">0</b>/100 Rødhetter</small></div>
  <div id="ulveToast"></div>
  <div id="ulveLeverHint">Trykk <b>I</b> for å gi Rødhettene til ulven</div>
@@ -1490,7 +1499,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   sprite.scale.set(2.65,.66,1);sprite.position.y=3.35;return sprite;
  }
  function buildWorld(role){
-  treeColliders.length=0;redHoods=[];drops=[];
+  treeColliders.length=0;redHoods=[];drops=[];attackers=[];playerHP=100;refreshHealth();
   tex.grass=loadTex("grass","grass-texture.jpg",24,24);
   tex.bark=loadTex("bark","bark-texture.jpg",1,1);
   tex.wall=loadTex("wall","wall-texture.jpg",2,1);
@@ -1503,6 +1512,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   tex.weaponStick=loadTex("weaponStick","weapon-stick.png",1,1);
   tex.weaponBasket=loadTex("weaponBasket","weapon-basket.png",1,1);
   tex.weaponSword=loadTex("weaponSword","weapon-sword.png",1,1);
+  tex.enemyCharacter=loadTex("enemyCharacter","skog_enemy_character.png",1,1);
   scene=new THREE.Scene();scene.background=new THREE.Color(0x07101b);scene.fog=new THREE.FogExp2(0x07101b,.021);
   camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,220);
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
@@ -1535,7 +1545,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
    const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+random()*.45,0),mat(0x202b28));
    rock.position.set((random()-.5)*360,terrainHeight((random()-.5)*360,(random()-.5)*360)+.12,(random()-.5)*360);rock.scale.y=.45;scene.add(rock);
   }
-  makeHouse();makeAgeCar();spawnRedHoods();
+  makeHouse();makeAgeCar();spawnRedHoods();spawnAttackers();
   player=buildPlayer(role);
   player.add(makeNameTag(myNickname,role.navn));
   refreshHUD();updateHeldWeapon();
@@ -1554,6 +1564,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   const length=Math.hypot(forward,side);if(length>1){forward/=length;side/=length;}
   if(attackCooldown>0)attackCooldown=Math.max(0,attackCooldown-dt);
   updateImpactBursts(dt);
+  updateAttackers(dt,time);
   if(progression.passive&&Math.random()<dt){addPoints(1);}
   if(progression.breadcrumbs){crumbTimer+=dt;if(crumbTimer>5){crumbTimer=0;dropBreadcrumbs();}}
   const speed=drivingCar?13.5:(progression.speed?7.2:5.0);
@@ -1562,6 +1573,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   const nextX=player.position.x+dx,nextZ=player.position.z+dz;
   const blocked=treeColliders.some(t=>Math.hypot(nextX-t.x,nextZ-t.z)<t.r);
   if(!blocked){player.position.x=nextX;player.position.z=nextZ;}
+  if(Math.abs(player.position.x)>208||Math.abs(player.position.z)>208){playerDied();}
   player.position.y=terrainHeight(player.position.x,player.position.z);
   if(drivingCar&&carGroup){
    carGroup.position.set(player.position.x,player.position.y,player.position.z);carGroup.rotation.y=player.rotation.y;
@@ -1649,7 +1661,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   skogMusikk.play().catch(()=>{help.textContent="Trykk én gang i spillet for å starte bakgrunnsmusikken.";});
   await loadThree();
   if(!root.classList.contains("aktiv"))return;
-  buildWorld(role);resize();lastTime=performance.now();loop(lastTime);pointerLock();
+  buildWorld(role);playerHP=100;refreshHealth();resize();lastTime=performance.now();loop(lastTime);pointerLock();
  }
  async function stopGame(){
   skogMusikk.pause();skogMusikk.currentTime=0;
@@ -1722,7 +1734,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
 
  // --- Rødhette-eventyret: lokal progresjon og 3D-objekter ---
  const progression={points:0,inventory:0,weapon:0,speed:false,breadcrumbs:false,dash:false,magnet:false,autoDeliver:false,doublePoints:false,passive:false,ageCar:false};
- let redHoods=[],drops=[],houseGroup=null,wolfGroup=null,carGroup=null,drivingCar=false,shopTab="våpen",lastTap=0,dashUntil=0,crumbTimer=0,attackCooldown=0;
+ let redHoods=[],drops=[],attackers=[],playerHP=100,houseGroup=null,wolfGroup=null,carGroup=null,drivingCar=false,shopTab="våpen",lastTap=0,dashUntil=0,crumbTimer=0,attackCooldown=0;
  const shopData={
   "våpen":[
    {id:"stick",name:"Trestokk",price:50,desc:"5 skade per slag."},
@@ -1780,6 +1792,41 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   const basket=new THREE.Mesh(new THREE.BoxGeometry(.25,.2,.2),mat(0x9a6937));basket.position.set(.35,.75,.05);g.add(basket);
   const size=rare?(1.65+Math.random()*.3):(.72+Math.random()*.72);g.scale.setScalar(size);g.position.set(x,terrainHeight(x,z),z);scene.add(g);g.userData.rare=rare;g.userData.hp=rare?40:20;g.userData.maxHp=g.userData.hp;g.userData.alive=true;g.userData.phase=Math.random()*6;g.userData.roamX=x+(Math.random()-.5)*22;g.userData.roamZ=z+(Math.random()-.5)*22;g.userData.roamWait=1+Math.random()*3;g.userData.walkPhase=Math.random()*6;makeHoodLabel(g);return g;
  }
+
+ function spawnAttackers(){
+  attackers=[];
+  for(let i=0;i<12;i++){
+   let x,z;do{x=(Math.random()-.5)*340;z=(Math.random()-.5)*340;}while(Math.hypot(x,z)<24);
+   const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex.enemyCharacter,transparent:true,depthWrite:false,alphaTest:.08}));
+   const scale=.95+Math.random()*.55;sprite.scale.set(1.25*scale,1.65*scale,1);
+   sprite.position.set(x,terrainHeight(x,z)+.95,z);scene.add(sprite);
+   attackers.push({sprite,hp:10,phase:Math.random()*6,attackCooldown:0,hopSpeed:3+Math.random()*1.5,roamX:x,roamZ:z,roamWait:Math.random()*3});
+  }
+ }
+ function updateAttackers(dt,time){
+  for(const enemy of attackers){
+   const dx=player.position.x-enemy.sprite.position.x,dz=player.position.z-enemy.sprite.position.z,dist=Math.hypot(dx,dz);
+   let vx=0,vz=0;
+   if(dist<30&&dist>1.25){vx=dx/dist;vz=dz/dist;}
+   else if(dist>=30){
+    enemy.roamWait-=dt;
+    if(enemy.roamWait<=0){enemy.roamX=enemy.sprite.position.x+(Math.random()-.5)*18;enemy.roamZ=enemy.sprite.position.z+(Math.random()-.5)*18;enemy.roamWait=2+Math.random()*3;}
+    const rx=enemy.roamX-enemy.sprite.position.x,rz=enemy.roamZ-enemy.sprite.position.z,rd=Math.hypot(rx,rz);
+    if(rd>1){vx=rx/rd;vz=rz/rd;}
+   }
+   const speed=dist<30?2.55:1.0;
+   enemy.sprite.position.x+=vx*speed*dt;enemy.sprite.position.z+=vz*speed*dt;
+   enemy.sprite.position.y=terrainHeight(enemy.sprite.position.x,enemy.sprite.position.z)+.95+Math.abs(Math.sin(time*.006*enemy.hopSpeed+enemy.phase))*.8;
+   enemy.sprite.material.rotation=0;
+   enemy.sprite.lookAt(camera.position);
+   if(enemy.attackCooldown>0)enemy.attackCooldown-=dt;
+   if(dist<1.65&&enemy.attackCooldown<=0){
+    enemy.attackCooldown=1.05;damagePlayer(5);
+    const away=Math.atan2(dx,dz);enemy.sprite.position.x-=Math.sin(away)*.45;enemy.sprite.position.z-=Math.cos(away)*.45;
+   }
+  }
+ }
+
  function makeHouse(){
   houseGroup=new THREE.Group();const wood=tex.door?textured(0xffffff,"door",1):mat(0x503322),wall=tex.wall?textured(0xffffff,"wall",1):mat(0x9a7650),roof=tex.roof?textured(0xffffff,"roof",1):mat(0x382b29);
   const base=new THREE.Mesh(new THREE.BoxGeometry(8,4.2,6),wall);base.position.y=2.1;houseGroup.add(base);
@@ -1865,6 +1912,27 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   document.querySelectorAll("#ulveShopTabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===shopTab));
  }
  function addPoints(n){progression.points=Math.min(5000,progression.points+n);refreshHUD();}
+ function refreshHealth(){
+  const fill=document.getElementById("playerHealthFill"),value=document.getElementById("playerHealthValue");
+  if(fill)fill.style.width=Math.max(0,playerHP)+"%";
+  if(value)value.textContent=playerHP+" / 100 HP";
+ }
+ function healPlayer(amount){
+  const before=playerHP;playerHP=Math.min(100,playerHP+amount);
+  if(playerHP>before){refreshHealth();toast("+"+(playerHP-before)+" HP");}
+ }
+ function damagePlayer(amount){
+  if(playerHP<=0||drivingCar)return;
+  playerHP=Math.max(0,playerHP-amount);refreshHealth();sound(90,.16,"triangle");
+  if(playerHP<=0)playerDied();
+ }
+ function playerDied(){
+  progression.points=0;refreshHUD();playerHP=100;refreshHealth();drivingCar=false;
+  if(carGroup)carGroup.visible=!!progression.ageCar;
+  if(player){player.visible=true;player.position.set(0,terrainHeight(0,0),0);player.rotation.y=0;}
+  toast("Du ble slått ut! Du mistet alle ulvepoengene, men beholdt resten.");
+ }
+
  function collectDrop(drop){
   if(!drop||!drop.userData.active)return;
   if(progression.inventory>=100){toast("Inventory er fullt! Lever Rødhettene til ulven.");return;}
@@ -1892,7 +1960,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
 
  function defeatHood(npc,byCar=false){
   npc.userData.alive=false;scene.remove(npc);redHoods=redHoods.filter(n=>n!==npc);sound(95,.18,"triangle");
-  if(progression.autoDeliver){addPoints(progression.doublePoints?20:10);toast("Rødhette sendt til ulven!");return;}
+  if(progression.autoDeliver){addPoints(progression.doublePoints?20:10);healPlayer(10);toast("Rødhette sendt til ulven!");return;}
   const drop=new THREE.Group();const token=new THREE.Mesh(new THREE.BoxGeometry(.45,.18,.35),mat(0x9b2027));token.position.y=.12;drop.add(token);drop.position.copy(npc.position);scene.add(drop);drop.userData.active=true;drop.userData.magnetizing=false;drops.push(drop);
   if(progression.inventory>=100)toast("Inventory er fullt! Lever Rødhettene til ulven.");
  }
@@ -1927,7 +1995,7 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   if(!player)return;
   if(progression.ageCar&&carGroup&&player.position.distanceTo(carGroup.position)<4){drivingCar=!drivingCar;player.visible=!drivingCar;toast(drivingCar?"Du satte deg inn i Åge Bil! Trykk E igjen for å gå ut.":"Du gikk ut av Åge Bil.");sound(300,.12);return;}
   if(player.position.distanceTo(wolfGroup.position)<5){
-   if(progression.inventory>0){const amount=progression.inventory;progression.inventory=0;addPoints(amount*(progression.doublePoints?20:10));toast("Ulven fikk "+amount+" Rødhetter!");sound(520,.22);refreshHUD();}
+   if(progression.inventory>0){const amount=progression.inventory;progression.inventory=0;addPoints(amount*(progression.doublePoints?20:10));healPlayer(amount*10);toast("Ulven fikk "+amount+" Rødhetter!");sound(520,.22);refreshHUD();}
    else toast("Den syke ulven trenger Rødhetter. Finn noen i skogen!");
    return;
   }
