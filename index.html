@@ -1002,17 +1002,16 @@ let sideForInnstillinger="valgSide";
 const settingsToggle=$("settingsToggle");
 function oppdaterInnstillingsikon(){
  const iInnstillinger=!$("settingsSide").classList.contains("hidden");
- settingsToggle.textContent=iInnstillinger?"⌂":"⚙";
- settingsToggle.setAttribute("aria-label",iInnstillinger?"Tilbake til startmenyen":"Åpne innstillinger");
- settingsToggle.title=iInnstillinger?"Til startmenyen":"Innstillinger";
+ settingsToggle.textContent=iInnstillinger?"←":"⚙";
+ settingsToggle.setAttribute("aria-label",iInnstillinger?"Tilbake":"Åpne innstillinger");
+ settingsToggle.title=iInnstillinger?"Tilbake":"Innstillinger";
 }
 settingsToggle.addEventListener("click",event=>{
  event.preventDefault();event.stopPropagation();
  if(!$("settingsSide").classList.contains("hidden")){
-  // Hjem-symbolet tar alltid brukeren tilbake til kortvelgeren.
+  // Tilbakepilen returnerer til siden som var åpen før innstillingene.
   $("settingsSide").classList.add("hidden");
-  $("spillSide").classList.add("hidden");
-  $("valgSide").classList.remove("hidden");
+  $(sideForInnstillinger).classList.remove("hidden");
  }else{
   // Når kortvelgeren forlates, stopp alle opplesninger og UI-lyder fra startmenyen.
   stoppAlleStartmenyLyder();
