@@ -419,6 +419,22 @@ textarea{min-height:70px}
 .night-phase .phase-number{color:var(--gold);font-weight:900;margin-right:7px}
 @media(max-width:520px){.night-phase{padding:11px}.night-phase .audio-controls{align-items:stretch}.night-phase .audio-controls button{flex:1}}
 
+
+/* 3D-skogspill */
+#skogSpill{position:fixed;inset:0;z-index:20000;background:#030812;color:#f5eddb;display:none;overflow:hidden}
+#skogSpill.aktiv{display:block}
+#skogCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#skogTopp{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:linear-gradient(#020711c9,transparent);pointer-events:none}
+#skogTopp>*{pointer-events:auto}
+#skogTittel{font-weight:900;letter-spacing:.08em;color:#f1d58c;text-shadow:0 2px 8px #000}
+#skogAvslutt{border:1px solid #c7a45b;border-radius:10px;padding:9px 14px;background:#101c2de8;color:#fff;font:inherit;cursor:pointer}
+#skogHjelp{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);padding:9px 15px;border:1px solid #c7a45b66;border-radius:10px;background:#050c18b8;color:#e9e1cf;font-size:13px;text-align:center;white-space:nowrap;pointer-events:none}
+#skogKryss{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#e9dfc6;box-shadow:0 0 5px #fff;transform:translate(-50%,-50%);pointer-events:none}
+#skogJoystick{position:absolute;left:24px;bottom:28px;width:116px;height:116px;border:2px solid #d7bd7c88;border-radius:50%;background:#101b2b88;display:none;touch-action:none}
+#skogJoystickKnott{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#d5b66eaa;border:1px solid #f3dda5}
+#skogSpill.feil #skogHjelp{white-space:normal}
+@media(pointer:coarse){#skogJoystick{display:block}#skogHjelp{bottom:158px;max-width:90%;white-space:normal}}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -1071,4 +1087,206 @@ document.addEventListener("click",event=>{
   if(openCard.dataset.roleIndex!==undefined&&roller[Number(openCard.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();
   openCard.classList.remove("flipped");
  }
-});</script></body></html>
+});</script>
+<div id="skogSpill" aria-label="3D-skogspill">
+ <canvas id="skogCanvas"></canvas>
+ <div id="skogTopp"><div id="skogTittel">MØRKESKOGEN · <span id="skogRolle">ROLLE</span></div><button id="skogAvslutt" type="button">← Til kortene</button></div>
+ <div id="skogKryss"></div>
+ <div id="skogHjelp">WASD for å gå · Mus for å se rundt · ESC for å låse opp musen</div>
+ <div id="skogJoystick"><div id="skogJoystickKnott"></div></div>
+</div>
+
+
+<script>
+(()=>{
+ const holdDelay=650;
+ let holdTimer=null,holdTriggered=false,skipClick=false;
+ function startHold(card,role,index,event){
+  if(event.button!==undefined&&event.button!==0)return;
+  clearTimeout(holdTimer);holdTriggered=false;
+  holdTimer=setTimeout(()=>{
+   holdTriggered=true;skipClick=true;
+   setTimeout(()=>{skipClick=false;},900);
+   startSkogSpill(role,index);
+  },holdDelay);
+ }
+ function cancelHold(){clearTimeout(holdTimer);holdTimer=null;}
+ document.querySelectorAll("#kortRutenett .card[data-role-index]").forEach(card=>{
+  const roleIndex=Number(card.dataset.roleIndex);
+  const role=roller[roleIndex];
+  card.addEventListener("pointerdown",e=>startHold(card,role,roleIndex,e));
+  ["pointerup","pointerleave","pointercancel"].forEach(name=>card.addEventListener(name,cancelHold));
+  card.addEventListener("click",e=>{
+   if(skipClick){skipClick=false;e.preventDefault();e.stopImmediatePropagation();}
+  },true);
+ });
+ const root=document.getElementById("skogSpill"),canvas=document.getElementById("skogCanvas");
+ const exit=document.getElementById("skogAvslutt"),help=document.getElementById("skogHjelp");
+ let renderer,scene,camera,player,animationId,keys={},yaw=0,pitch=-.12,lastTime=0,walkTime=0;
+ let joystickActive=false,joyId=null,joyX=0,joyY=0,lookTouch=null,lookX=0,lookY=0;
+ const joystick=document.getElementById("skogJoystick"),knob=document.getElementById("skogJoystickKnott");
+ function loadThree(){
+  if(window.THREE)return Promise.resolve();
+  if(window.__skogThreePromise)return window.__skogThreePromise;
+  window.__skogThreePromise=new Promise((resolve,reject)=>{
+   const s=document.createElement("script");
+   s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+   s.onload=resolve;s.onerror=()=>reject(new Error("Kunne ikke laste 3D-motoren. Kontroller internettforbindelsen."));
+   document.head.appendChild(s);
+  });
+  return window.__skogThreePromise;
+ }
+ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,roughness});}
+ function makeTree(x,z,scale){
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.16*scale,.25*scale,2.2*scale,6),mat(0x211a17));
+  trunk.position.set(x,1.1*scale,z);scene.add(trunk);
+  for(let layer=0;layer<3;layer++){
+   const h=(2.5-layer*.48)*scale,r=(1.25-layer*.22)*scale;
+   const crown=new THREE.Mesh(new THREE.ConeGeometry(r,h,7),mat(layer===0?0x101f1b:0x142720));
+   crown.position.set(x,(2.1+layer*.72)*scale,z);scene.add(crown);
+  }
+ }
+ function buildPlayer(role){
+  player=new THREE.Group();scene.add(player);
+  const skin=mat(0xb5a58a),cloth=mat(role.lag==="Ulvelaget"?0x392a31:role.lag==="Landsbylaget"?0x263b43:0x423a2a),dark=mat(0x17191b);
+  const torso=new THREE.Mesh(new THREE.BoxGeometry(.72,1.05,.38),cloth);torso.position.y=1.48;player.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.34,10,8),skin);head.position.y=2.25;player.add(head);
+  const hood=new THREE.Mesh(new THREE.SphereGeometry(.37,9,7,0,Math.PI*2,0,Math.PI*.56),dark);hood.position.y=2.31;hood.scale.set(1.08,1.05,1.08);player.add(hood);
+  const armL=new THREE.Group(),armR=new THREE.Group();
+  function limb(group,x){const mesh=new THREE.Mesh(new THREE.BoxGeometry(.22,.78,.24),skin);mesh.position.y=-.34;group.add(mesh);group.position.set(x,1.85,0);player.add(group);}
+  limb(armL,-.5);limb(armR,.5);
+  const legL=new THREE.Group(),legR=new THREE.Group();
+  function leg(group,x){const mesh=new THREE.Mesh(new THREE.BoxGeometry(.27,.78,.3),dark);mesh.position.y=-.38;group.add(mesh);group.position.set(x,.95,0);player.add(group);}
+  leg(legL,-.2);leg(legR,.2);
+  // Kortillustrasjonen vises som et merke på brystet til den tilsvarende 3D-figuren.
+  const loader=new THREE.TextureLoader();
+  loader.load(role.bilde,texture=>{
+   texture.colorSpace=THREE.SRGBColorSpace||"srgb";
+   const badge=new THREE.Mesh(new THREE.PlaneGeometry(.52,.68),new THREE.MeshBasicMaterial({map:texture,transparent:true}));
+   badge.position.set(0,1.52,.197);player.add(badge);
+  });
+  player.userData={armL,armR,legL,legR};
+ }
+ function buildWorld(role){
+  scene=new THREE.Scene();scene.background=new THREE.Color(0x07101b);scene.fog=new THREE.FogExp2(0x07101b,.021);
+  camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,220);
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.8));renderer.setSize(innerWidth,innerHeight);
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  scene.add(new THREE.HemisphereLight(0x9aabc4,0x10140f,1.0));
+  const moonLight=new THREE.DirectionalLight(0x9cb8dc,1.15);moonLight.position.set(-25,35,18);scene.add(moonLight);
+  const moon=new THREE.Mesh(new THREE.SphereGeometry(5,24,18),new THREE.MeshBasicMaterial({color:0xd7dfdc}));
+  moon.position.set(-35,42,-75);scene.add(moon);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(260,260),mat(0x101a16));ground.rotation.x=-Math.PI/2;ground.position.y=-.06;scene.add(ground);
+  const random=(()=>{let seed=918273;return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};})();
+  for(let i=0;i<180;i++){
+   let x=(random()-.5)*180,z=(random()-.5)*180;
+   if(Math.abs(x)<4&&Math.abs(z)<6)continue;
+   makeTree(x,z,.75+random()*.9);
+  }
+  // Lave steiner og bregnelignende tuer bryter opp skogbunnen.
+  for(let i=0;i<75;i++){
+   const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+random()*.45,0),mat(0x202b28));
+   rock.position.set((random()-.5)*100,.12,(random()-.5)*100);rock.scale.y=.45;scene.add(rock);
+  }
+  buildPlayer(role);
+  camera.position.set(0,2.45,5);
+ }
+ function resize(){
+  if(!renderer||!camera)return;
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
+ }
+ function loop(time){
+  animationId=requestAnimationFrame(loop);
+  const dt=Math.min((time-lastTime)/1000||0,.05);lastTime=time;
+  if(!player||!camera||!renderer)return;
+  let forward=(keys.KeyW?1:0)-(keys.KeyS?1:0)-joyY;
+  let side=(keys.KeyD?1:0)-(keys.KeyA?1:0)+joyX;
+  const length=Math.hypot(forward,side);if(length>1){forward/=length;side/=length;}
+  const speed=5.0;
+  const dx=(-Math.sin(yaw)*forward+Math.cos(yaw)*side)*speed*dt;
+  const dz=(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*speed*dt;
+  player.position.x+=dx;player.position.z+=dz;
+  player.rotation.y=yaw;
+  if(length>.05){
+   walkTime+=dt*9;
+   const swing=Math.sin(walkTime)*.48;
+   const limbs=player.userData;
+   limbs.legL.rotation.x=swing;limbs.legR.rotation.x=-swing;
+   limbs.armL.rotation.x=-swing*.7;limbs.armR.rotation.x=swing*.7;
+  }else if(player.userData){
+   Object.values(player.userData).forEach(l=>l.rotation.x*=.82);
+  }
+  const lookTarget=new THREE.Vector3(player.position.x,player.position.y+2.05,player.position.z);
+  const distance=5.1;
+  camera.position.set(player.position.x+Math.sin(yaw)*distance,player.position.y+2.65+pitch*3,player.position.z+Math.cos(yaw)*distance);
+  lookTarget.y+=pitch*2.2;
+  camera.lookAt(lookTarget);
+  renderer.render(scene,camera);
+ }
+ function pointerLock(){
+  if(matchMedia("(hover:hover) and (pointer:fine)").matches){
+   canvas.requestPointerLock?.();
+   help.textContent="WASD for å gå · Mus for å se rundt · ESC for å låse opp musen";
+  }else help.textContent="Bruk styrespaken for å gå · Dra på høyre side for å se rundt";
+ }
+ function startSkogSpill(role,index){
+  root.classList.add("aktiv");root.dataset.roleIndex=String(index);
+  document.getElementById("skogRolle").textContent=role.navn.toUpperCase();
+  document.body.style.overflow="hidden";
+  loadThree().then(()=>{
+   if(!root.classList.contains("aktiv"))return;
+   buildWorld(role);resize();lastTime=performance.now();loop(lastTime);pointerLock();
+  }).catch(error=>{
+   root.classList.add("feil");help.textContent=error.message;
+  });
+ }
+ function stopGame(){
+  root.classList.remove("aktiv","feil");document.body.style.overflow="";
+  if(animationId)cancelAnimationFrame(animationId);animationId=null;
+  if(document.pointerLockElement)document.exitPointerLock();
+  if(renderer){renderer.dispose();renderer=null;}
+  scene=null;camera=null;player=null;keys={};joyX=joyY=0;
+  knob.style.transform="translate(0,0)";
+ }
+ exit.addEventListener("click",stopGame);
+ document.addEventListener("keydown",e=>{
+  if(!root.classList.contains("aktiv"))return;
+  if(["KeyW","KeyA","KeyS","KeyD","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)){keys[e.code]=true;e.preventDefault();}
+  if(e.code==="Escape"&&document.pointerLockElement)document.exitPointerLock();
+ });
+ document.addEventListener("keyup",e=>{keys[e.code]=false;});
+ document.addEventListener("mousemove",e=>{
+  if(!root.classList.contains("aktiv")||document.pointerLockElement!==canvas)return;
+  yaw-=e.movementX*.0025;pitch=Math.max(-.65,Math.min(.45,pitch-e.movementY*.0018));
+ });
+ canvas.addEventListener("click",()=>{if(root.classList.contains("aktiv")&&matchMedia("(hover:hover) and (pointer:fine)").matches&&!document.pointerLockElement)canvas.requestPointerLock?.();});
+ window.addEventListener("resize",resize);
+ joystick.addEventListener("pointerdown",e=>{
+  e.preventDefault();joystickActive=true;joyId=e.pointerId;joystick.setPointerCapture(e.pointerId);updateJoy(e);
+ });
+ joystick.addEventListener("pointermove",e=>{if(joystickActive&&e.pointerId===joyId)updateJoy(e);});
+ ["pointerup","pointercancel","lostpointercapture"].forEach(name=>joystick.addEventListener(name,()=>{
+  joystickActive=false;joyId=null;joyX=joyY=0;knob.style.transform="translate(0,0)";
+ }));
+ function updateJoy(e){
+  const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let x=(e.clientX-cx)/43,y=(e.clientY-cy)/43;const len=Math.hypot(x,y);if(len>1){x/=len;y/=len;}
+  joyX=x;joyY=y;knob.style.transform=`translate(${x*34}px,${y*34}px)`;
+ }
+ let rightLook=null;
+ root.addEventListener("pointerdown",e=>{
+  if(e.target.closest("#skogJoystick,#skogAvslutt"))return;
+  if(e.pointerType==="touch"&&e.clientX>innerWidth*.42){rightLook={id:e.pointerId,x:e.clientX,y:e.clientY};}
+ });
+ root.addEventListener("pointermove",e=>{
+  if(!rightLook||rightLook.id!==e.pointerId)return;
+  const dx=e.clientX-rightLook.x,dy=e.clientY-rightLook.y;rightLook.x=e.clientX;rightLook.y=e.clientY;
+  yaw-=dx*.009;pitch=Math.max(-.65,Math.min(.45,pitch-dy*.006));
+ });
+ ["pointerup","pointercancel"].forEach(name=>root.addEventListener(name,e=>{if(rightLook&&rightLook.id===e.pointerId)rightLook=null;}));
+ window.startSkogSpill=startSkogSpill;
+})();
+</script>
+
+</body></html>
