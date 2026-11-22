@@ -467,6 +467,9 @@ textarea{min-height:70px}
 #ulveToast{position:absolute;z-index:8;left:50%;bottom:18%;transform:translateX(-50%);padding:10px 16px;border-radius:10px;background:#081321ed;border:1px solid #d7bd7c;color:#fff;display:none;text-align:center;max-width:85%;pointer-events:none}
 @media(max-width:600px){#ulveHUD{top:116px;font-size:13px}#ulveShopOpen{top:116px}}
 
+
+#ulveLeverHint{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);z-index:7;padding:10px 16px;border:1px solid #d7bd7c;border-radius:12px;background:#07111de8;color:#fff;font-weight:800;text-align:center;pointer-events:none;display:none;max-width:85%;text-shadow:0 1px 2px #000}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -1136,6 +1139,7 @@ document.addEventListener("click",event=>{
  <button id="ulveShopOpen" type="button">SHOP</button>
  <div id="ulveHUD"><span>🐺 <b id="ulvePoeng">0</b> ulvepoeng</span><small>🎒 <b id="ulveInventory">0</b>/100 Rødhetter</small></div>
  <div id="ulveToast"></div>
+ <div id="ulveLeverHint">Trykk <b>I</b> for å gi Rødhettene til ulven</div>
  <section id="ulveShop" aria-label="Ulvebutikk">
   <button id="ulveShopClose" type="button">Lukk ✕</button><h2>🐺 Ulvebutikken</h2>
   <div id="ulveShopTabs"><button data-tab="våpen" class="active">Våpen</button><button data-tab="ferdigheter">Ferdigheter</button><button data-tab="spesielle">Spesielle</button></div>
@@ -1549,7 +1553,11 @@ document.addEventListener("click",event=>{
   camera.lookAt(lookTarget);
   for(const n of redHoods){
    let tx=n.userData.roamX,tz=n.userData.roamZ,walkSpeed=.85;
-   if(n.userData.lure&&player.position.distanceTo(n.position)<48){tx=player.position.x;tz=player.position.z;walkSpeed=1.45;}
+   const panicking=performance.now()<(n.userData.panicUntil||0);
+   if(panicking){
+    const awayX=n.position.x-player.position.x,awayZ=n.position.z-player.position.z,len=Math.hypot(awayX,awayZ)||1;
+    tx=n.position.x+awayX/len*18;tz=n.position.z+awayZ/len*18;walkSpeed=3.25;
+   }else if(n.userData.lure&&player.position.distanceTo(n.position)<48){tx=player.position.x;tz=player.position.z;walkSpeed=1.45;}
    let dx=tx-n.position.x,dz=tz-n.position.z,dist=Math.hypot(dx,dz);
    if(dist<1.2){
     if(n.userData.lure&&player.position.distanceTo(n.position)<48){n.userData.lure=false;}
@@ -1569,12 +1577,15 @@ document.addEventListener("click",event=>{
    n.children[0].position.y=.8+bob;
    if(n.userData.labelCanvas)n.children[n.children.length-1].position.y=2.55+bob;
   }
+  const leverHint=document.getElementById("ulveLeverHint");
+  if(leverHint&&wolfGroup&&player){const nearWolf=player.position.distanceTo(wolfGroup.position)<5;leverHint.style.display=nearWolf&&progression.inventory>0?"block":"none";}
   for(const d of [...drops]){
-   if(progression.magnet&&progression.inventory<100){
-    const dx=player.position.x-d.position.x,dz=player.position.z-d.position.z,dist=Math.hypot(dx,dz);
-    if(dist<18){d.userData.magnetizing=true;const pull=Math.min(1,dt*(4+12/(dist+.5)));d.position.x+=dx*pull;d.position.z+=dz*pull;d.position.y=terrainHeight(d.position.x,d.position.z)+.45+Math.sin(time*.012)*.12;}
-    if(dist<1.35)collectDrop(d);
+   if(progression.inventory>=100)continue;
+   const dx=player.position.x-d.position.x,dz=player.position.z-d.position.z,dist=Math.hypot(dx,dz);
+   if(progression.magnet&&dist<18){
+    d.userData.magnetizing=true;const pull=Math.min(1,dt*(4+12/(dist+.5)));d.position.x+=dx*pull;d.position.z+=dz*pull;d.position.y=terrainHeight(d.position.x,d.position.z)+.45+Math.sin(time*.012)*.12;
    }
+   if(dist<2.25)collectDrop(d);
   }
   for(const p of remotePlayers.values()){
    p.model.position.x+=(p.targetX-p.model.position.x)*Math.min(1,dt*12);
@@ -1634,7 +1645,7 @@ document.addEventListener("click",event=>{
  document.addEventListener("keydown",e=>{
   if(!root.classList.contains("aktiv"))return;
   if(["KeyW","KeyA","KeyS","KeyD","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)){keys[e.code]=true;e.preventDefault();}
-  if(e.code==="KeyE"){interact();e.preventDefault();}
+  if(e.code==="KeyE"||e.code==="KeyI"){interact();e.preventDefault();}
   if(e.code==="Space"){attack();e.preventDefault();}
   if(e.code==="Escape"&&document.pointerLockElement)document.exitPointerLock();
  });
@@ -1798,12 +1809,26 @@ document.addEventListener("click",event=>{
   for(const n of redHoods){const d=player.position.distanceTo(n.position);if(d<dist){dist=d;best=n;}}
   return best;
  }
+
+ function fightSound(){
+  try{
+   const C=window.AudioContext||window.webkitAudioContext,c=new C(),now=c.currentTime;
+   const noise=c.createBuffer(1,Math.floor(c.sampleRate*.16),c.sampleRate),data=noise.getChannelData(0);
+   for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*(1-i/data.length);
+   const src=c.createBufferSource();src.buffer=noise;
+   const filter=c.createBiquadFilter();filter.type="lowpass";filter.frequency.setValueAtTime(1500,now);filter.frequency.exponentialRampToValueAtTime(220,now+.13);
+   const gain=c.createGain();gain.gain.setValueAtTime(.28,now);gain.gain.exponentialRampToValueAtTime(.001,now+.16);
+   src.connect(filter);filter.connect(gain);gain.connect(c.destination);src.start(now);src.stop(now+.16);
+   const osc=c.createOscillator(),og=c.createGain();osc.type="triangle";osc.frequency.setValueAtTime(115,now);osc.frequency.exponentialRampToValueAtTime(48,now+.12);og.gain.setValueAtTime(.22,now);og.gain.exponentialRampToValueAtTime(.001,now+.14);osc.connect(og);og.connect(c.destination);osc.start(now);osc.stop(now+.15);
+   src.onended=()=>c.close();
+  }catch(e){}
+ }
  function attack(){
   if(drivingCar){toast("Gå ut av bilen for å slåss.");return;}
   if(attackCooldown>0)return;const n=nearestTarget();if(!n){toast("Kom nærmere en Rødhette for å slå.");return;}
-  attackCooldown=.38;const damage=[1,5,10,20][progression.weapon]||1;n.userData.hp-=damage;updateHoodLabel(n);
+  attackCooldown=.38;const damage=[1,5,10,20][progression.weapon]||1;n.userData.hp-=damage;n.userData.panicUntil=performance.now()+10000;updateHoodLabel(n);
   n.rotation.y=player.rotation.y;const arm=player.userData.armR;if(arm){arm.rotation.x=-1.5;arm.rotation.z=-.4;}
-  sound(150+damage*8,.1,"sawtooth");
+  fightSound();
   if(n.userData.hp<=0)defeatHood(n);else toast("Treff! "+n.userData.hp+" liv igjen.");
  }
  function interact(){
