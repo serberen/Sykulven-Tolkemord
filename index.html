@@ -564,7 +564,7 @@ function oppdaterAlleKortMarkering(){
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(roller.every((_,i)=>valgt.has(i))?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;const fravelg=roller.every((_,i)=>valgt.has(i));if(fravelg){if(roller.some((r,i)=>(r.navn==="Emo"||r.navn==="Frimurer")&&valgt.has(i)))stoppEmoOpplesning();spillAlleFravalgtLyd();}else{spillAlleValgtLyd();}spillAlleSjokkbølge(fravelg,!fravelg)};grid.append(alle);
+ alle.onclick=()=>{stoppEmoOpplesning();stoppVokterOpplesning();if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;const fravelg=roller.every((_,i)=>valgt.has(i));if(fravelg){if(roller.some((r,i)=>(r.navn==="Emo"||r.navn==="Frimurer")&&valgt.has(i)))stoppEmoOpplesning();spillAlleFravalgtLyd();}else{spillAlleValgtLyd();}spillAlleSjokkbølge(fravelg,!fravelg)};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
