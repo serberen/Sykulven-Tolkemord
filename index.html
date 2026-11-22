@@ -510,16 +510,19 @@ function lagKortflate(knapp, bilde, alt, rolle){
  back.append(title,team,desc);knapp.append(front,back);
 }
 
-function spillAlleSjokkbølge(){
- // Bølg fra Røver og videre ned til Paranormal Etterforsker i kortrekkefølgen.
+function spillAlleSjokkbølge(baklengs=false){
+ // Velg alle: Røver til Paranormal Etterforsker. Fravelg alle: motsatt vei.
  const fra=roller.findIndex(r=>r.navn==="Røver");
  const til=roller.findIndex(r=>r.navn==="Paranormal Etterforsker");
  if(fra<0||til<fra)return;
- for(let i=fra;i<=til;i++){
+ const start=baklengs?til:fra;
+ const slutt=baklengs?fra:til;
+ const steg=baklengs?-1:1;
+ for(let i=start,rekkefølge=0;baklengs?i>=slutt:i<=slutt;i+=steg,rekkefølge++){
   const kort=grid.querySelector('.card[data-role-index="'+i+'"]');
   if(!kort)continue;
   kort.classList.remove("sjokkbølge");
-  kort.style.setProperty("--sjokk-forsinkelse",((i-fra)*32)+"ms");
+  kort.style.setProperty("--sjokk-forsinkelse",(rekkefølge*32)+"ms");
   void kort.offsetWidth;
   kort.classList.add("sjokkbølge");
   kort.addEventListener("animationend",()=>{
@@ -532,7 +535,7 @@ function spillAlleSjokkbølge(){
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();spillAlleFravalgtLyd();}else{roller.forEach((_,i)=>valgt.add(i));spillAlleValgtLyd();}tegnKort();spillAlleSjokkbølge()};grid.append(alle);
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();spillAlleFravalgtLyd();}else{roller.forEach((_,i)=>valgt.add(i));spillAlleValgtLyd();}tegnKort();spillAlleSjokkbølge(valgt.size===0)};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
