@@ -557,6 +557,10 @@ function spillAlleSjokkbølge(baklengs=false,velg=false){
  $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
  $("startKnapp").disabled=valgt.size===0;
 }
+function oppdaterAlleKortMarkering(){
+ const alle=grid.querySelector(".card.all");
+ if(alle)alle.classList.toggle("selected",roller.every((_,j)=>valgt.has(j)));
+}
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(roller.every((_,i)=>valgt.has(i))?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
@@ -661,6 +665,7 @@ function tegnKort(){grid.innerHTML="";
    b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
    $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
    $("startKnapp").disabled=valgt.size===0;
+   oppdaterAlleKortMarkering();
    if(flipOverlay){
     requestAnimationFrame(()=>{
      flipOverlay.style.transition="transform .16s ease-out,border-color .16s ease-out,box-shadow .16s ease-out";
@@ -672,7 +677,7 @@ function tegnKort(){grid.innerHTML="";
   };
   grid.append(b)
  });
- $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;
+ $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;oppdaterAlleKortMarkering();
 }
 
 let lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
