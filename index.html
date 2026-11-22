@@ -497,7 +497,7 @@ function lagKortflate(knapp, bilde, alt, rolle){
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();}else roller.forEach((_,i)=>valgt.add(i));tegnKort()};grid.append(alle);
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;if(valgt.size===roller.length){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();valgt.clear();spillAlleFravalgtLyd();}else{roller.forEach((_,i)=>valgt.add(i));spillAlleValgtLyd();}tegnKort()};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
@@ -792,9 +792,13 @@ function spillKlikkelyd(){try{const c=uiContext();if(!c)return;const t=c.current
 const kortFlippingLyd=new Audio("kort-flipping.mp3");
 const kortValgtLyd=new Audio("kort-select-ny.wav");
 const kortFravalgtLyd=new Audio("kort-deselect-ny.wav");
+const alleValgtLyd=new Audio("alle-select.wav");
+const alleFravalgtLyd=new Audio("alle-deselect.wav");
 function spillKorttrekklyd(){try{const klipp=kortFlippingLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
 function spillKortValgtLyd(){try{const klipp=kortValgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
 function spillKortFravalgtLyd(){try{const klipp=kortFravalgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
+function spillAlleValgtLyd(){try{const klipp=alleValgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
+function spillAlleFravalgtLyd(){try{const klipp=alleFravalgtLyd.cloneNode();klipp.volume=0.8;klipp.play().catch(()=>{});}catch(e){}}
 
 // Egne stemmeopptak for Emo-kortet. Bare ett Emo-opptak kan spille om gangen.
 let aktivEmoLyd=null;
