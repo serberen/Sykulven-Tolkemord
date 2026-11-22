@@ -558,7 +558,7 @@ function spillAlleSjokkbølge(baklengs=false,velg=false){
 function tegnKort(){grid.innerHTML="";
  const alle=document.createElement("button");alle.type="button";alle.className="card all"+(valgt.size===roller.length?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
  lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
- alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;const fravelg=valgt.size===roller.length;if(fravelg){if(roller.some((r,i)=>r.navn==="Emo"&&valgt.has(i)))stoppEmoOpplesning();spillAlleFravalgtLyd();}else{spillAlleValgtLyd();}spillAlleSjokkbølge(fravelg,!fravelg)};grid.append(alle);
+ alle.onclick=()=>{if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;const fravelg=valgt.size===roller.length;if(fravelg){if(roller.some((r,i)=>(r.navn==="Emo"||r.navn==="Frimurer")&&valgt.has(i)))stoppEmoOpplesning();spillAlleFravalgtLyd();}else{spillAlleValgtLyd();}spillAlleSjokkbølge(fravelg,!fravelg)};grid.append(alle);
  roller.forEach((r,i)=>{
   const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
   lagKortflate(b,r.bilde,r.navn,r);
@@ -593,13 +593,13 @@ function tegnKort(){grid.innerHTML="";
    event.preventDefault();
    if(b.classList.contains("flipped")){
     spillKorttrekklyd();
-    if(r.navn==="Emo")stoppEmoOpplesning();
+    stoppRolleopplesning(r.navn);
     b.classList.remove("flipped");
    }else{
-    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined)stoppRolleopplesning(roller[Number(card.dataset.roleIndex)]?.navn);card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
-    if(r.navn==="Emo")spillEmoOpplesning("./emo-info-v2.wav?rev=2");
+    spillKortrolleopplesning(r.navn,"info");
     b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
    }
   },{passive:false});
@@ -616,29 +616,29 @@ function tegnKort(){grid.innerHTML="";
    b.classList.remove("pc-tilt-left","pc-tilt-right");
    if(b.classList.contains("flipped")){
     spillKorttrekklyd();
-    if(r.navn==="Emo")stoppEmoOpplesning();
+    stoppRolleopplesning(r.navn);
     b.classList.remove("flipped");
    }else{
-    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined&&roller[Number(card.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();card.classList.remove("flipped");});
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined)stoppRolleopplesning(roller[Number(card.dataset.roleIndex)]?.navn);card.classList.remove("flipped");});
     spillKorttrekklyd();
     b.classList.add("flipped");
-    if(r.navn==="Emo")spillEmoOpplesning("./emo-info-v2.wav?rev=2");
+    spillKortrolleopplesning(r.navn,"info");
    }
   },true);
 
   b.onclick=()=>{
-   if(b.classList.contains("flipped")){spillKorttrekklyd();if(r.navn==="Emo")stoppEmoOpplesning();b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
+   if(b.classList.contains("flipped")){spillKorttrekklyd();stoppRolleopplesning(r.navn);b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
    const oppdaterValg=()=>{
     if(valgt.has(i)){
      valgt.delete(i);
      if(aktivInfoKort===i)aktivInfoKort=null;
-     if(r.navn==="Emo")stoppEmoOpplesning();
+     stoppRolleopplesning(r.navn);
      spillKortFravalgtLyd();
     }else{
      valgt.add(i);
      aktivInfoKort=i;
      spillKortValgtLyd();
-     if(r.navn==="Emo")spillEmoOpplesning("emo-rollevalg-v2.wav");
+     spillKortrolleopplesning(r.navn,"rolle");
     }
    };
    let flipOverlay=null;
@@ -764,7 +764,7 @@ function nattensRoller(natt){
 function aktivNatt(){return nattData[valgtNatt];}
 function renderNatt(){
  const natt=aktivNatt();$("nightLabel").textContent=natt.navn.toUpperCase();$("nightTitle").textContent=natt.navn;
- $("nightDescription").textContent="Startlyden «Alle sammen, lukk øynene» spilles først. Deretter er det alltid 5 sekunder stille før instruksjon 1. Sluttlyden «Alle sammen, våkn opp» spilles etter siste rolle. Du kan laste opp egne lydfiler for å erstatte standardlydene. Rolleklippene bør inneholde både oppvåkningsbeskjeden og beskjeden om å lukke øynene igjen.";
+ $("nightDescription").textContent="Startlyden «Alle sammen, lukk øynene» spilles først. Deretter er det alltid 5 sekunder stille før instruksjon 1. Sluttlyden «Alle sammen, våkn opp» spilles etter siste rolle. Frimurer har egne oppvåknings- og lukk-øynene-lyder med ventetid mellom. Du kan laste opp egne lydfiler for øvrige rolleklipp.";
  document.querySelectorAll("#nightTabs button").forEach(b=>{b.classList.toggle("primary",Number(b.dataset.night)===valgtNatt);});
  const list=$("nightPhaseList");list.innerHTML="";
  const phases=nattensRoller(natt);
@@ -782,7 +782,7 @@ function renderNatt(){
   const play=document.createElement("button");play.className="action";play.type="button";play.textContent="▶ Spill klippet";play.addEventListener("click",()=>spillEnkeltKlipp(p.id,p.rolle));
   const remove=document.createElement("button");remove.className="action";remove.type="button";remove.textContent="Fjern lydfil";remove.addEventListener("click",async()=>{try{await slettLydklipp(p.id);meta.textContent="Ingen lydfil lagt inn."; }catch(e){meta.textContent="Kunne ikke fjerne lydfilen."; }});
   controls.append(input,play,remove);card.append(heading,script,meta,controls);list.append(card);
-  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":"Lokal lagring er ikke tilgjengelig.";});
+  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":"Lokal lagring er ikke tilgjengelig.";});
  });
  if(!phases.length){const p=document.createElement("p");p.className="small";p.textContent="Ingen av rollene i denne natten er valgt i kortvelgeren. Velg rollene du skal bruke, så vises instruksjonene her.";list.append(p);}
 }
@@ -832,8 +832,21 @@ async function spillHeleNatten(){
   const p=phases[i];let file;
   try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
   if(token!==sekvensToken)break;
-  if(!file){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
-  const ok=await spillFil(file,p.rolle);if(!ok)break;
+  if(!file&&p.id!=="frimurer"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
+  let ok=true;
+  if(p.id==="frimurer"){
+   const wake=new Audio("./frimurer-vakne.wav");wake.volume=lydinnstillinger.stemmeVolum;
+   try{await wake.play();ok=await ventPaaLyd(wake);}catch(e){ok=false;}
+   if(!ok)break;
+   if(token!==sekvensToken)break;
+   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Frimurerne utfører handlingen. Lukk øynene om {sek} sekunder …");
+   if(!ventet)break;
+   const close=new Audio("./frimurer-lukk-oynene.wav");close.volume=lydinnstillinger.stemmeVolum;
+   try{await close.play();ok=await ventPaaLyd(close);}catch(e){ok=false;}
+   if(!ok)break;
+  }else{
+   ok=await spillFil(file,p.rolle);if(!ok)break;
+  }
   if(token!==sekvensToken)break;spilt++;
   if(i<phases.length-1&&lydinnstillinger.pauseSekunder>0){
    const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Neste instruksjon om {sek} sekunder …");
@@ -876,6 +889,20 @@ function spillEmoOpplesning(fil){
  lydklipp.addEventListener("ended",()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;},{once:true});
  lydklipp.addEventListener("error",()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;},{once:true});
  lydklipp.play().catch(()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;});
+}
+function spillFrimurerOpplesning(type){
+ const filer={info:"./frimurer-info.wav",rolle:"./frimurer-rolle.wav"};
+ spillEmoOpplesning(filer[type]);
+}
+function stoppRolleopplesning(navn){
+ if(navn==="Emo"||navn==="Frimurer")stoppEmoOpplesning();
+}
+function spillKortrolleopplesning(navn,type){
+ if(navn==="Emo"){
+  spillEmoOpplesning(type==="info"?"./emo-info-v2.wav?rev=2":"./emo-rollevalg-v2.wav");
+ }else if(navn==="Frimurer"){
+  spillFrimurerOpplesning(type);
+ }
 }
 document.addEventListener("click",event=>{
  const expanded=event.target.closest(".card.flipped");
