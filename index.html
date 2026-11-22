@@ -435,6 +435,16 @@ textarea{min-height:70px}
 #skogSpill.feil #skogHjelp{white-space:normal}
 @media(pointer:coarse){#skogJoystick{display:block}#skogHjelp{bottom:158px;max-width:90%;white-space:normal}}
 
+
+#skogNavnPanel{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;background:#030812eF}
+.skog-navn-kort{width:min(360px,calc(100% - 36px));padding:26px;border:1px solid #c7a45b88;border-radius:16px;background:linear-gradient(145deg,#172231,#080e18);box-shadow:0 18px 70px #000b;text-align:center}
+.skog-navn-overskrift{font-weight:900;letter-spacing:.18em;color:#e8c879;font-size:21px}
+.skog-navn-kort p{color:#d5d1c8;font-size:14px;line-height:1.5}
+#skogNavnInput{box-sizing:border-box;width:100%;padding:13px;margin:12px 0;border:1px solid #9b8557;border-radius:9px;background:#070d16;color:#fff;font:inherit;outline:none}
+#skogNavnStart{width:100%;padding:13px;border:1px solid #e2c37b;border-radius:9px;background:#8d6a2e;color:white;font:700 15px inherit;cursor:pointer}
+#skogNavnFeil{min-height:22px;color:#f3a0a0;font-size:13px;margin:0 0 8px}
+#skogOnline{display:inline-block;margin-left:10px;color:#b8c6b9;font-size:11px;letter-spacing:0}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -1090,7 +1100,16 @@ document.addEventListener("click",event=>{
 });</script>
 <div id="skogSpill" aria-label="3D-skogspill">
  <canvas id="skogCanvas"></canvas>
- <div id="skogTopp"><div id="skogTittel">MØRKESKOGEN · <span id="skogRolle">ROLLE</span></div><button id="skogAvslutt" type="button">← Til kortene</button></div>
+ <div id="skogNavnPanel">
+  <div class="skog-navn-kort">
+   <div class="skog-navn-overskrift">MØRKESKOGEN</div>
+   <p>Skriv inn et kallenavn som er ledig akkurat nå.</p>
+   <input id="skogNavnInput" maxlength="18" autocomplete="nickname" placeholder="Kallenavn">
+   <div id="skogNavnFeil" role="status"></div>
+   <button id="skogNavnStart" type="button">Gå inn i skogen</button>
+  </div>
+ </div>
+ <div id="skogTopp"><div id="skogTittel">MØRKESKOGEN · <span id="skogRolle">ROLLE</span> <small id="skogOnline">0 online</small></div><button id="skogAvslutt" type="button">← Til kortene</button></div>
  <div id="skogKryss"></div>
  <div id="skogHjelp">WASD for å gå · Mus for å se rundt · ESC for å låse opp musen</div>
  <div id="skogJoystick"><div id="skogJoystickKnott"></div></div>
@@ -1125,6 +1144,97 @@ document.addEventListener("click",event=>{
  let renderer,scene,camera,player,animationId,keys={},yaw=0,pitch=-.12,lastTime=0,walkTime=0,orbitDrag=null;
  let joystickActive=false,joyId=null,joyX=0,joyY=0,lookTouch=null,lookX=0,lookY=0;
  const joystick=document.getElementById("skogJoystick"),knob=document.getElementById("skogJoystickKnott");
+ const SUPABASE_URL="https://vaxuyicmozanxbtgkoku.supabase.co";
+ const SUPABASE_KEY="sb_publishable_Q_5oTSRiT55-H95gykr5BA_Pq5Nh58u";
+ let sb=null,room=null,myNickname="",mySession=crypto.randomUUID(),heartbeatTimer=null,broadcastTimer=null;
+ const remotePlayers=new Map(),remoteState=new Map();
+ const roleForName=name=>roller.find(r=>r.navn===name)||roller[0];
+ function loadSupabase(){
+  if(window.supabase?.createClient){sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return Promise.resolve();}
+  return new Promise((resolve,reject)=>{
+   const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+   s.onload=()=>{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);resolve();};
+   s.onerror=()=>reject(new Error("Kunne ikke koble til multiplayer-tjenesten."));
+   document.head.appendChild(s);
+  });
+ }
+ async function claimNickname(name){
+  const {data,error}=await sb.rpc("claim_game_nickname",{p_nickname:name,p_session_id:mySession});
+  if(error)throw error;
+  return data===true;
+ }
+ async function releaseNickname(){
+  if(!sb||!myNickname)return;
+  try{await sb.rpc("release_game_nickname",{p_nickname:myNickname,p_session_id:mySession});}catch(e){}
+  myNickname="";
+ }
+ function makeRemote(id,state){
+  if(remotePlayers.has(id))return;
+  const role=roleForName(state.role);
+  const model=buildPlayer(role);
+  model.position.set(Number(state.x)||0,0,Number(state.z)||0);
+  scene.add(model);
+  remotePlayers.set(id,{model,nickname:state.nickname||"Spiller",targetX:model.position.x,targetZ:model.position.z,targetYaw:0});
+ }
+ function syncRemotePresence(){
+  if(!room)return;
+  const state=room.presenceState(),seen=new Set();
+  Object.entries(state).forEach(([key,items])=>items.forEach(item=>{
+   if(item.session===mySession)return;
+   seen.add(item.session);
+   if(!remotePlayers.has(item.session))makeRemote(item.session,item);
+  }));
+  for(const [id,p] of remotePlayers){if(!seen.has(id)){scene.remove(p.model);remotePlayers.delete(id);}}
+  document.getElementById("skogOnline").textContent=(seen.size+1)+" online";
+ }
+ async function connectMultiplayer(role){
+  await loadSupabase();
+  room=sb.channel("sykulven-dark-forest",{config:{presence:{key:mySession},broadcast:{self:false}}});
+  room.on("presence",{event:"sync"},syncRemotePresence);
+  room.on("broadcast",{event:"move"},({payload})=>{
+   if(!payload||payload.session===mySession)return;
+   let p=remotePlayers.get(payload.session);
+   if(!p){makeRemote(payload.session,payload);p=remotePlayers.get(payload.session);}
+   if(!p)return;
+   p.targetX=Number(payload.x)||0;p.targetZ=Number(payload.z)||0;p.targetYaw=Number(payload.yaw)||0;
+  });
+  await new Promise((resolve,reject)=>{
+   room.subscribe(async status=>{
+    if(status==="SUBSCRIBED"){
+     await room.track({session:mySession,nickname:myNickname,role:role.navn,x:0,z:0});
+     resolve();
+    }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")reject(new Error("Kunne ikke koble til multiplayer-rommet."));
+   });
+  });
+  heartbeatTimer=setInterval(async()=>{
+   if(myNickname)await sb.rpc("heartbeat_game_nickname",{p_nickname:myNickname,p_session_id:mySession});
+  },15000);
+  broadcastTimer=setInterval(()=>{
+   if(!room||!player)return;
+   room.send({type:"broadcast",event:"move",payload:{session:mySession,nickname:myNickname,role:role.navn,x:player.position.x,z:player.position.z,yaw:player.rotation.y}});
+  },120);
+ }
+ async function enterGameWithNickname(role,index){
+  const input=document.getElementById("skogNavnInput"),err=document.getElementById("skogNavnFeil"),btn=document.getElementById("skogNavnStart");
+  const name=input.value.trim().replace(/\s+/g," ");
+  if(!/^[\p{L}\p{N}_ -]{3,18}$/u.test(name)){err.textContent="Bruk 3–18 bokstaver, tall, mellomrom eller _. ";return;}
+  btn.disabled=true;err.textContent="Sjekker kallenavn …";
+  try{
+   await loadSupabase();
+   const ok=await claimNickname(name);
+   if(!ok){err.textContent="Dette kallenavnet er allerede i bruk. Velg et annet.";btn.disabled=false;return;}
+   myNickname=name;document.getElementById("skogNavnPanel").style.display="none";
+   document.getElementById("skogTittel").insertAdjacentHTML("beforeend",` <small>· ${name}</small>`);
+   await startWorld(role,index);
+   await connectMultiplayer(role);
+   err.textContent="";
+  }catch(e){
+   if(myNickname)await releaseNickname();
+   err.textContent=e.message||"Kunne ikke koble til. Prøv igjen.";
+   btn.disabled=false;
+  }
+ }
+
  function loadThree(){
   if(window.THREE)return Promise.resolve();
   if(window.__skogThreePromise)return window.__skogThreePromise;
@@ -1146,8 +1256,8 @@ document.addEventListener("click",event=>{
    crown.position.set(x,(2.1+layer*.72)*scale,z);scene.add(crown);
   }
  }
- function buildPlayer(role){
-  player=new THREE.Group();scene.add(player);
+ function buildPlayer(role,parentScene=scene){
+  const model=new THREE.Group();parentScene.add(model);
   const profiles={
    "Sov Ulven":{skin:0xe2b58e,hair:0x7c285d,coat:0x63345e,shirt:0x292235,pants:0x28202d,hood:1,glasses:1,accent:0xd4a0d1},
    "Jeger":{skin:0xc78c5c,hair:0x302018,coat:0x59402c,shirt:0x292b25,pants:0x29251f,hood:0,weapon:1,accent:0x9b754b},
@@ -1171,9 +1281,9 @@ document.addEventListener("click",event=>{
   const p=profiles[role.navn]||profiles["Landsbyboer"];
   const M=(c,r=0.9)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
   const skin=M(p.skin),hair=M(p.hair),coat=M(p.coat),shirt=M(p.shirt),pants=M(p.pants),accent=M(p.accent),dark=M(0x171719),white=M(0xe7e0d2),eye=M(0x17151a);
-  const part=(geo,material,x,y,z,parent=player)=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);parent.add(m);return m;};
-  const sphere=(material,x,y,z,sx,sy,sz,parent=player)=>{const m=part(new THREE.SphereGeometry(1,14,12),material,x,y,z,parent);m.scale.set(sx,sy,sz);return m;};
-  const capsule=(material,x,y,z,radius,length,parent=player)=>{
+  const part=(geo,material,x,y,z,parent=model)=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);parent.add(m);return m;};
+  const sphere=(material,x,y,z,sx,sy,sz,parent=model)=>{const m=part(new THREE.SphereGeometry(1,14,12),material,x,y,z,parent);m.scale.set(sx,sy,sz);return m;};
+  const capsule=(material,x,y,z,radius,length,parent=model)=>{
    const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
    part(new THREE.CylinderGeometry(radius,radius,length,10),material,0,0,0,g);
    sphere(material,0,length/2,0,radius,radius,radius,g);
@@ -1207,7 +1317,7 @@ document.addEventListener("click",event=>{
   // Bukse, bevegelige lår/legger og solide støvler.
   const legL=new THREE.Group(),legR=new THREE.Group();
   function makeLeg(g,x){
-   g.position.set(x,.94,0);player.add(g);
+   g.position.set(x,.94,0);model.add(g);
    capsule(pants,0,-.25,0,.14,.48,g);
    part(new THREE.BoxGeometry(.27,.16,.43),dark,0,-.67,.08,g);
   }
@@ -1215,7 +1325,7 @@ document.addEventListener("click",event=>{
   // Bevegelige armer med skuldre, overarmer, underarmer og hansker/hender.
   const armL=new THREE.Group(),armR=new THREE.Group();
   function makeArm(g,x){
-   g.position.set(x,1.78,0);player.add(g);
+   g.position.set(x,1.78,0);model.add(g);
    sphere(coat,0,-.08,0,.19,.2,.2,g);
    capsule(coat,0,-.32,0,.105,.34,g);
    capsule(skin,0,-.66,.015,.085,.3,g);
@@ -1256,7 +1366,7 @@ document.addEventListener("click",event=>{
   if(p.glow){
    const orbMat=new THREE.MeshBasicMaterial({color:p.accent});
    const orb=part(new THREE.SphereGeometry(.12,12,10),orbMat,.48,1.28,.22);
-   const light=new THREE.PointLight(p.accent,1.1,3);light.position.copy(orb.position);player.add(light);
+   const light=new THREE.PointLight(p.accent,1.1,3);light.position.copy(orb.position);model.add(light);
   }
   if(p.weapon){
    const handle=part(new THREE.CylinderGeometry(.035,.035,.55,8),M(0x634326),.62,1.25,.04);handle.rotation.z=-.45;
@@ -1268,13 +1378,14 @@ document.addEventListener("click",event=>{
   }
   if(role.navn==="Paranormal Etterforsker"){
    const bottle=part(new THREE.CylinderGeometry(.07,.1,.25,8),M(0x66c99a,.25),.61,1.05,.12);
-   const glow=new THREE.PointLight(0x5effae,.8,2.5);glow.position.copy(bottle.position);player.add(glow);
+   const glow=new THREE.PointLight(0x5effae,.8,2.5);glow.position.copy(bottle.position);model.add(glow);
   }
   // Kappen får en egen bakside og tydelig silhuett.
   if(["Vokter","Syk Ulven","Sov Ulven","Prins","Synsk","Emo"].includes(role.navn)){
    const cape=part(new THREE.ConeGeometry(.55,1.25,8,1,true),coat,0,1.12,-.28);cape.rotation.x=Math.PI;cape.scale.z=.32;
   }
-  player.userData={armL,armR,legL,legR};
+  model.userData={armL,armR,legL,legR};
+  return model;
  }
  function buildWorld(role){
   scene=new THREE.Scene();scene.background=new THREE.Color(0x07101b);scene.fog=new THREE.FogExp2(0x07101b,.021);
@@ -1298,7 +1409,7 @@ document.addEventListener("click",event=>{
    const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+random()*.45,0),mat(0x202b28));
    rock.position.set((random()-.5)*100,.12,(random()-.5)*100);rock.scale.y=.45;scene.add(rock);
   }
-  buildPlayer(role);
+  player=buildPlayer(role);
   camera.position.set(0,2.45,5);
  }
  function resize(){
@@ -1331,6 +1442,11 @@ document.addEventListener("click",event=>{
   camera.position.set(player.position.x+Math.sin(yaw)*distance,player.position.y+2.65+pitch*3,player.position.z+Math.cos(yaw)*distance);
   lookTarget.y+=pitch*2.2;
   camera.lookAt(lookTarget);
+  for(const p of remotePlayers.values()){
+   p.model.position.x+=(p.targetX-p.model.position.x)*Math.min(1,dt*12);
+   p.model.position.z+=(p.targetZ-p.model.position.z)*Math.min(1,dt*12);
+   p.model.rotation.y=p.targetYaw;
+  }
   renderer.render(scene,camera);
  }
  function pointerLock(){
@@ -1341,22 +1457,37 @@ document.addEventListener("click",event=>{
  function startSkogSpill(role,index){
   root.classList.add("aktiv");root.dataset.roleIndex=String(index);
   document.getElementById("skogRolle").textContent=role.navn.toUpperCase();
+  document.getElementById("skogNavnPanel").style.display="flex";
+  document.getElementById("skogNavnInput").value="";
+  document.getElementById("skogNavnFeil").textContent="";
+  document.getElementById("skogNavnStart").disabled=false;
   document.body.style.overflow="hidden";
-  loadThree().then(()=>{
-   if(!root.classList.contains("aktiv"))return;
-   buildWorld(role);resize();lastTime=performance.now();loop(lastTime);pointerLock();
-  }).catch(error=>{
-   root.classList.add("feil");help.textContent=error.message;
-  });
  }
- function stopGame(){
+ async function startWorld(role,index){
+  await loadThree();
+  if(!root.classList.contains("aktiv"))return;
+  buildWorld(role);resize();lastTime=performance.now();loop(lastTime);pointerLock();
+ }
+ async function stopGame(){
   root.classList.remove("aktiv","feil");document.body.style.overflow="";
+  if(heartbeatTimer)clearInterval(heartbeatTimer);heartbeatTimer=null;
+  if(broadcastTimer)clearInterval(broadcastTimer);broadcastTimer=null;
+  if(room){try{await room.untrack();await sb.removeChannel(room);}catch(e){}room=null;}
+  for(const p of remotePlayers.values()){if(scene)scene.remove(p.model);}remotePlayers.clear();
+  await releaseNickname();
+  document.getElementById("skogNavnPanel").style.display="flex";
   if(animationId)cancelAnimationFrame(animationId);animationId=null;
   if(document.pointerLockElement)document.exitPointerLock();
   if(renderer){renderer.dispose();renderer=null;}
   scene=null;camera=null;player=null;keys={};joyX=joyY=0;
+  document.getElementById("skogNavnStart").disabled=false;
   knob.style.transform="translate(0,0)";
  }
+ document.getElementById("skogNavnStart").addEventListener("click",()=>{
+  const role=roller[Number(root.dataset.roleIndex)];
+  if(role)enterGameWithNickname(role,Number(root.dataset.roleIndex));
+ });
+ document.getElementById("skogNavnInput").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("skogNavnStart").click();});
  exit.addEventListener("click",stopGame);
  document.addEventListener("keydown",e=>{
   if(!root.classList.contains("aktiv"))return;
