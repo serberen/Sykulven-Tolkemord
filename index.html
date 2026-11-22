@@ -1806,6 +1806,24 @@ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,rou
   for(const z of [-.92,.82]){const w=new THREE.Mesh(new THREE.BoxGeometry(2.28,.62,.08),glass);w.position.set(0,1.7,z);carGroup.add(w);}
   const bonnet=new THREE.Mesh(new THREE.BoxGeometry(2.35,.18,1.35),pink);bonnet.position.set(0,1.25,1.55);carGroup.add(bonnet);
   const fringe=new THREE.Mesh(new THREE.BoxGeometry(2.2,.22,1.05),hair);fringe.position.set(0,1.43,2.05);carGroup.add(fringe);
+  // Åge Bils ansikt på fronten: store øyne, pupiller, øyenbryn, nese og smil.
+  const eyeWhite=mat(0xf8f5e9),eyeDark=mat(0x171b20),skin=mat(0xf0a09a),mouthMat=mat(0x542a2a);
+  for(const x of [-.57,.57]){
+   const eye=new THREE.Mesh(new THREE.SphereGeometry(.25,14,12),eyeWhite);
+   eye.scale.set(1,.9,.42);eye.position.set(x,1.48,2.34);carGroup.add(eye);
+   const pupil=new THREE.Mesh(new THREE.SphereGeometry(.115,12,10),eyeDark);
+   pupil.position.set(x+.035,1.47,2.445);carGroup.add(pupil);
+   const shine=new THREE.Mesh(new THREE.SphereGeometry(.04,8,8),mat(0xffffff));
+   shine.position.set(x+.07,1.53,2.49);carGroup.add(shine);
+   const brow=new THREE.Mesh(new THREE.BoxGeometry(.48,.075,.09),hair);
+   brow.position.set(x,1.79,2.34);brow.rotation.z=x<0?-.12:.12;carGroup.add(brow);
+  }
+  const nose=new THREE.Mesh(new THREE.SphereGeometry(.16,12,10),skin);
+  nose.scale.set(1.25,.72,.5);nose.position.set(0,1.22,2.43);carGroup.add(nose);
+  const smile=new THREE.Mesh(new THREE.TorusGeometry(.36,.055,8,24,Math.PI),mouthMat);
+  smile.position.set(0,.98,2.405);smile.rotation.z=Math.PI;carGroup.add(smile);
+  const bumper=new THREE.Mesh(new THREE.BoxGeometry(1.65,.12,.12),mat(0x493638));
+  bumper.position.set(0,.72,2.38);carGroup.add(bumper);
   for(const x of [-1.32,1.32])for(const z of [-1.5,1.5]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.28,16),black);wheel.rotation.z=Math.PI/2;wheel.position.set(x,.55,z);carGroup.add(wheel);}
   carGroup.position.set(2,terrainHeight(2,1),1);scene.add(carGroup);carGroup.visible=false;
  }
