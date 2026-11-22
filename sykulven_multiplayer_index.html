@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081426">
+<meta name="description" content="Syk Ulven – Tolkemord. Spillederkontroll med innebygde lydinstruksjoner.">
+<title>Syk Ulven – Tolkemord</title>
+<style>
+:root{
+ color-scheme:dark;--bg:#061020;--panel:#111e33;--panel2:#182943;
+ --line:#344b6a;--text:#f7f4ec;--muted:#b8c5d8;--gold:#f4c34e;
+ --gold2:#ffdf83;--green:#35f078
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+ margin:0;min-height:100vh;color:var(--text);
+ background:
+  linear-gradient(180deg,rgba(5,14,29,.82) 0%,rgba(5,14,29,.88) 48%,rgba(4,11,23,.94) 100%),
+  url("skog-bakgrunn.webp") center center / cover fixed,
+  linear-gradient(180deg,#081426 0%,#091426 55%,#050d19 100%);
+ background-color:#061020;
+ font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif
+}
+header{
+ position:relative;text-align:center;padding:24px 16px 20px;overflow:hidden;
+ border-bottom:1px solid #b78d3b55;
+ background:linear-gradient(180deg,#071426cc,#0a1728aa)
+}
+header:before{
+ content:"";position:absolute;inset:0;pointer-events:none;opacity:.22;
+ background:radial-gradient(circle at 50% 42%,#f3bd42 0,transparent 27%)
+}
+.brand{position:relative;display:flex;justify-content:center;align-items:center}
+.brand img{
+ display:block;width:min(100%,620px);height:auto;max-height:none;object-fit:contain;
+ border-radius:12px;filter:drop-shadow(0 12px 28px #000b)
+}
+header p{
+ position:relative;margin:3px 0 0;color:var(--gold2);font-size:12px;
+ font-weight:800;letter-spacing:.24em;text-transform:uppercase
+}
+main{max-width:1250px;margin:auto;padding:20px 16px 44px}
+.panel{
+ background:linear-gradient(145deg,#172943f5,#101c30f5);
+ border:1px solid #49617f;border-radius:20px;padding:19px;margin:14px 0;
+ box-shadow:0 18px 48px #0005,inset 0 1px #ffffff0a
+}
+h2{font-size:19px;margin:0 0 12px;color:#fff7e7}
+.intro{color:var(--muted);margin:0 0 16px}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:11px}
+.card{
+ position:relative;display:block;width:100%;padding:0;border:2px solid #465b76;
+ border-radius:15px;overflow:hidden;background:#081426;cursor:pointer;
+ transition:transform .16s ease-out,border-color .16s ease-out,box-shadow .16s ease-out;min-width:0;aspect-ratio:.72
+}
+.card:hover{transform:translateY(-3px);border-color:#d5ad55;box-shadow:0 8px 20px #0006}
+.card img{display:block;width:100%;height:100%;object-fit:cover}
+.card.selected{
+ border:3px solid #00ff57 !important;
+ outline:2px solid #b7ffca;
+ outline-offset:-5px;
+ box-shadow:0 0 0 2px #003d18,0 0 0 5px #00ed50,0 0 24px 8px #00ed50cc,inset 0 0 0 2px #b7ffca !important;
+ transform:translateY(-2px);
+}
+.card.selected:hover{
+ border-color:#00ff57 !important;
+ box-shadow:0 0 0 2px #003d18,0 0 0 5px #00ed50,0 0 30px 10px #00ed50e0,inset 0 0 0 2px #b7ffca !important;
+}
+.card.selected:after{
+ content:"✓";position:absolute;right:7px;bottom:7px;top:auto;background:#00d94b;
+ border:2px solid #e4ffeb;border-radius:50%;width:29px;height:29px;
+ display:grid;place-items:center;font-weight:950;color:#fff;text-shadow:0 1px 2px #064b25;box-shadow:0 0 0 2px #00551f,0 0 18px #00ff57
+}
+.card.all{background:linear-gradient(145deg,#243b5a,#101c30);border-color:#d8b65e}
+
+.card{perspective:1000px}
+.card .card-front,.card .card-back{
+ display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:9px;
+ padding:12px 11px;text-align:left;white-space:normal;
+ color:#4a3824;background:linear-gradient(145deg,#f6edda,#e8d7b8);
+ border:2px solid var(--team-color,#c8ad7d);transform:rotateY(-180deg);transition:transform .55s ease;backface-visibility:hidden;-webkit-backface-visibility:hidden
+}
+.card .card-back strong{font-size:clamp(12px,1.35vw,16px);color:#604629;line-height:1.12;flex:0 0 auto;text-align:center}
+.card .card-back .team-tag{align-self:center;font-size:clamp(9px,1vw,12px);line-height:1.1;font-weight:900;letter-spacing:.02em;padding:4px 7px;border-radius:6px;color:#fff;background:var(--team-color);flex:0 0 auto}
+.card .card-back .role-description{font-size:clamp(9px,1.05vw,13px);line-height:1.25;color:#352719;flex:0 0 auto;min-height:0;overflow:visible;display:block;text-align:left;overflow-wrap:anywhere}
+.card.flipped{z-index:1000;border-color:#e7c56d;box-shadow:0 0 0 3px #8c6a2a,0 18px 55px #000e,0 0 35px #d5ad5590;transform:scale(1.5) translateZ(70px);transform-origin:center}
+.card.flipped.selected:after{display:none}
+.card.flipped .card-front{transform:rotateY(180deg)}
+.card.flipped .card-back{transform:rotateY(0deg)}
+.card[data-team="Ulvelaget"]{--team-color:#783f36}
+.card[data-team="Landsbylaget"]{--team-color:#176b78}
+.card[data-team="Alenelag"]{--team-color:#285b3d}
+.card[data-team="???-laget"]{--team-color:#88733d}
+
+.card{touch-action:pan-y;user-select:none;-webkit-user-select:none;}
+.card.all .card-front{object-fit:cover}
+
+.card.all img{display:block;width:100%;height:100%;object-fit:cover}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px;align-items:center}
+button.action{
+ border:1px solid #506481;border-radius:11px;padding:10px 14px;
+ background:#263b58;color:white;font:inherit;cursor:pointer;transition:.15s
+}
+button.action:hover:not(:disabled){border-color:var(--gold);background:#304969}
+button.primary{
+ background:linear-gradient(135deg,#b98a2f,#e2b84d);border-color:#f5d987;
+ color:#171b24;font-weight:800
+}
+button.primary:hover:not(:disabled){background:linear-gradient(135deg,#d09e39,#f4cf70)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.small{font-size:13px;color:var(--muted)}
+.count{margin-left:auto;color:var(--gold2);font-size:clamp(20px,2.5vw,25px);font-weight:900;line-height:1.2;padding:9px 15px;background:#071426eF;border:1px solid #d7ad4f;border-radius:12px;text-shadow:0 2px 8px #000;box-shadow:0 0 14px #f4c34e30;white-space:nowrap}
+.hidden{display:none!important}
+.phasebox{
+ text-align:center;background:linear-gradient(145deg,#1d3452,#14243b);
+ border:1px solid #526b8c;border-radius:16px;padding:24px;margin:12px 0
+}
+.phasebox h2{font-size:clamp(23px,4vw,32px);margin:8px;color:var(--gold2)}
+.phasebox p{color:var(--muted);margin:0}
+.controls{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.phase-list{display:grid;gap:7px}
+.phase-row{
+ display:flex;align-items:center;gap:10px;background:#0d192b;
+ border:1px solid var(--line);padding:10px;border-radius:11px
+}
+.phase-row.active{border-color:var(--gold);background:#182a43}
+.phase-row span:nth-child(2){flex:1}
+label{display:block;color:var(--muted);font-size:13px;margin:10px 0 5px}
+input,textarea{
+ width:100%;padding:10px;border-radius:9px;border:1px solid var(--line);
+ background:#091528;color:white;font:inherit
+}
+textarea{min-height:70px}
+.status{color:var(--green);min-height:22px;font-size:13px}
+.foot{text-align:center;color:#91a5bf;font-size:12px;padding:18px 12px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}}
+@media(max-width:480px){
+ header{padding:14px 12px 16px}.brand img{width:min(94vw,620px);max-height:none}
+ .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+ .panel{padding:12px;border-radius:15px}
+ .card.selected:after{width:22px;height:22px;right:4px;bottom:4px;top:auto}
+}
+
+
+/* Rask sjokkbølge når ALLE-knappen brukes */
+@keyframes kortSjokkbølge{
+  0%,100%{translate:0 0}
+  38%{translate:0 -9px}
+  68%{translate:0 -2px}
+}
+.card.sjokkbølge{
+  animation:kortSjokkbølge .24s cubic-bezier(.2,.75,.25,1) both;
+  animation-delay:var(--sjokk-forsinkelse,0ms);
+}
+@media(prefers-reduced-motion:reduce){
+  .card.sjokkbølge{animation:none}
+}
+
+/* Fix card faces: front visible by default, beige back stacked above it */
+.card{position:relative;isolation:isolate;overflow:visible}
+.card .card-front{
+ position:absolute;inset:0;width:100%;height:100%;
+ display:block;padding:0;border:0;border-radius:inherit;
+ background:none;object-fit:cover;transform:rotateY(0deg);
+}
+.card .card-back{
+ position:absolute;inset:0;width:100%;height:100%;
+ overflow:hidden;border-radius:inherit;transform:rotateY(-180deg);
+}
+.card.flipped .card-front{transform:rotateY(180deg)}
+.card.flipped .card-back{transform:rotateY(0deg)}
+.card.all .card-front{object-fit:cover}
+
+
+/* Info-flip: unselected cards keep neutral edges; compact back text fits one face */
+.card.flipped:not(.selected){
+ border-color:#465b76 !important;
+ box-shadow:0 14px 42px #000d,0 0 22px #0008 !important;
+ outline:none !important;
+}
+.card.flipped .card-back{
+ gap:5px !important;
+ padding:8px 8px !important;
+ overflow:hidden !important;
+}
+.card.flipped .card-back strong{
+ font-size:clamp(10px,1.05vw,14px) !important;
+ line-height:1.05 !important;
+}
+.card.flipped .card-back .team-tag{
+ font-size:clamp(8px,.78vw,10px) !important;
+ padding:3px 6px !important;
+ line-height:1 !important;
+}
+.card.flipped .card-back .role-description{
+ font-size:clamp(8px,.88vw,11px) !important;
+ line-height:1.12 !important;
+ overflow:hidden !important;
+}
+@media (max-width:700px){
+ .card.flipped .card-back{
+  display:flex !important;
+  justify-content:flex-start !important;
+  align-items:stretch !important;
+  gap:2px !important;
+  padding:4px 5px !important;
+  overflow:hidden !important;
+ }
+ .card.flipped .card-back strong{
+  font-size:clamp(8px,2.25vw,10px) !important;
+  line-height:1 !important;
+  margin:0 !important;
+ }
+ .card.flipped .card-back .team-tag{
+  align-self:center !important;
+  font-size:clamp(6px,1.7vw,8px) !important;
+  padding:2px 4px !important;
+  margin:0 !important;
+ }
+ .card.flipped .card-back .role-description{
+  font-size:clamp(6.5px,1.95vw,8.5px) !important;
+  line-height:1.04 !important;
+  margin:0 !important;
+  overflow:visible !important;
+  white-space:normal !important;
+  overflow-wrap:anywhere !important;
+  word-break:normal !important;
+  text-align:left !important;
+ }
+}
+
+
+@media (max-width:390px){
+ .card.flipped .card-back{padding:3px 4px !important;gap:1px !important}
+ .card.flipped .card-back strong{font-size:7.5px !important}
+ .card.flipped .card-back .team-tag{font-size:6px !important;padding:1px 3px !important}
+ .card.flipped .card-back .role-description{font-size:6.5px !important;line-height:1.02 !important}
+}
+
+
+@media (max-width:700px){
+ .card.flipped .card-back .role-description{
+  font-size:clamp(8px,2.35vw,10px) !important;
+  line-height:1.12 !important;
+  white-space:normal !important;
+  overflow-wrap:break-word !important;
+  word-break:normal !important;
+  text-wrap:pretty;
+  hyphens:auto;
+  max-width:100% !important;
+ }
+ .card.flipped .card-back{gap:3px !important;padding:5px 6px !important}
+}
+@media (max-width:390px){
+ .card.flipped .card-back .role-description{
+  font-size:8px !important;
+  line-height:1.1 !important;
+ }
+}
+
+
+@media (hover:hover) and (pointer:fine){
+ .card.pc-tilt-left:not(.flipped){
+  transform:perspective(900px) rotateY(-8deg) translateY(-2px);
+  transform-origin:left center;
+  box-shadow:0 12px 26px #0009;
+ }
+ .card.pc-tilt-right:not(.flipped){
+  transform:perspective(900px) rotateY(8deg) translateY(-2px);
+  transform-origin:right center;
+  box-shadow:0 12px 26px #0009;
+ }
+ .card:not(.flipped){transition:transform .2s ease,border-color .18s,box-shadow .2s ease}
+ .card.pc-tilt-left:not(.flipped),.card.pc-tilt-right:not(.flipped){cursor:ew-resize}
+}
+
+
+
+/* Longer role descriptions: reduce type slightly so the complete text fits */
+@media (min-width:701px){
+ .card .card-back .role-description.long{
+  font-size:clamp(10px,.92vw,12px) !important;
+  line-height:1.16 !important;
+ }
+}
+@media (max-width:700px){
+ .card .card-back .role-description.long{
+  font-size:clamp(7px,1.8vw,8.5px) !important;
+  line-height:1.06 !important;
+ }
+}
+
+/* Desktop info card: keep the back layout identical while opening and closing */
+@media (min-width:701px){
+ .card .card-back{
+  justify-content:center !important;
+  gap:10px !important;
+  padding:16px 14px !important;
+ }
+ .card .card-back strong{
+  font-size:clamp(13px,1.25vw,17px) !important;
+  line-height:1.12 !important;
+ }
+ .card .card-back .team-tag{
+  font-size:clamp(10px,.95vw,12px) !important;
+  padding:4px 8px !important;
+ }
+ .card .card-back .role-description{
+  font-size:clamp(11px,1.05vw,14px) !important;
+  line-height:1.22 !important;
+  overflow:visible !important;
+ }
+}
+
+
+/* Sidepanel for lydinnstillinger */
+.settings-toggle{position:fixed;right:0;top:42%;z-index:3000;border:1px solid #d7b45e;border-right:0;border-radius:12px 0 0 12px;padding:13px 11px;background:linear-gradient(145deg,#b98a2f,#e2b84d);color:#171b24;font-weight:900;cursor:pointer;writing-mode:vertical-rl;box-shadow:0 5px 20px #0009}
+.settings-panel{position:fixed;z-index:2999;right:0;top:0;height:100dvh;width:min(330px,88vw);padding:22px 18px;background:linear-gradient(145deg,#172943,#0b1729);border-left:1px solid #b78d3b;box-shadow:-16px 0 40px #0009;transform:translateX(105%);transition:transform .24s ease;overflow-y:auto}
+.settings-panel.open{transform:translateX(0)}
+.settings-panel h2{margin:5px 0 18px;color:var(--gold2)}
+.settings-panel .setting{padding:14px 0;border-top:1px solid #344b6a}
+.settings-panel label{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#f7f4ec;font-size:14px;margin:0 0 9px}
+.settings-panel input[type=range]{width:100%;accent-color:var(--gold);padding:0}
+.settings-panel input[type=checkbox]{width:20px;height:20px;accent-color:var(--gold);flex:0 0 auto}
+.settings-panel .setting-value{color:var(--gold2);font-variant-numeric:tabular-nums}
+.settings-close{float:right;border:1px solid #506481;border-radius:8px;padding:5px 10px;background:#263b58;color:white}
+.settings-help{font-size:12px;color:var(--muted);margin:8px 0 0}
+@media(max-width:480px){.settings-toggle{top:38%;padding:12px 9px;font-size:13px}}
+
+
+/* Gullfarget innstillingsikon over innholdet */
+.settings-toggle{
+ position:fixed;top:16px;right:16px;z-index:5000;
+ width:48px;height:48px;border-radius:50%;
+ border:2px solid #ffe39a;background:linear-gradient(145deg,#b98a2f,#f4c34e);
+ color:#171b24;font-size:25px;font-weight:900;line-height:1;
+ display:grid;place-items:center;cursor:pointer;
+ box-shadow:0 4px 18px #000b,0 0 16px #f4c34e55;
+ writing-mode:initial;padding:0
+}
+.settings-toggle:hover{filter:brightness(1.12);transform:scale(1.05)}
+#settingsSide .setting{padding:16px 0;border-top:1px solid #344b6a}
+#settingsSide label{display:flex;align-items:center;justify-content:space-between;gap:14px;color:#f7f4ec;font-size:15px;margin:0 0 10px}
+#settingsSide input[type=range]{width:100%;accent-color:var(--gold);padding:0}
+#settingsSide input[type=checkbox]{width:22px;height:22px;accent-color:var(--gold);flex:0 0 auto}
+#settingsSide .setting-value{color:var(--gold2);font-variant-numeric:tabular-nums}
+#settingsSide .settings-help{font-size:13px;color:var(--muted);margin:8px 0 0}
+@media(max-width:480px){.settings-toggle{top:10px;right:10px;width:42px;height:42px;font-size:22px}}
+
+
+/* Innstillingsknapp – tilbake til den smale sideknappen */
+.settings-toggle{
+ position:fixed;right:0;top:42%;z-index:5000;
+ border:1px solid #d7b45e;border-right:0;border-radius:12px 0 0 12px;
+ padding:13px 11px;background:linear-gradient(145deg,#b98a2f,#e2b84d);
+ color:#171b24;font-weight:900;cursor:pointer;writing-mode:vertical-rl;
+ box-shadow:0 5px 20px #0009;font-size:13px;letter-spacing:1px;
+}
+.settings-toggle:hover{filter:brightness(1.12)}
+@media(max-width:480px){.settings-toggle{top:38%;padding:12px 9px;font-size:12px}}
+
+
+/* Endelig stil: svart tannhjul øverst til høyre */
+.settings-toggle{
+ position:fixed !important;
+ top:16px !important;
+ right:16px !important;
+ left:auto !important;
+ z-index:5000 !important;
+ width:48px !important;
+ height:48px !important;
+ padding:0 !important;
+ display:grid !important;
+ place-items:center !important;
+ border:1px solid #c9a34a !important;
+ border-radius:50% !important;
+ background:#080b10 !important;
+ color:#e2b84d !important;
+ font-size:29px !important;
+ line-height:1 !important;
+ writing-mode:initial !important;
+ letter-spacing:0 !important;
+ box-shadow:0 4px 16px #000b !important;
+ cursor:pointer !important;
+}
+.settings-toggle:hover{background:#151b24 !important;filter:brightness(1.12)}
+.settings-toggle .settings-back-icon{
+ width:27px;height:27px;display:block;
+ fill:none;stroke:currentColor;stroke-width:3.2;
+ stroke-linecap:round;stroke-linejoin:round;
+}
+@media(max-width:480px){
+ .settings-toggle{top:10px !important;right:10px !important;width:44px !important;height:44px !important;font-size:27px !important}
+}
+
+/* Knapp for å slå av/på framtidig opplesning av rollekort */
+.info-audio-toggle{
+ position:fixed;top:72px;right:16px;z-index:5001;
+ width:48px;height:48px;display:grid;place-items:center;
+ border:1px solid #c9a34a;border-radius:50%;background:#080b10;
+ color:#e2b84d;cursor:pointer;box-shadow:0 4px 16px #000b;
+}
+.info-audio-toggle svg{width:25px;height:25px;display:block}
+.info-audio-toggle .mute-slash{display:none;stroke:#ef4444;stroke-width:3.5;stroke-linecap:round}
+.info-audio-toggle.muted .mute-slash{display:block}
+.info-audio-toggle:hover{background:#151b24;filter:brightness(1.12)}
+@media(max-width:480px){.info-audio-toggle{top:62px;right:10px;width:44px;height:44px}}
+
+
+.night-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0}
+.night-phase-list{display:grid;gap:12px;margin-top:16px}
+.night-phase{background:#0d192b;border:1px solid var(--line);border-radius:14px;padding:14px}
+.night-phase h3{margin:0 0 7px;color:var(--gold2);font-size:17px}
+.night-phase .voice-text{margin:0 0 10px;color:#f3eee2;white-space:pre-line}
+.night-phase .audio-meta{font-size:12px;color:var(--muted);margin:8px 0}
+.night-phase .audio-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.night-phase input[type=file]{max-width:100%;font-size:13px;padding:7px}
+.night-phase .phase-number{color:var(--gold);font-weight:900;margin-right:7px}
+@media(max-width:520px){.night-phase{padding:11px}.night-phase .audio-controls{align-items:stretch}.night-phase .audio-controls button{flex:1}}
+
+
+/* 3D-skogspill */
+#skogSpill{position:fixed;inset:0;z-index:20000;background:#030812;color:#f5eddb;display:none;overflow:hidden}
+#skogSpill.aktiv{display:block}
+#skogCanvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+#skogTopp{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:linear-gradient(#020711c9,transparent);pointer-events:none}
+#skogTopp>*{pointer-events:auto}
+#skogTittel{font-weight:900;letter-spacing:.08em;color:#f1d58c;text-shadow:0 2px 8px #000}
+#skogAvslutt{border:1px solid #c7a45b;border-radius:10px;padding:9px 14px;background:#101c2de8;color:#fff;font:inherit;cursor:pointer}
+#skogHjelp{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);padding:9px 15px;border:1px solid #c7a45b66;border-radius:10px;background:#050c18b8;color:#e9e1cf;font-size:13px;text-align:center;white-space:nowrap;pointer-events:none}
+#skogKryss{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#e9dfc6;box-shadow:0 0 5px #fff;transform:translate(-50%,-50%);pointer-events:none}
+#skogJoystick{position:absolute;left:24px;bottom:28px;width:116px;height:116px;border:2px solid #d7bd7c88;border-radius:50%;background:#101b2b88;display:none;touch-action:none}
+#skogJoystickKnott{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px;border-radius:50%;background:#d5b66eaa;border:1px solid #f3dda5}
+#skogSpill.feil #skogHjelp{white-space:normal}
+@media(pointer:coarse){#skogJoystick{display:block}#skogHjelp{bottom:158px;max-width:90%;white-space:normal}}
+
+
+#skogNavnPanel{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;background:#030812eF}
+.skog-navn-kort{width:min(360px,calc(100% - 36px));padding:26px;border:1px solid #c7a45b88;border-radius:16px;background:linear-gradient(145deg,#172231,#080e18);box-shadow:0 18px 70px #000b;text-align:center}
+.skog-navn-overskrift{font-weight:900;letter-spacing:.18em;color:#e8c879;font-size:21px}
+.skog-navn-kort p{color:#d5d1c8;font-size:14px;line-height:1.5}
+#skogNavnInput{box-sizing:border-box;width:100%;padding:13px;margin:12px 0;border:1px solid #9b8557;border-radius:9px;background:#070d16;color:#fff;font:inherit;outline:none}
+#skogNavnStart{width:100%;padding:13px;border:1px solid #e2c37b;border-radius:9px;background:#8d6a2e;color:white;font:700 15px inherit;cursor:pointer}
+#skogNavnFeil{min-height:22px;color:#f3a0a0;font-size:13px;margin:0 0 8px}
+#skogOnline{display:inline-block;margin-left:10px;color:#b8c6b9;font-size:11px;letter-spacing:0}
+
+</style>
+</head><body>
+<button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
+<button class="info-audio-toggle" id="infoAudioToggle" type="button" aria-label="Slå av informasjonsopplesning" aria-pressed="false" title="Opplesning av kortinformasjon på">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+  <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="mute-slash" d="M4 4 20 20"/>
+ </svg>
+</button>
+
+<header>
+ <div class="brand"><img src="sykulven-logo.jpg" alt="Syk Ulven – Tolkemord, med den syke ulven foran månen"></div>
+ <p>Spillederkontroll</p>
+</header>
+<main>
+<section id="valgSide" class="panel"><h2>Velg kort til spillet</h2><p class="intro">Trykk på kortene du vil bruke. Grønn markering betyr at kortet er valgt. «Alle» velger eller fjerner alle kortene samtidig.</p>
+<div id="kortRutenett" class="grid"></div>
+<div class="actions"><span id="valgtAntall" class="count">0 av 23 valgt</span></div>
+<div class="actions"><button class="action primary" id="startKnapp" disabled>Start spill →</button></div></section>
+<section id="spillSide" class="panel hidden">
+<div class="actions"><button class="action" id="tilbakeKnapp">← Til kortvelgeren</button><span id="spillAntall" class="count"></span></div>
+<h2>Nattavspilling</h2>
+<p class="intro">Velg natt, last opp dine egne lydfiler for hver rolleinstruksjon, og spill av hele natten i riktig rekkefølge. Lydfilene lagres i nettleseren på denne enheten.</p>
+<div class="night-tabs" id="nightTabs">
+ <button class="action primary" data-night="0">Natt 1</button>
+ <button class="action" data-night="1">Natt 2</button>
+ <button class="action" data-night="2">Natt 3 og videre</button>
+</div>
+<div class="phasebox"><small id="nightLabel">NATT 1</small><h2 id="nightTitle">Natt 1</h2><p id="nightDescription">Last opp lydklippene til instruksjonene nedenfor.</p></div>
+<div class="actions">
+ <button class="action primary" id="playNightButton">▶ Spill av hele natten</button>
+ <button class="action" id="stopNightButton" disabled>■ Stopp avspilling</button>
+</div>
+<p id="sekvensStatus" class="small" aria-live="polite">Ingen natt spilles av.</p>
+<div id="nightPhaseList" class="night-phase-list"></div>
+</section>
+<section id="settingsSide" class="panel hidden">
+<div class="actions"><button class="action" id="settingsBack" type="button">← Tilbake</button></div>
+<h2>Innstillinger</h2>
+<p class="intro">Tilpass lyd og tempo for spillsekvensen.</p>
+<div class="setting">
+ <label for="backgroundEnabled"><span>Bakgrunnsmusikk gjennom natten</span><input id="backgroundEnabled" type="checkbox" checked></label>
+ <p class="settings-help">Slå bakgrunnslyden av eller på mens nattsekvensen spilles.</p>
+</div>
+<div class="setting">
+ <label for="backgroundVolume"><span>Volum på bakgrunnsmusikk</span><span class="setting-value" id="backgroundVolumeValue">22 %</span></label>
+ <input id="backgroundVolume" type="range" min="0" max="100" value="22">
+</div>
+<div class="setting">
+ <label for="voiceVolume"><span>Volum på lesestemmen</span><span class="setting-value" id="voiceVolumeValue">100 %</span></label>
+ <input id="voiceVolume" type="range" min="0" max="100" value="100">
+ <p class="settings-help">Justerer opplesningen av instruksjonene.</p>
+</div>
+<div class="setting">
+ <label for="roleInterval"><span>Pause mellom rolleopplesninger</span><span class="setting-value" id="roleIntervalValue">10 sek</span></label>
+ <input id="roleInterval" type="range" min="5" max="60" step="5" value="10">
+ <p class="settings-help">Velg mellom 5 og 60 sekunder i trinn på 5 sekunder.</p>
+</div>
+</section>
+<div class="foot">Dine opplastede nattklipp lagres lokalt i nettleseren på denne enheten.</div></main>
+<script>
+const roller=[
+ {navn:"Røver",bilde:"rover.webp",lag:"Landsbylaget",tekst:"Velg én annen spiller og bytt kort med vedkommende. Se på ditt nye kort. Du spiller nå som denne rollen."},
+ {navn:"Frimurer",bilde:"frimurer.webp",lag:"Landsbylaget",tekst:"Våkn opp sammen med de andre frimurerne. Se hvem som har Frimurer-rollen. Hvis du er den eneste frimureren, får du vite at ingen andre våknet sammen med deg."},
+ {navn:"Frimurer",bilde:"frimurer_2.webp",lag:"Landsbylaget",tekst:"Våkn opp sammen med de andre frimurerne. Se hvem som har Frimurer-rollen. Hvis du er den eneste frimureren, får du vite at ingen andre våknet sammen med deg."},
+ {navn:"Synsk",bilde:"synsk.webp",lag:"Landsbylaget",tekst:"Velg én spiller og se kortet deres, eller velg to kort fra midten og se på dem. Legg kortene tilbake på samme plass."},
+ {navn:"Håndlanger",bilde:"handlanger.webp",lag:"Ulvelaget",tekst:"Våkn opp etter ulvene og få vite hvem de er. Du er på ulvenes lag, men ulvene vet ikke hvem du er."},
+ {navn:"Syk Ulven",bilde:"syk-ulven.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres. Når Håndlanger våkner, rekker du opp tommelen."},
+ {navn:"Syk Ulven",bilde:"syk-ulven_2.webp",lag:"Ulvelaget",tekst:"Våkn opp sammen med de andre ulvene og se hvem de er. Hvis du er den eneste ulven, kan du se på ett kort fra midten. Fra natt 2 velger ulvelaget én spiller som skal elimineres. Når Håndlanger våkner, rekker du opp tommelen."},
+ {navn:"Emo",bilde:"emo.webp",lag:"Alenelag",tekst:"Du spiller på ditt eget lag. Hvis du blir drept i avstemningen, vinner du alene. Du må prøve å få de andre til å stemme på deg."},
+ {navn:"Doppelgjenger",bilde:"doppelgjenger.webp",lag:"???-laget",tekst:"Velg én annen spiller og se kortet deres. Du kopierer rollen og lagtilhørigheten deres. Hvis rollen har en nattlig handling, utfører du den også."},
+ {navn:"Jeger",bilde:"jeger.webp",lag:"Landsbylaget",tekst:"Hvis du blir drept i avstemningen må du peke ut en annen spiller, som også blir drept."},
+ {navn:"Landsbyboer",bilde:"landsbyboer.webp",lag:"Landsbylaget",tekst:"Du har ingen nattlig handling. Bruk diskusjonen til å finne ut hvem ulvene er."},
+ {navn:"Landsbyboer",bilde:"landsbyboer_2.webp",lag:"Landsbylaget",tekst:"Du har ingen nattlig handling. Bruk diskusjonen til å finne ut hvem ulvene er."},
+ {navn:"Landsbyboer",bilde:"landsbyboer_3.webp",lag:"Landsbylaget",tekst:"Du har ingen nattlig handling. Bruk diskusjonen til å finne ut hvem ulvene er."},
+ {navn:"Rimmi",bilde:"rimmi.webp",lag:"???-laget",tekst:"Du må bytte rollekort med den første som blir stemt ut. Du kopierer rollen og lagtilhørigheten deres. Hvis rollen har en nattlig handling, utfører du den samme natt."},
+ {navn:"Beruset",bilde:"beruset.webp",lag:"???-laget",tekst:"Velg ett av kortene i midten og bytt det med ditt eget kort. Du får ikke se hvilket kort du ender opp med før neste natt."},
+ {navn:"Bråkmaker",bilde:"brakmaker.webp",lag:"Landsbylaget",tekst:"Velg to andre spillere og bytt kortene deres uten å se på dem. Spillerne får ikke vite at kortene deres er byttet."},
+ {navn:"Prins",bilde:"prins.webp",lag:"Landsbylaget",tekst:"Hvis du får flest stemmer, overlever du avstemningen. Spilleren med nest flest stemmer blir drept i stedet."},
+ {navn:"Avslører",bilde:"avslo-rer.webp",lag:"Landsbylaget",tekst:"Velg én spiller og snu kortet deres. Hvis det er Syk Ulven, Sov Ulven eller Emo, snur du det tilbake. Alle andre kort blir liggende synlige for alle."},
+ {navn:"Sov Ulven",bilde:"sov-ulven.webp",lag:"Ulvelaget",tekst:"Du er på ulvelaget, men får ikke se hvem de andre ulvene er. Når Syk Ulv våkner, rekker du opp tommelen. Når Håndlanger våkner, rekker du opp tommelen sammen med Syk Ulv."},
+ {navn:"Søvnløs",bilde:"sovnlos.webp",lag:"Landsbylaget",tekst:"Våkn opp helt til slutt, før alle våkner. Se på ditt eget kort for å kontrollere om rollen din har blitt byttet i løpet av natten."},
+ {navn:"Dulter",bilde:"dulter.webp",lag:"Landsbylaget",tekst:"Berør skulderen til spilleren til høyre eller venstre"},
+ {navn:"Vokter",bilde:"vokter.webp",lag:"Landsbylaget",tekst:"Våkn opp først av alle. Velg én annen spiller å beskytte. Kortet deres kan ikke sees på eller flyttes i løpet av natten. Du kan ikke beskytte deg selv."},
+ {navn:"Paranormal Etterforsker",bilde:"paranormal-etterforsker.webp",lag:"Landsbylaget",tekst:"Våkn opp og se på opptil to andre spilleres kort, ett om gangen. Hvis du finner en rolle som ikke tilhører landsbylaget, må du stoppe og overta rollen og lagtilhørigheten deres."}
+];
+const valgt=new Set(),grid=document.getElementById("kortRutenett"),$=id=>document.getElementById(id);
+let aktivInfoKort = null;
+function lagKortflate(knapp, bilde, alt, rolle){
+ const front=document.createElement("img");front.className="card-front";front.src=bilde;front.alt=alt;front.loading="lazy";
+ const back=document.createElement("span");back.className="card-back";back.setAttribute("aria-hidden","true");
+ const title=document.createElement("strong");title.textContent=rolle.navn;
+ const team=document.createElement("span");team.className="team-tag";team.textContent=rolle.lag;
+ const desc=document.createElement("span");desc.className="role-description"+(rolle.tekst.length>115?" long":"");desc.textContent=rolle.tekst;
+ back.append(title,team,desc);knapp.append(front,back);
+}
+
+function spillAlleSjokkbølge(baklengs=false,velg=false){
+ // Grønnmarkeringen følger sjokkbølgen kort for kort.
+ const fra=roller.findIndex(r=>r.navn==="Røver");
+ const til=roller.findIndex(r=>r.navn==="Paranormal Etterforsker");
+ if(fra<0||til<fra)return;
+ const start=baklengs?til:fra;
+ const slutt=baklengs?fra:til;
+ const steg=baklengs?-1:1;
+ const berørte=new Set();
+ for(let i=start,rekkefølge=0;baklengs?i>=slutt:i<=slutt;i+=steg,rekkefølge++){
+  berørte.add(i);
+  const kort=grid.querySelector('.card[data-role-index="'+i+'"]');
+  if(!kort)continue;
+  const forsinkelse=rekkefølge*32;
+  kort.classList.remove("sjokkbølge");
+  kort.style.setProperty("--sjokk-forsinkelse",forsinkelse+"ms");
+  void kort.offsetWidth;
+  kort.classList.add("sjokkbølge");
+  setTimeout(()=>{
+   if(velg)valgt.add(i);else valgt.delete(i);
+   kort.classList.toggle("selected",velg);
+   kort.setAttribute("aria-label",roller[i].navn+(velg?", valgt":", ikke valgt"));
+   $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
+   $("startKnapp").disabled=valgt.size===0;
+   const alleKort=grid.querySelector(".card.all");
+   if(alleKort)alleKort.classList.toggle("selected",roller.every((_,j)=>valgt.has(j)));
+   const alle=grid.querySelector(".card.all");
+   if(alle)alle.classList.toggle("selected",roller.every((_,j)=>valgt.has(j)));
+  },forsinkelse);
+  kort.addEventListener("animationend",()=>{
+   kort.classList.remove("sjokkbølge");
+   kort.style.removeProperty("--sjokk-forsinkelse");
+  },{once:true});
+ }
+ // Kort utenfor bølgeområdet følger ALLE-knappen umiddelbart.
+ roller.forEach((_,i)=>{
+  if(berørte.has(i))return;
+  if(velg)valgt.add(i);else valgt.delete(i);
+  const kort=grid.querySelector('.card[data-role-index="'+i+'"]');
+  if(kort){
+   kort.classList.toggle("selected",velg);
+   kort.setAttribute("aria-label",roller[i].navn+(velg?", valgt":", ikke valgt"));
+  }
+ });
+ $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
+ $("startKnapp").disabled=valgt.size===0;
+}
+function oppdaterAlleKortMarkering(){
+ const alle=grid.querySelector(".card.all");
+ if(alle)alle.classList.toggle("selected",roller.every((_,j)=>valgt.has(j)));
+}
+function tegnKort(){grid.innerHTML="";
+ const alle=document.createElement("button");alle.type="button";alle.className="card all"+(roller.every((_,i)=>valgt.has(i))?" selected":"");alle.setAttribute("aria-label","Velg eller fjern alle kort");
+ lagKortflate(alle,"alle.webp","Alle karakterene samlet på ett kort",{navn:"Alle",lag:"",tekst:"Velg eller fjern alle rollekort samtidig."});
+ let alleCooldown=false;
+ alle.onclick=()=>{if(alleCooldown)return;alleCooldown=true;setTimeout(()=>{alleCooldown=false;},1000);stoppEmoOpplesning();stoppVokterOpplesning();if(alle.classList.contains("flipped")){alle.classList.remove("flipped");return;}aktivInfoKort=null;const fravelg=roller.every((_,i)=>valgt.has(i));if(fravelg){if(roller.some((r,i)=>(r.navn==="Emo"||r.navn==="Frimurer")&&valgt.has(i)))stoppEmoOpplesning();spillAlleFravalgtLyd();}else{spillAlleValgtLyd();}spillAlleSjokkbølge(fravelg,!fravelg)};grid.append(alle);
+ roller.forEach((r,i)=>{
+  const b=document.createElement("button");b.type="button";b.className="card"+(valgt.has(i)?" selected":"");b.dataset.team=r.lag;b.dataset.roleIndex=String(i);b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
+  lagKortflate(b,r.bilde,r.navn,r);
+  let touchStart=null;
+  b.style.touchAction="pan-y";
+  // PC: tilt toward the side under the pointer; clicking either outer edge flips the card.
+  b.addEventListener("pointermove",event=>{
+   if(event.pointerType!=="mouse" || b.classList.contains("flipped"))return;
+   const rect=b.getBoundingClientRect();
+   const x=(event.clientX-rect.left)/rect.width;
+   b.classList.toggle("pc-tilt-left",x<0.28);
+   b.classList.toggle("pc-tilt-right",x>0.72);
+  });
+  b.addEventListener("pointerleave",()=>{
+   b.classList.remove("pc-tilt-left","pc-tilt-right");
+  });
+
+  // Mobil: swipe håndteres direkte på touch-end. Vanlige trykk går rett til onclick.
+  // Ingen tidslås eller ventetid brukes mellom swipe og neste trykk.
+  b.addEventListener("touchstart",event=>{
+   if(event.touches.length!==1){touchStart=null;return;}
+   const t=event.touches[0];
+   touchStart={x:t.clientX,y:t.clientY};
+  },{passive:true});
+  b.addEventListener("touchend",event=>{
+   if(!touchStart)return;
+   const t=event.changedTouches[0];
+   const dx=t.clientX-touchStart.x,dy=t.clientY-touchStart.y;
+   touchStart=null;
+   if(Math.abs(dx)<35||Math.abs(dx)<Math.abs(dy)*1.2)return;
+   // Hindre bare det syntetiske klikket som ellers følger akkurat denne swipen.
+   event.preventDefault();
+   if(b.classList.contains("flipped")){
+    spillKorttrekklyd();
+    stoppRolleopplesning(r.navn);
+    b.classList.remove("flipped");
+   }else{
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined)stoppRolleopplesning(roller[Number(card.dataset.roleIndex)]?.navn);card.classList.remove("flipped");});
+    spillKorttrekklyd();
+    b.classList.add("flipped");
+    spillKortrolleopplesning(r.navn,"info");
+    b.setAttribute("aria-label",r.navn+", informasjon. Sveip igjen eller trykk utenfor for å lukke.");
+   }
+  },{passive:false});
+  b.addEventListener("touchcancel",()=>{touchStart=null;},{passive:true});
+
+  // PC-kantklikk flipper kortet; midten brukes til valg.
+  b.addEventListener("click",event=>{
+   if(event.detail===0 || !window.matchMedia("(hover: hover) and (pointer: fine)").matches)return;
+   const rect=b.getBoundingClientRect();
+   const x=(event.clientX-rect.left)/rect.width;
+   if(x>0.22 && x<0.78)return;
+   event.preventDefault();
+   event.stopImmediatePropagation();
+   b.classList.remove("pc-tilt-left","pc-tilt-right");
+   if(b.classList.contains("flipped")){
+    spillKorttrekklyd();
+    stoppRolleopplesning(r.navn);
+    b.classList.remove("flipped");
+   }else{
+    grid.querySelectorAll(".card.flipped").forEach(card=>{if(card.dataset.roleIndex!==undefined)stoppRolleopplesning(roller[Number(card.dataset.roleIndex)]?.navn);card.classList.remove("flipped");});
+    spillKorttrekklyd();
+    b.classList.add("flipped");
+    spillKortrolleopplesning(r.navn,"info");
+   }
+  },true);
+
+  b.onclick=()=>{
+   if(b.classList.contains("flipped")){spillKorttrekklyd();stoppRolleopplesning(r.navn);b.classList.remove("flipped");b.setAttribute("aria-label",r.navn+", valgt");return;}
+   const oppdaterValg=()=>{
+    if(valgt.has(i)){
+     valgt.delete(i);
+     if(aktivInfoKort===i)aktivInfoKort=null;
+     stoppRolleopplesning(r.navn);
+     spillKortFravalgtLyd();
+    }else{
+     valgt.add(i);
+     aktivInfoKort=i;
+     spillKortValgtLyd();
+     spillKortrolleopplesning(r.navn,"rolle");
+    }
+   };
+   let flipOverlay=null;
+   if(aktivInfoKort!==null&&aktivInfoKort!==i){
+    const forrige=grid.querySelector('.card[data-role-index="'+aktivInfoKort+'"]');
+    if(forrige&&forrige.classList.contains("flipped")){
+     const rect=forrige.getBoundingClientRect();
+     flipOverlay=forrige.cloneNode(true);
+     // Info-ikonet skal bare finnes på det aktive, valgte kortet – aldri på flip-klonen.
+     flipOverlay.style.position="fixed";flipOverlay.style.left=rect.left+"px";flipOverlay.style.top=rect.top+"px";
+     flipOverlay.style.width=rect.width+"px";flipOverlay.style.height=rect.height+"px";
+     flipOverlay.style.margin="0";flipOverlay.style.zIndex="9999";flipOverlay.style.pointerEvents="none";
+     flipOverlay.style.transition="none";document.body.append(flipOverlay);
+    }
+   }
+   oppdaterValg();
+   b.classList.toggle("selected",valgt.has(i));
+   b.setAttribute("aria-label",r.navn+(valgt.has(i)?", valgt":", ikke valgt"));
+   $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";
+   $("startKnapp").disabled=valgt.size===0;
+   oppdaterAlleKortMarkering();
+   if(flipOverlay){
+    requestAnimationFrame(()=>{
+     flipOverlay.style.transition="transform .16s ease-out,border-color .16s ease-out,box-shadow .16s ease-out";
+     flipOverlay.classList.remove("flipped");
+    });
+    flipOverlay.addEventListener("transitionend",()=>flipOverlay.remove(),{once:true});
+    setTimeout(()=>flipOverlay.remove(),650);
+   }
+  };
+  grid.append(b)
+ });
+ $("valgtAntall").textContent=valgt.size+" av "+roller.length+" valgt";$("startKnapp").disabled=valgt.size===0;oppdaterAlleKortMarkering();
+}
+
+let lyd=null,sekvensAktiv=false,sekvensToken=0,sekvensTimer=null,sekvensAudioContext=null;
+let valgtNatt=0;
+const nattData=[
+ {id:"natt1",navn:"Natt 1",roller:[
+  {id:"start_lukk_natt1",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
+  {id:"vokter",rolle:"Vokter",tekst:"«Vokter, våkn opp. Plasser skjoldet ditt foran en spiller du ønsker å beskytte.»\n«Vokter, lukk øynene igjen.»"},
+  {id:"doppelgjenger",rolle:"Doppelgjenger",tekst:"«Doppelgjenger, våkn opp. Se på kortet til en annen spiller. Du blir denne rollen og følger dens instruksjoner.»\n«Doppelgjenger, lukk øynene igjen.»"},
+  {id:"sykulv",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Se hvem de andre syke ulvene er. Hvis du er alene, kan du se på ett kort i midten. Sov Ulv, rekk opp tommelen.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"handlanger",rolle:"Håndlanger",tekst:"«Håndlanger, våkn opp. Syk Ulv og Sov Ulv, rekk opp tommelen.»\n«Syk Ulv og Sov Ulv, legg ned tomlene. Håndlanger, lukk øynene igjen.»"},
+  {id:"frimurer",rolle:"Frimurer",tekst:"«Frimurere, våkn opp. Se hvem den andre frimureren er.»\n«Frimurere, lukk øynene igjen.»"},
+  {id:"dulter",rolle:"Dulter",tekst:"«Dulter, våkn opp. Velg en spiller og berør skulderen deres.»\n«Dulter, lukk øynene igjen.»"},
+  {id:"synsk",rolle:"Synsk",tekst:"«Synsk, våkn opp. Se på ett spillerkort eller to kort i midten.»\n«Synsk, lukk øynene igjen.»"},
+  {id:"paranormal",rolle:"Paranormal etterforsker",tekst:"«Paranormal etterforsker, våkn opp. Se på kortene til opptil to andre spillere. Hvis du finner en syk ulv eller Emo, må du stoppe.»\n«Paranormal etterforsker, lukk øynene igjen.»"},
+  {id:"rover",rolle:"Røver",tekst:"«Røver, våkn opp. Bytt kort med en annen spiller og se på ditt nye kort.»\n«Røver, lukk øynene igjen.»"},
+  {id:"braakmaker",rolle:"Bråkmaker",tekst:"«Bråkmaker, våkn opp. Bytt kortene til to andre spillere uten å se på dem.»\n«Bråkmaker, lukk øynene igjen.»"},
+  {id:"beruset",rolle:"Beruset",tekst:"«Beruset, våkn opp. Bytt ditt eget kort med et kort i midten uten å se på det.»\n«Beruset, lukk øynene igjen.»"},
+  {id:"avsloerer",rolle:"Avslører",tekst:"«Avslører, våkn opp. Velg en spiller og snu kortet deres. Hvis det er Syk Ulven, Sov Ulven eller Emo, snur du det tilbake. Alle andre kort blir liggende synlige for alle.»\n«Avslører, lukk øynene igjen.»"},
+  {id:"sovnlos",rolle:"Søvnløs",tekst:"«Søvnløs, våkn opp. Se på ditt eget kort.»\n«Søvnløs, lukk øynene igjen.»"},
+  {id:"slutt_natt1",rolle:"Sluttbeskjed",tekst:"«Alle sammen, våkn opp.»",endfase:true}
+ ]},
+ {id:"natt2",navn:"Natt 2",roller:[
+  {id:"start_lukk_natt2",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
+  {id:"beruset_n2",rolle:"Beruset",tekst:"«Beruset, våkn opp. Se på ditt eget kort.»\n«Beruset, lukk øynene igjen.»"},
+  {id:"rimmi_n2",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
+  {id:"sykulv_n2",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Sov Ulv, rekk opp tommelen. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"slutt_natt2",rolle:"Sluttbeskjed",tekst:"«Alle sammen, våkn opp.»",endfase:true}
+ ]},
+ {id:"natt3",navn:"Natt 3 og videre",roller:[
+  {id:"start_lukk_natt3",rolle:"Startbeskjed",tekst:"«Alle lukker øynene.»",startfase:true},
+  {id:"rimmi_n3",rolle:"Rimmi",tekst:"«Rimmi, våkn opp. Bytt ut kortet til spilleren som ble stemt ut forrige runde med ditt eget kort, dersom noen ble stemt ut. Dette er nå din nye rolle.»\n«Rimmi, lukk øynene igjen.»"},
+  {id:"sykulv_n3",rolle:"Syk ulv",tekst:"«Syk ulv, våkn opp. Sov Ulv, rekk opp tommelen. Velg én spiller som skal drepes.»\n«Syk ulv, lukk øynene igjen.»"},
+  {id:"slutt_natt3",rolle:"Sluttbeskjed",tekst:"«Alle sammen, våkn opp.»",endfase:true}
+ ]}
+];
+
+const bakgrunnsmusikk=new Audio("ulvis.mp3");
+bakgrunnsmusikk.loop=true;
+const lydinnstillinger={bakgrunnPaa:true,bakgrunnVolum:0.22,stemmeVolum:1,pauseSekunder:10};
+function kobleLydkontroller(){
+ const bg=$("backgroundVolume"),voice=$("voiceVolume"),pause=$("roleInterval"),enabled=$("backgroundEnabled");
+ if(bg)bg.addEventListener("input",()=>{lydinnstillinger.bakgrunnVolum=Number(bg.value)/100;$("backgroundVolumeValue").textContent=bg.value+"%";bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;});
+ if(voice)voice.addEventListener("input",()=>{lydinnstillinger.stemmeVolum=Number(voice.value)/100;$("voiceVolumeValue").textContent=voice.value+"%";if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;});
+ if(pause)pause.addEventListener("input",()=>{lydinnstillinger.pauseSekunder=Number(pause.value);$("roleIntervalValue").textContent=pause.value+" sek";});
+ if(enabled)enabled.addEventListener("change",()=>{lydinnstillinger.bakgrunnPaa=enabled.checked;settBakgrunnsmusikk();});
+}
+function oppdaterLydinnstillinger(){
+ bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
+ if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
+ const bg=$("backgroundVolume"),voice=$("voiceVolume"),enabled=$("backgroundEnabled");
+ if(bg){bg.value=Math.round(lydinnstillinger.bakgrunnVolum*100);$("backgroundVolumeValue").textContent=bg.value+"%";}
+ if(voice){voice.value=Math.round(lydinnstillinger.stemmeVolum*100);$("voiceVolumeValue").textContent=voice.value+"%";}
+ if(enabled)enabled.checked=lydinnstillinger.bakgrunnPaa;
+}
+function startBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});}
+function stoppBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;}
+function settBakgrunnsmusikk(){bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;if(!lydinnstillinger.bakgrunnPaa){bakgrunnsmusikk.pause();return;}if(sekvensAktiv&&bakgrunnsmusikk.paused)bakgrunnsmusikk.play().catch(()=>{});}
+
+// Lydklippene lagres i IndexedDB slik at de fortsatt finnes etter at siden lastes på nytt.
+let lydDatabasePromise=null;
+function hentLydDatabase(){
+ if(!("indexedDB" in window))return Promise.reject(new Error("Nettleseren støtter ikke lokal lagring av lydfiler."));
+ if(!lydDatabasePromise)lydDatabasePromise=new Promise((resolve,reject)=>{
+  const request=indexedDB.open("sykulven-nattlyd",1);
+  request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains("klipp"))db.createObjectStore("klipp",{keyPath:"id"});};
+  request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+ });
+ return lydDatabasePromise;
+}
+async function lagreLydklipp(id,file){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readwrite");tx.objectStore("klipp").put({id,navn:file.name,blob:file});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+async function hentLydklipp(id){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readonly"),req=tx.objectStore("klipp").get(id);req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);});}
+async function hentFaseLydklipp(id){
+ const lagret=await hentLydklipp(id);if(lagret)return lagret;
+ const standard={
+  start_lukk_natt1:"natt-start-lukk-oynene.mp3",start_lukk_natt2:"natt-start-lukk-oynene.mp3",start_lukk_natt3:"natt-start-lukk-oynene.mp3",
+  slutt_natt1:"natt-slutt-vakn-opp.mp3",slutt_natt2:"natt-slutt-vakn-opp.mp3",slutt_natt3:"natt-slutt-vakn-opp.mp3"
+ };
+ return standard[id]?{url:standard[id],navn:standard[id]}:null;
+}
+async function slettLydklipp(id){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readwrite");tx.objectStore("klipp").delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
+function harValgtRolle(navn){return roller.some((r,i)=>r.navn.toLowerCase()===navn.toLowerCase()&&valgt.has(i));}
+function nattensRoller(natt){
+ return natt.roller.filter(p=>{
+  if(p.startfase||p.endfase)return true;
+  if(p.rolle==="Syk ulv")return harValgtRolle("Syk Ulven");
+  if(p.rolle==="Paranormal etterforsker")return harValgtRolle("Paranormal Etterforsker");
+  return harValgtRolle(p.rolle);
+ });
+}
+function aktivNatt(){return nattData[valgtNatt];}
+function renderNatt(){
+ const natt=aktivNatt();$("nightLabel").textContent=natt.navn.toUpperCase();$("nightTitle").textContent=natt.navn;
+ $("nightDescription").textContent="Startlyden «Alle sammen, lukk øynene» spilles først. Deretter er det alltid 5 sekunder stille før instruksjon 1. Sluttlyden «Alle sammen, våkn opp» spilles etter siste rolle. Frimurer har egne oppvåknings- og lukk-øynene-lyder med ventetid mellom. Du kan laste opp egne lydfiler for øvrige rolleklipp.";
+ document.querySelectorAll("#nightTabs button").forEach(b=>{b.classList.toggle("primary",Number(b.dataset.night)===valgtNatt);});
+ const list=$("nightPhaseList");list.innerHTML="";
+ const phases=nattensRoller(natt);
+ phases.forEach((p,i)=>{
+  const card=document.createElement("article");card.className="night-phase";
+  const heading=document.createElement("h3");
+  if(p.startfase){heading.textContent="Startlyd – Alle sammen, lukk øynene";}
+  else if(p.endfase){heading.textContent="Sluttlyd – Alle sammen, våkn opp";}
+  else{const nummer=phases.slice(0,i).filter(x=>!x.startfase&&!x.endfase).length+1;heading.innerHTML='<span class="phase-number">'+nummer+'.</span>';heading.append(document.createTextNode(p.rolle));}
+  const script=document.createElement("p");script.className="voice-text";script.textContent=p.tekst;
+  const meta=document.createElement("p");meta.className="audio-meta";meta.id="meta-"+p.id;meta.textContent="Sjekker om lydfil er lagt inn …";
+  const controls=document.createElement("div");controls.className="audio-controls";
+  const input=document.createElement("input");input.type="file";input.accept="audio/*";input.setAttribute("aria-label","Last opp lydfil for "+p.rolle);
+  input.addEventListener("change",async()=>{const file=input.files&&input.files[0];if(!file)return;try{await lagreLydklipp(p.id,file);meta.textContent="Lydfil lagret: "+file.name;}catch(e){meta.textContent="Kunne ikke lagre lydfilen: "+e.message;}});
+  const play=document.createElement("button");play.className="action";play.type="button";play.textContent="▶ Spill klippet";play.addEventListener("click",()=>spillEnkeltKlipp(p.id,p.rolle));
+  const remove=document.createElement("button");remove.className="action";remove.type="button";remove.textContent="Fjern lydfil";remove.addEventListener("click",async()=>{try{await slettLydklipp(p.id);meta.textContent="Ingen lydfil lagt inn."; }catch(e){meta.textContent="Kunne ikke fjerne lydfilen."; }});
+  controls.append(input,play,remove);card.append(heading,script,meta,controls);list.append(card);
+  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":"Lokal lagring er ikke tilgjengelig.";});
+ });
+ if(!phases.length){const p=document.createElement("p");p.className="small";p.textContent="Ingen av rollene i denne natten er valgt i kortvelgeren. Velg rollene du skal bruke, så vises instruksjonene her.";list.append(p);}
+}
+function visNatt(index){avbrytSekvens();valgtNatt=index;renderNatt();}
+function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
+async function spillEnkeltKlipp(id,navn){
+ avbrytSekvens();try{const file=await hentFaseLydklipp(id);if(!file){$("sekvensStatus").textContent="Du må laste opp en lydfil for "+navn+" først.";return;}
+ const url=URL.createObjectURL(file.blob);lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;lyd.onended=()=>{URL.revokeObjectURL(url);$("stopNightButton").disabled=true;};await lyd.play();$("stopNightButton").disabled=false;$("sekvensStatus").textContent="Spiller: "+navn;
+ }catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydklippet: "+e.message;}
+}
+function avbrytSekvens(tekst){
+ sekvensAktiv=false;sekvensToken++;if(sekvensTimer){clearInterval(sekvensTimer);sekvensTimer=null;}
+ if(lyd){lyd.pause();lyd.currentTime=0;}stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;if(tekst)$("sekvensStatus").textContent=tekst;
+}
+async function ventSekunder(sekunder,token,tekst){
+ let igjen=sekunder;$("sekvensStatus").textContent=tekst.replace("{sek}",igjen);
+ return new Promise(resolve=>{
+  sekvensTimer=setInterval(()=>{
+   if(token!==sekvensToken){clearInterval(sekvensTimer);sekvensTimer=null;resolve(false);return;}
+   igjen--;
+   if(igjen>0){$("sekvensStatus").textContent=tekst.replace("{sek}",igjen);}
+   else{clearInterval(sekvensTimer);sekvensTimer=null;resolve(true);}
+  },1000);
+ });
+}
+async function spillFil(file,navn){
+ if(lyd){lyd.pause();lyd.currentTime=0;}
+ const url=file.url||URL.createObjectURL(file.blob);const egenUrl=!!file.url;lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;
+ $("sekvensStatus").textContent="Spiller: "+navn;
+ try{await lyd.play();const ok=await ventPaaLyd(lyd);if(!egenUrl)URL.revokeObjectURL(url);if(!ok)throw new Error("Lydfilen kunne ikke spilles av.");return true;}
+ catch(e){if(!egenUrl)URL.revokeObjectURL(url);$("sekvensStatus").textContent="Feil ved avspilling av "+navn+": "+e.message;return false;}
+}
+async function spillHeleNatten(){
+ if(sekvensAktiv)return;const natt=aktivNatt(),alleFaser=nattensRoller(natt),startfase=alleFaser.find(p=>p.startfase),sluttfase=alleFaser.find(p=>p.endfase),phases=alleFaser.filter(p=>!p.startfase&&!p.endfase),token=++sekvensToken;sekvensAktiv=true;startBakgrunnsmusikk();$("stopNightButton").disabled=false;
+ let spilt=0,skippet=0;
+ if(startfase){
+  let startfil=null;try{startfil=await hentFaseLydklipp(startfase.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente startbeskjeden.";}
+  if(token!==sekvensToken)return;
+  if(startfil){const ok=await spillFil(startfil,"Alle sammen, lukk øynene");if(!ok){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;return;}spilt++;}
+  else{$("sekvensStatus").textContent="Ingen lydfil for startbeskjeden. Venter før instruksjon 1.";skippet++;}
+  if(token!==sekvensToken)return;
+  const ventet=await ventSekunder(5,token,"Stille i {sek} sekunder før instruksjon 1 …");
+  if(!ventet)return;
+ }
+ for(let i=0;i<phases.length;i++){
+  if(token!==sekvensToken)break;
+  const p=phases[i];let file;
+  try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
+  if(token!==sekvensToken)break;
+  if(!file&&p.id!=="frimurer"&&p.id!=="vokter"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
+  let ok=true;
+  if(p.id==="vokter"){
+   const instruction={url:"./vokter-nattinstruksjon.wav"};
+   ok=await spillFil(instruction,"Vokter – instruksjon");
+   if(!ok)break;
+   if(token!==sekvensToken)break;
+   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Vokter utfører handlingen. Lukk øynene om {sek} sekunder …");
+   if(!ventet)break;
+   const close={url:"./vokter-lukk-oynene.wav"};
+   ok=await spillFil(close,"Vokter – lukk øynene igjen");
+   if(!ok)break;
+  }else if(p.id==="frimurer"){
+   const wake=new Audio("./frimurer-vakne.wav");wake.volume=lydinnstillinger.stemmeVolum;
+   try{await wake.play();ok=await ventPaaLyd(wake);}catch(e){ok=false;}
+   if(!ok)break;
+   if(token!==sekvensToken)break;
+   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Frimurerne utfører handlingen. Lukk øynene om {sek} sekunder …");
+   if(!ventet)break;
+   const close=new Audio("./frimurer-lukk-oynene.wav");close.volume=lydinnstillinger.stemmeVolum;
+   try{await close.play();ok=await ventPaaLyd(close);}catch(e){ok=false;}
+   if(!ok)break;
+  }else{
+   ok=await spillFil(file,p.rolle);if(!ok)break;
+  }
+  if(token!==sekvensToken)break;spilt++;
+  if(i<phases.length-1){
+   const ventet=await ventSekunder(5,token,"Stille etter lukk-øynene-beskjeden. Neste instruksjon om {sek} sekunder …");
+   if(!ventet)break;
+  }
+ }
+ if(token===sekvensToken&&sluttfase){
+  let sluttfil=null;try{sluttfil=await hentFaseLydklipp(sluttfase.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente sluttbeskjeden.";}
+  if(token===sekvensToken&&sluttfil){const ok=await spillFil(sluttfil,"Alle sammen, våkn opp");if(ok)spilt++;else skippet++;}
+ }
+ if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stopNightButton").disabled=true;$("sekvensStatus").textContent="Natten er ferdig. "+spilt+" lydklipp spilt av"+(skippet?", "+skippet+" uten lydfil hoppet over.":".");}
+}
+// Korte UI-lyder: korttrekk ved valg av kort og et diskret klikk på knapper.
+let uiAudioContext=null;
+function uiContext(){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;if(!uiAudioContext)uiAudioContext=new C();if(uiAudioContext.state==="suspended")uiAudioContext.resume().catch(()=>{});return uiAudioContext;}
+function spillKlikkelyd(){try{const c=uiContext();if(!c)return;const t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.setValueAtTime(1050,t);o.frequency.exponentialRampToValueAtTime(720,t+.035);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.045,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.055);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.06);}catch(e){}}
+const kortFlippingLyd=new Audio("kort-flipping.mp3");
+const kortValgtLyd=new Audio("kort-select-ny.wav");
+const kortFravalgtLyd=new Audio("kort-deselect-ny.wav");
+const alleValgtLyd=new Audio("alle-select.wav");
+const alleFravalgtLyd=new Audio("alle-deselect.wav");
+const aktiveStartmenyLyder=new Set();
+function spillStartmenyLyd(kilde){
+ try{
+  const klipp=kilde.cloneNode();klipp.volume=0.8;
+  aktiveStartmenyLyder.add(klipp);
+  const rydd=()=>aktiveStartmenyLyder.delete(klipp);
+  klipp.addEventListener("ended",rydd,{once:true});
+  klipp.addEventListener("error",rydd,{once:true});
+  klipp.play().catch(rydd);
+ }catch(e){}
+}
+function stoppAlleStartmenyLyder(){
+ stoppEmoOpplesning();
+ stoppVokterOpplesning();
+ for(const klipp of aktiveStartmenyLyder){
+  try{klipp.pause();klipp.currentTime=0;}catch(e){}
+ }
+ aktiveStartmenyLyder.clear();
+}
+function spillKorttrekklyd(){spillStartmenyLyd(kortFlippingLyd);}
+function spillKortValgtLyd(){spillStartmenyLyd(kortValgtLyd);}
+function spillKortFravalgtLyd(){spillStartmenyLyd(kortFravalgtLyd);}
+function spillAlleValgtLyd(){spillStartmenyLyd(alleValgtLyd);}
+function spillAlleFravalgtLyd(){spillStartmenyLyd(alleFravalgtLyd);}
+
+// Egne stemmeopptak for Emo-kortet. Bare ett Emo-opptak kan spille om gangen.
+let aktivEmoLyd=null;
+function stoppEmoOpplesning(){
+ if(aktivEmoLyd){try{aktivEmoLyd.pause();aktivEmoLyd.currentTime=0;}catch(e){}}
+ aktivEmoLyd=null;
+}
+function spillEmoOpplesning(fil){
+ if(!infoOpplesningAktiv)return;
+ stoppEmoOpplesning();
+ const lydklipp=new Audio(fil);
+ lydklipp.volume=1;
+ aktivEmoLyd=lydklipp;
+ lydklipp.addEventListener("ended",()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;},{once:true});
+ lydklipp.addEventListener("error",()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;},{once:true});
+ lydklipp.play().catch(()=>{if(aktivEmoLyd===lydklipp)aktivEmoLyd=null;});
+}
+function spillFrimurerOpplesning(type){
+ const filer={info:"./frimurer-info.wav",rolle:"./frimurer-rolle.wav"};
+ spillEmoOpplesning(filer[type]);
+}
+// Egne stemmeopptak for Vokter: rollevalg og baksideinfo.
+let aktivVokterLyd=null;
+function stoppVokterOpplesning(){
+ if(aktivVokterLyd){try{aktivVokterLyd.pause();aktivVokterLyd.currentTime=0;}catch(e){}}
+ aktivVokterLyd=null;
+}
+function spillVokterOpplesning(fil){
+ if(!infoOpplesningAktiv)return;
+ stoppVokterOpplesning();
+ const lydklipp=new Audio(fil);
+ lydklipp.volume=1;
+ aktivVokterLyd=lydklipp;
+ lydklipp.addEventListener("ended",()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;},{once:true});
+ lydklipp.addEventListener("error",()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;},{once:true});
+ lydklipp.play().catch(()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;});
+}
+function stoppRolleopplesning(navn){
+ if(navn==="Emo"||navn==="Frimurer")stoppEmoOpplesning();
+ if(navn==="Vokter")stoppVokterOpplesning();
+}
+function spillKortrolleopplesning(navn,type){
+ if(navn==="Emo"){
+  spillEmoOpplesning(type==="info"?"./emo-info-v2.wav?rev=2":"./emo-rollevalg-v2.wav");
+ }else if(navn==="Frimurer"){
+  spillFrimurerOpplesning(type);
+ }else if(navn==="Vokter"){
+  spillVokterOpplesning(type==="info"?"./vokter-info.wav":"./vokter-rollevalg.wav");
+ }
+}
+document.addEventListener("click",event=>{
+ const expanded=event.target.closest(".card.flipped");
+ if(!expanded)return;
+ // Finn hvilket kort som ligger under trykkpunktet, også når det er dekket
+ // av den forstørrede baksiden. Dette gjør at første trykk på et overlappet
+ // nabokort registreres på mobil i stedet for å bli spist av det åpne kortet.
+ expanded.style.visibility="hidden";
+ const underneath=document.elementFromPoint(event.clientX,event.clientY);
+ expanded.style.visibility="";
+ const nextCard=underneath&&underneath.closest(".card:not(.flipped)");
+ if(nextCard&&nextCard!==expanded){
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  spillKorttrekklyd();
+  if(expanded.dataset.roleIndex!==undefined&&roller[Number(expanded.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();
+  expanded.classList.remove("flipped");
+  nextCard.click();
+ }
+},true);
+
+document.addEventListener("click",event=>{const button=event.target.closest("button");if(!button||button.disabled||button.classList.contains("card"))return;spillKlikkelyd();},true);
+function lavtTick(){try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!sekvensAudioContext)sekvensAudioContext=new C();if(sekvensAudioContext.state==="suspended")sekvensAudioContext.resume();const osc=sekvensAudioContext.createOscillator(),gain=sekvensAudioContext.createGain();osc.type="sine";osc.frequency.value=720;gain.gain.setValueAtTime(.0001,sekvensAudioContext.currentTime);gain.gain.exponentialRampToValueAtTime(.018,sekvensAudioContext.currentTime+.006);gain.gain.exponentialRampToValueAtTime(.0001,sekvensAudioContext.currentTime+.045);osc.connect(gain);gain.connect(sekvensAudioContext.destination);osc.start();osc.stop(sekvensAudioContext.currentTime+.05)}catch(e){}}
+function ventPaaLyd(audio){return new Promise(resolve=>{audio.addEventListener("ended",()=>resolve(true),{once:true});audio.addEventListener("error",()=>resolve(false),{once:true});});}
+async function spillHeleSekvensen(){
+ if(sekvensAktiv)return;sekvensAktiv=true;const token=++sekvensToken;startBakgrunnsmusikk();$("stoppLydKnapp").disabled=false;
+ $("sekvensStatus").textContent="Starter opplesningen …";
+ for(let i=0;i<faser.length;i++){
+  if(token!==sekvensToken)break;faseValgt=i;visFase();const f=faser[i];
+  if(lyd){lyd.pause();lyd.currentTime=0;}lyd=new Audio(f.lyd);lyd.volume=lydinnstillinger.stemmeVolum;$("sekvensStatus").textContent="Spiller "+(i+1)+" av "+faser.length+": "+f.navn;
+  try{await lyd.play()}catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydfilen "+f.lyd;break;}
+  const ferdig=await ventPaaLyd(lyd);if(token!==sekvensToken)break;if(!ferdig)break;
+  if(i<faser.length-1){
+   let igjen=lydinnstillinger.pauseSekunder;$("sekvensStatus").textContent="Neste instruksjon om "+igjen+" sekunder …";lavtTick();
+   await new Promise(resolve=>{sekvensTimer=setInterval(()=>{if(token!==sekvensToken){clearInterval(sekvensTimer);sekvensTimer=null;resolve();return;}igjen--;if(igjen>0){$("sekvensStatus").textContent="Neste instruksjon om "+igjen+" sekunder …";lavtTick()}else{clearInterval(sekvensTimer);sekvensTimer=null;resolve()}},1000)});
+  }
+ }
+ if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stoppLydKnapp").disabled=true;$("sekvensStatus").textContent="Opplesningen er ferdig.";}
+}
+$("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";valgtNatt=0;renderNatt();oppdaterLydinnstillinger();};
+$("tilbakeKnapp").onclick=()=>{avbrytSekvens();$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden")};
+document.querySelectorAll("#nightTabs button").forEach(button=>button.addEventListener("click",()=>visNatt(Number(button.dataset.night))));
+$("playNightButton").onclick=spillHeleNatten;
+$("stopNightButton").onclick=()=>avbrytSekvens("Avspillingen er stoppet.");
+tegnKort();
+kobleLydkontroller();
+
+// Innstillingsknappen blir et hjem-symbol mens innstillingene er åpne.
+let sideForInnstillinger="valgSide";
+const settingsToggle=$("settingsToggle");
+function oppdaterInnstillingsikon(){
+ const iInnstillinger=!$("settingsSide").classList.contains("hidden");
+ settingsToggle.innerHTML=iInnstillinger
+  ? '<svg class="settings-back-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'
+  : "⚙";
+ settingsToggle.setAttribute("aria-label",iInnstillinger?"Tilbake":"Åpne innstillinger");
+ settingsToggle.title=iInnstillinger?"Tilbake":"Innstillinger";
+}
+settingsToggle.addEventListener("click",event=>{
+ event.preventDefault();event.stopPropagation();
+ if(!$("settingsSide").classList.contains("hidden")){
+  // Tilbakepilen returnerer til siden som var åpen før innstillingene.
+  $("settingsSide").classList.add("hidden");
+  $(sideForInnstillinger).classList.remove("hidden");
+ }else{
+  // Når kortvelgeren forlates, stopp alle opplesninger og UI-lyder fra startmenyen.
+  stoppAlleStartmenyLyder();
+  sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
+  $("valgSide").classList.add("hidden");
+  $("spillSide").classList.add("hidden");
+  $("settingsSide").classList.remove("hidden");
+ }
+ oppdaterInnstillingsikon();
+});
+$("settingsBack").addEventListener("click",event=>{
+ event.preventDefault();event.stopPropagation();
+ $("settingsSide").classList.add("hidden");
+ $(sideForInnstillinger).classList.remove("hidden");
+ oppdaterInnstillingsikon();
+});
+
+// Bryteren lagrer valget slik at framtidig lydopplesning av kortbaksidene kan respektere det.
+let infoOpplesningAktiv=true;
+try{infoOpplesningAktiv=localStorage.getItem("sykulven-info-opplesning")!=="av";}catch(e){}
+const infoAudioToggle=$("infoAudioToggle");
+function oppdaterInfoAudioKnapp(){
+ infoAudioToggle.classList.toggle("muted",!infoOpplesningAktiv);
+ infoAudioToggle.setAttribute("aria-pressed",String(!infoOpplesningAktiv));
+ infoAudioToggle.setAttribute("aria-label",infoOpplesningAktiv?"Slå av informasjonsopplesning":"Slå på informasjonsopplesning");
+ infoAudioToggle.title=infoOpplesningAktiv?"Opplesning av kortinformasjon på":"Opplesning av kortinformasjon av";
+}
+infoAudioToggle.addEventListener("click",()=>{
+ infoOpplesningAktiv=!infoOpplesningAktiv;
+ if(!infoOpplesningAktiv)stoppEmoOpplesning();
+ try{localStorage.setItem("sykulven-info-opplesning",infoOpplesningAktiv?"på":"av");}catch(e){}
+ oppdaterInfoAudioKnapp();
+});
+window.infoOpplesningErAktiv=()=>infoOpplesningAktiv;
+oppdaterInfoAudioKnapp();
+oppdaterInnstillingsikon();
+
+document.addEventListener("click",event=>{
+ const openCard=document.querySelector(".card.flipped");
+ if(openCard&&!event.target.closest(".card.flipped")){
+  if(openCard.dataset.roleIndex!==undefined&&roller[Number(openCard.dataset.roleIndex)]?.navn==="Emo")stoppEmoOpplesning();
+  openCard.classList.remove("flipped");
+ }
+});</script>
+<div id="skogSpill" aria-label="3D-skogspill">
+ <canvas id="skogCanvas"></canvas>
+ <div id="skogNavnPanel">
+  <div class="skog-navn-kort">
+   <div class="skog-navn-overskrift">MØRKESKOGEN</div>
+   <p>Skriv inn et kallenavn som er ledig akkurat nå.</p>
+   <input id="skogNavnInput" maxlength="18" autocomplete="nickname" placeholder="Kallenavn">
+   <div id="skogNavnFeil" role="status"></div>
+   <button id="skogNavnStart" type="button">Gå inn i skogen</button>
+  </div>
+ </div>
+ <div id="skogTopp"><div id="skogTittel">MØRKESKOGEN · <span id="skogRolle">ROLLE</span> <small id="skogOnline">0 online</small></div><button id="skogAvslutt" type="button">← Til kortene</button></div>
+ <div id="skogKryss"></div>
+ <div id="skogHjelp">WASD for å gå · Mus for å se rundt · ESC for å låse opp musen</div>
+ <div id="skogJoystick"><div id="skogJoystickKnott"></div></div>
+</div>
+
+
+<script>
+(()=>{
+ const holdDelay=650;
+ let holdTimer=null,holdTriggered=false,skipClick=false;
+ function startHold(card,role,index,event){
+  if(event.button!==undefined&&event.button!==0)return;
+  clearTimeout(holdTimer);holdTriggered=false;
+  holdTimer=setTimeout(()=>{
+   holdTriggered=true;skipClick=true;
+   setTimeout(()=>{skipClick=false;},900);
+   startSkogSpill(role,index);
+  },holdDelay);
+ }
+ function cancelHold(){clearTimeout(holdTimer);holdTimer=null;}
+ document.querySelectorAll("#kortRutenett .card[data-role-index]").forEach(card=>{
+  const roleIndex=Number(card.dataset.roleIndex);
+  const role=roller[roleIndex];
+  card.addEventListener("pointerdown",e=>startHold(card,role,roleIndex,e));
+  ["pointerup","pointerleave","pointercancel"].forEach(name=>card.addEventListener(name,cancelHold));
+  card.addEventListener("click",e=>{
+   if(skipClick){skipClick=false;e.preventDefault();e.stopImmediatePropagation();}
+  },true);
+ });
+ const root=document.getElementById("skogSpill"),canvas=document.getElementById("skogCanvas");
+ const exit=document.getElementById("skogAvslutt"),help=document.getElementById("skogHjelp");
+ let renderer,scene,camera,player,animationId,keys={},yaw=0,pitch=-.12,lastTime=0,walkTime=0,orbitDrag=null;
+ let joystickActive=false,joyId=null,joyX=0,joyY=0,lookTouch=null,lookX=0,lookY=0;
+ const joystick=document.getElementById("skogJoystick"),knob=document.getElementById("skogJoystickKnott");
+ const SUPABASE_URL="https://vaxuyicmozanxbtgkoku.supabase.co";
+ const SUPABASE_KEY="sb_publishable_Q_5oTSRiT55-H95gykr5BA_Pq5Nh58u";
+ let sb=null,room=null,myNickname="",mySession=crypto.randomUUID(),heartbeatTimer=null,broadcastTimer=null;
+ const remotePlayers=new Map(),remoteState=new Map();
+ const roleForName=name=>roller.find(r=>r.navn===name)||roller[0];
+ function loadSupabase(){
+  if(window.supabase?.createClient){sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return Promise.resolve();}
+  return new Promise((resolve,reject)=>{
+   const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+   s.onload=()=>{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);resolve();};
+   s.onerror=()=>reject(new Error("Kunne ikke koble til multiplayer-tjenesten."));
+   document.head.appendChild(s);
+  });
+ }
+ async function claimNickname(name){
+  const {data,error}=await sb.rpc("claim_game_nickname",{p_nickname:name,p_session_id:mySession});
+  if(error)throw error;
+  return data===true;
+ }
+ async function releaseNickname(){
+  if(!sb||!myNickname)return;
+  try{await sb.rpc("release_game_nickname",{p_nickname:myNickname,p_session_id:mySession});}catch(e){}
+  myNickname="";
+ }
+ function makeRemote(id,state){
+  if(remotePlayers.has(id))return;
+  const role=roleForName(state.role);
+  const model=buildPlayer(role);
+  model.position.set(Number(state.x)||0,0,Number(state.z)||0);
+  scene.add(model);
+  remotePlayers.set(id,{model,nickname:state.nickname||"Spiller",targetX:model.position.x,targetZ:model.position.z,targetYaw:0});
+ }
+ function syncRemotePresence(){
+  if(!room)return;
+  const state=room.presenceState(),seen=new Set();
+  Object.entries(state).forEach(([key,items])=>items.forEach(item=>{
+   if(item.session===mySession)return;
+   seen.add(item.session);
+   if(!remotePlayers.has(item.session))makeRemote(item.session,item);
+  }));
+  for(const [id,p] of remotePlayers){if(!seen.has(id)){scene.remove(p.model);remotePlayers.delete(id);}}
+  document.getElementById("skogOnline").textContent=(seen.size+1)+" online";
+ }
+ async function connectMultiplayer(role){
+  await loadSupabase();
+  room=sb.channel("sykulven-dark-forest",{config:{presence:{key:mySession},broadcast:{self:false}}});
+  room.on("presence",{event:"sync"},syncRemotePresence);
+  room.on("broadcast",{event:"move"},({payload})=>{
+   if(!payload||payload.session===mySession)return;
+   let p=remotePlayers.get(payload.session);
+   if(!p){makeRemote(payload.session,payload);p=remotePlayers.get(payload.session);}
+   if(!p)return;
+   p.targetX=Number(payload.x)||0;p.targetZ=Number(payload.z)||0;p.targetYaw=Number(payload.yaw)||0;
+  });
+  await new Promise((resolve,reject)=>{
+   room.subscribe(async status=>{
+    if(status==="SUBSCRIBED"){
+     await room.track({session:mySession,nickname:myNickname,role:role.navn,x:0,z:0});
+     resolve();
+    }else if(status==="CHANNEL_ERROR"||status==="TIMED_OUT")reject(new Error("Kunne ikke koble til multiplayer-rommet."));
+   });
+  });
+  heartbeatTimer=setInterval(async()=>{
+   if(myNickname)await sb.rpc("heartbeat_game_nickname",{p_nickname:myNickname,p_session_id:mySession});
+  },15000);
+  broadcastTimer=setInterval(()=>{
+   if(!room||!player)return;
+   room.send({type:"broadcast",event:"move",payload:{session:mySession,nickname:myNickname,role:role.navn,x:player.position.x,z:player.position.z,yaw:player.rotation.y}});
+  },120);
+ }
+ async function enterGameWithNickname(role,index){
+  const input=document.getElementById("skogNavnInput"),err=document.getElementById("skogNavnFeil"),btn=document.getElementById("skogNavnStart");
+  const name=input.value.trim().replace(/\s+/g," ");
+  if(!/^[\p{L}\p{N}_ -]{3,18}$/u.test(name)){err.textContent="Bruk 3–18 bokstaver, tall, mellomrom eller _. ";return;}
+  btn.disabled=true;err.textContent="Sjekker kallenavn …";
+  try{
+   await loadSupabase();
+   const ok=await claimNickname(name);
+   if(!ok){err.textContent="Dette kallenavnet er allerede i bruk. Velg et annet.";btn.disabled=false;return;}
+   myNickname=name;document.getElementById("skogNavnPanel").style.display="none";
+   document.getElementById("skogTittel").insertAdjacentHTML("beforeend",` <small>· ${name}</small>`);
+   await startWorld(role,index);
+   await connectMultiplayer(role);
+   err.textContent="";
+  }catch(e){
+   if(myNickname)await releaseNickname();
+   err.textContent=e.message||"Kunne ikke koble til. Prøv igjen.";
+   btn.disabled=false;
+  }
+ }
+
+ function loadThree(){
+  if(window.THREE)return Promise.resolve();
+  if(window.__skogThreePromise)return window.__skogThreePromise;
+  window.__skogThreePromise=new Promise((resolve,reject)=>{
+   const s=document.createElement("script");
+   s.src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+   s.onload=resolve;s.onerror=()=>reject(new Error("Kunne ikke laste 3D-motoren. Kontroller internettforbindelsen."));
+   document.head.appendChild(s);
+  });
+  return window.__skogThreePromise;
+ }
+ function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,roughness});}
+ function makeTree(x,z,scale){
+  const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.16*scale,.25*scale,2.2*scale,6),mat(0x211a17));
+  trunk.position.set(x,1.1*scale,z);scene.add(trunk);
+  for(let layer=0;layer<3;layer++){
+   const h=(2.5-layer*.48)*scale,r=(1.25-layer*.22)*scale;
+   const crown=new THREE.Mesh(new THREE.ConeGeometry(r,h,7),mat(layer===0?0x101f1b:0x142720));
+   crown.position.set(x,(2.1+layer*.72)*scale,z);scene.add(crown);
+  }
+ }
+ function buildPlayer(role,parentScene=scene){
+  const model=new THREE.Group();parentScene.add(model);
+  const profiles={
+   "Sov Ulven":{skin:0xe2b58e,hair:0x7c285d,coat:0x63345e,shirt:0x292235,pants:0x28202d,hood:1,glasses:1,accent:0xd4a0d1},
+   "Jeger":{skin:0xc78c5c,hair:0x302018,coat:0x59402c,shirt:0x292b25,pants:0x29251f,hood:0,weapon:1,accent:0x9b754b},
+   "Landsbyboer":{skin:0xe0b48b,hair:0x51331e,coat:0x426276,shirt:0xc8c0a5,pants:0x343b46,cap:1,glasses:1,accent:0x9aa9a9},
+   "Frimurer":{skin:0xe8bda0,hair:0xc58b45,coat:0xd8d0bd,shirt:0xf0e9d9,pants:0x34303a,accent:0x987c53},
+   "Syk Ulven":{skin:0xb98a70,hair:0x49332c,coat:0x33363a,shirt:0x292b2d,pants:0x26282a,hood:1,fur:1,accent:0x8b796c},
+   "Emo":{skin:0xe2b99e,hair:0x17151b,coat:0x24232a,shirt:0x111216,pants:0x1b1b22,fringe:1,accent:0x77516e},
+   "Doppelgjenger":{skin:0xe0b08b,hair:0x8d3f28,coat:0x395044,shirt:0x293b36,pants:0x292e2d,glasses:1,accent:0x9e7654},
+   "Håndlanger":{skin:0xd89b72,hair:0xb65d2d,coat:0x9b8062,shirt:0xe0d1b4,pants:0x4b4137,accent:0x6b5541},
+   "Paranormal Etterforsker":{skin:0xdca27a,hair:0x30251f,coat:0x49345d,shirt:0x31243f,pants:0x282332,glow:1,accent:0x6ed6a0},
+   "Vokter":{skin:0xc18a60,hair:0x39251a,coat:0x8b5a27,shirt:0x51331d,pants:0x34251b,helmet:1,accent:0xe4b94e},
+   "Søvnløs":{skin:0xe7b99c,hair:0x9b4d32,coat:0x416a86,shirt:0x8cb0c1,pants:0x394452,accent:0xc88b82},
+   "Beruset":{skin:0xf0c29b,hair:0xf0c36b,coat:0xe4d5c6,shirt:0xf3e9dd,pants:0x5d4b4c,accent:0xd69b67},
+   "Røver":{skin:0xe1ae85,hair:0x292019,coat:0x344b28,shirt:0x293321,pants:0x252a20,scarf:1,accent:0x9eae42},
+   "Bråkmaker":{skin:0xdca27f,hair:0xe18ab5,coat:0x342a3b,shirt:0x29232f,pants:0x24232a,accent:0xe6a1cb},
+   "Prins":{skin:0xf0c49b,hair:0xe8c16b,coat:0x573d78,shirt:0xe5c66c,pants:0x3a304c,crown:1,accent:0xe6c65e},
+   "Synsk":{skin:0xd8a27e,hair:0xd7ad54,coat:0x355b48,shirt:0x503b64,pants:0x282c35,hood:1,glow:1,accent:0x91d5a1},
+   "Dulter":{skin:0xe2b28d,hair:0x70452b,coat:0x48664a,shirt:0x354d3b,pants:0x353b32,cap:1,accent:0x9bb36e},
+   "Rimmi":{skin:0xd6a17f,hair:0x30221d,coat:0x26252d,shirt:0x4a3540,pants:0x29252a,accent:0xa35d70}
+  };
+  const p=profiles[role.navn]||profiles["Landsbyboer"];
+  const M=(c,r=0.9)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
+  const skin=M(p.skin),hair=M(p.hair),coat=M(p.coat),shirt=M(p.shirt),pants=M(p.pants),accent=M(p.accent),dark=M(0x171719),white=M(0xe7e0d2),eye=M(0x17151a);
+  const part=(geo,material,x,y,z,parent=model)=>{const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);parent.add(m);return m;};
+  const sphere=(material,x,y,z,sx,sy,sz,parent=model)=>{const m=part(new THREE.SphereGeometry(1,24,18),material,x,y,z,parent);m.scale.set(sx,sy,sz);return m;};
+  const capsule=(material,x,y,z,radius,length,parent=model)=>{
+   const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
+   part(new THREE.CylinderGeometry(radius,radius,length,16),material,0,0,0,g);
+   sphere(material,0,length/2,0,radius,radius,radius,g);
+   sphere(material,0,-length/2,0,radius,radius,radius,g);
+   return g;
+  };
+  // Kropp og klær er bygget av separate, avrundede 3D-deler – ikke et flatt kortbilde.
+  const torso=capsule(coat,0,1.43,0,.38,.66);torso.scale.set(1,.94,.72);
+  part(new THREE.BoxGeometry(.43,.72,.055),shirt,0,1.46,.275);
+  part(new THREE.BoxGeometry(.12,.78,.08),accent,-.19,1.43,.31);
+  part(new THREE.BoxGeometry(.12,.78,.08),accent,.19,1.43,.31);
+  // Skreddersydde jakkeslag, knapper, belte og skulderplater gir mer detaljert silhuett.
+  const lapelL=part(new THREE.BufferGeometry(),shirt,0,0,0);lapelL.geometry.dispose();model.remove(lapelL);
+  const lapelGeo=new THREE.Shape();lapelGeo.moveTo(-.22,1.82);lapelGeo.lineTo(-.04,1.63);lapelGeo.lineTo(-.16,1.32);lapelGeo.lineTo(-.29,1.68);lapelGeo.closePath();
+  const lapelMesh=new THREE.Mesh(new THREE.ShapeGeometry(lapelGeo),accent);lapelMesh.position.z=.355;model.add(lapelMesh);
+  const lapelGeo2=new THREE.Shape();lapelGeo2.moveTo(.22,1.82);lapelGeo2.lineTo(.04,1.63);lapelGeo2.lineTo(.16,1.32);lapelGeo2.lineTo(.29,1.68);lapelGeo2.closePath();
+  const lapelMesh2=new THREE.Mesh(new THREE.ShapeGeometry(lapelGeo2),accent);lapelMesh2.position.z=.355;model.add(lapelMesh2);
+  for(let i=0;i<4;i++)sphere(dark,.0,1.68-i*.16,.365,.025,.025,.018);
+  const belt=part(new THREE.TorusGeometry(.29,.045,8,24),dark,0,.99,0);belt.rotation.x=Math.PI/2;
+  part(new THREE.BoxGeometry(.13,.12,.06),accent,0,.99,.31);
+  const neck=part(new THREE.CylinderGeometry(.13,.15,.22,10),skin,0,1.99,0);
+  const head=sphere(skin,0,2.28,.015,.32,.39,.3);
+  // Ører, nese, øyne, bryn og munn gir ansiktet volum og uttrykk.
+  sphere(skin,-.325,2.29,0,.075,.11,.07);sphere(skin,.325,2.29,0,.075,.11,.07);
+  sphere(skin,0,2.25,.303,.055,.075,.06);
+  for(const x of [-.12,.12]){
+   sphere(white,x,2.34,.27,.075,.052,.028);
+   sphere(eye,x,2.34,.296,.027,.035,.018);
+   part(new THREE.BoxGeometry(.11,.025,.035),hair,x,2.425,.27).rotation.z=x<0?-.12:.12;
+  }
+  part(new THREE.BoxGeometry(.13,.025,.025),M(0x754b48),0,2.12,.29);
+  // Bruk selve ansiktet fra rollekortet som ansiktstekstur på 3D-hodet.
+  // Bildet klippes til ansiktsområdet, mens hode, hår og resten av kroppen fortsatt er 3D-geometri.
+  if(role.bilde){
+   const faceCanvas=document.createElement("canvas");faceCanvas.width=256;faceCanvas.height=320;
+   const faceCtx=faceCanvas.getContext("2d");
+   const faceImage=new Image();faceImage.crossOrigin="anonymous";
+   faceImage.onload=()=>{
+    const iw=faceImage.naturalWidth,ih=faceImage.naturalHeight;
+    faceCtx.clearRect(0,0,256,320);
+    // Øvre, sentrale del av kortillustrasjonen inneholder normalt hodet/ansiktet.
+    const sw=iw*.54,sh=ih*.43,sx=(iw-sw)/2,sy=ih*.015;
+    faceCtx.save();faceCtx.beginPath();faceCtx.ellipse(128,160,119,154,0,0,Math.PI*2);faceCtx.clip();
+    faceCtx.drawImage(faceImage,sx,sy,sw,sh,0,0,256,320);faceCtx.restore();
+    const tex=new THREE.CanvasTexture(faceCanvas);tex.needsUpdate=true;
+    const faceMat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false});
+    const facePatch=new THREE.Mesh(new THREE.CircleGeometry(1,40),faceMat);
+    facePatch.position.set(0,2.28,.307);facePatch.scale.set(.235,.29,1);model.add(facePatch);
+   };
+   faceImage.src=role.bilde;
+  }
+  // Hår: hårhette + separate lokker, med profilspesifikk pannelugg.
+  sphere(hair,0,2.55,-.005,.34,.22,.31);
+  for(let i=0;i<5;i++){
+   const x=-.24+i*.12;
+   const lock=sphere(hair,x,2.48,.22,.085,.19,.105);
+   lock.rotation.z=(i-2)*-.12;
+  }
+  for(let i=0;i<7;i++){
+   const x=-.24+i*.08;
+   const strand=part(new THREE.CylinderGeometry(.018,.025,.22,8),hair,x,2.51,.29);
+   strand.rotation.z=(i-3)*.10;
+  }
+  // Små folder langs jakken gir dybde når karakteren beveger seg.
+  for(let i=0;i<3;i++){
+   const fold=part(new THREE.BoxGeometry(.025,.42,.018),M(p.accent,1),-.29+i*.29,1.43,.355);
+   fold.rotation.z=(i-1)*.08;
+  }
+  if(p.fringe){for(let i=0;i<4;i++){const l=sphere(hair,-.2+i*.12,2.43,.27,.11,.22,.09);l.rotation.z=-.35+i*.12;}}
+  // Bukse, bevegelige lår/legger og solide støvler.
+  const legL=new THREE.Group(),legR=new THREE.Group();
+  function makeLeg(g,x){
+   g.position.set(x,.94,0);model.add(g);
+   capsule(pants,0,-.25,0,.14,.48,g);
+   part(new THREE.BoxGeometry(.27,.16,.43),dark,0,-.67,.08,g);
+  }
+  makeLeg(legL,-.2);makeLeg(legR,.2);
+  // Bevegelige armer med skuldre, overarmer, underarmer og hansker/hender.
+  const armL=new THREE.Group(),armR=new THREE.Group();
+  function makeArm(g,x){
+   g.position.set(x,1.78,0);model.add(g);
+   sphere(coat,0,-.08,0,.19,.2,.2,g);
+   capsule(coat,0,-.32,0,.105,.34,g);
+   capsule(skin,0,-.66,.015,.085,.3,g);
+   sphere(skin,0,-.85,.03,.105,.12,.1,g);
+  }
+  makeArm(armL,-.48);makeArm(armR,.48);
+  // Identitetsspesifikke detaljer fra hvert rollekort.
+  if(p.hood){
+   const hoodMesh=part(new THREE.SphereGeometry(.4,12,10,0,Math.PI*2,0,Math.PI*.68),coat,0,2.36,-.09);
+   hoodMesh.scale.set(1.12,1.15,1.05);
+  }
+  if(p.cap){
+   part(new THREE.CylinderGeometry(.31,.31,.13,12),accent,0,2.59,0);
+   part(new THREE.SphereGeometry(.31,12,8,0,Math.PI*2,0,Math.PI/2),coat,0,2.61,0);
+   part(new THREE.BoxGeometry(.38,.045,.22),accent,0,2.56,.24);
+  }
+  if(p.helmet){
+   const helm=part(new THREE.SphereGeometry(.38,12,10,0,Math.PI*2,0,Math.PI*.58),accent,0,2.57,0);
+   part(new THREE.BoxGeometry(.72,.12,.12),dark,0,2.39,.29);
+   part(new THREE.ConeGeometry(.12,.36,6),accent,0,2.99,0);
+   for(const x of [-.39,.39]){const horn=part(new THREE.ConeGeometry(.09,.35,6),accent,x,2.72,0);horn.rotation.z=x<0?-.65:.65;}
+  }
+  if(p.crown){
+   for(let i=0;i<5;i++){const x=-.25+i*.125;const spike=part(new THREE.ConeGeometry(.055,.23,5),accent,x,2.82,0);spike.rotation.z=(i-2)*-.12;}
+   part(new THREE.BoxGeometry(.62,.1,.1),accent,0,2.69,0);
+  }
+  if(p.glasses){
+   for(const x of [-.13,.13]){const ring=part(new THREE.TorusGeometry(.09,.018,6,14),dark,x,2.34,.31);ring.scale.y=.8;}
+   part(new THREE.BoxGeometry(.08,.025,.025),dark,0,2.35,.31);
+  }
+  if(p.scarf){
+   const scarf=part(new THREE.TorusGeometry(.25,.11,8,16),accent,0,1.95,0);scarf.rotation.x=Math.PI/2;
+   const tail=part(new THREE.BoxGeometry(.13,.48,.09),accent,.23,1.68,.17);tail.rotation.z=-.25;
+  }
+  if(p.fur){
+   for(let i=0;i<9;i++){const a=i*Math.PI*2/9;const tuft=part(new THREE.ConeGeometry(.12,.34,5),accent,Math.cos(a)*.38,1.83,Math.sin(a)*.3);tuft.rotation.z=Math.cos(a)*.7;tuft.rotation.x=Math.sin(a)*.7;}
+  }
+  if(p.glow){
+   const orbMat=new THREE.MeshBasicMaterial({color:p.accent});
+   const orb=part(new THREE.SphereGeometry(.12,12,10),orbMat,.48,1.28,.22);
+   const light=new THREE.PointLight(p.accent,1.1,3);light.position.copy(orb.position);model.add(light);
+  }
+  if(p.weapon){
+   const handle=part(new THREE.CylinderGeometry(.035,.035,.55,8),M(0x634326),.62,1.25,.04);handle.rotation.z=-.45;
+   const blade=part(new THREE.BoxGeometry(.28,.16,.055),M(0xaeb7b5),.78,1.53,.04);blade.rotation.z=-.45;
+  }
+  if(role.navn==="Beruset"){
+   const cup=part(new THREE.CylinderGeometry(.08,.12,.2,10),M(0xb6c7c8,.25),.62,1.08,.12);cup.rotation.z=-.35;
+   part(new THREE.SphereGeometry(.07,10,8),M(0x9c3547),.62,1.18,.12);
+  }
+  if(role.navn==="Paranormal Etterforsker"){
+   const bottle=part(new THREE.CylinderGeometry(.07,.1,.25,8),M(0x66c99a,.25),.61,1.05,.12);
+   const glow=new THREE.PointLight(0x5effae,.8,2.5);glow.position.copy(bottle.position);model.add(glow);
+  }
+  // Kappen får en egen bakside og tydelig silhuett.
+  if(["Vokter","Syk Ulven","Sov Ulven","Prins","Synsk","Emo"].includes(role.navn)){
+   const cape=part(new THREE.ConeGeometry(.55,1.25,8,1,true),coat,0,1.12,-.28);cape.rotation.x=Math.PI;cape.scale.z=.32;
+  }
+  model.userData={armL,armR,legL,legR};
+  return model;
+ }
+ function buildWorld(role){
+  scene=new THREE.Scene();scene.background=new THREE.Color(0x07101b);scene.fog=new THREE.FogExp2(0x07101b,.021);
+  camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,220);
+  renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.8));renderer.setSize(innerWidth,innerHeight);
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  scene.add(new THREE.HemisphereLight(0x9aabc4,0x10140f,1.0));
+  const moonLight=new THREE.DirectionalLight(0x9cb8dc,1.15);moonLight.position.set(-25,35,18);scene.add(moonLight);
+  const moon=new THREE.Mesh(new THREE.SphereGeometry(5,24,18),new THREE.MeshBasicMaterial({color:0xd7dfdc}));
+  moon.position.set(-35,42,-75);scene.add(moon);
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(260,260),mat(0x101a16));ground.rotation.x=-Math.PI/2;ground.position.y=-.06;scene.add(ground);
+  const random=(()=>{let seed=918273;return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};})();
+  for(let i=0;i<180;i++){
+   let x=(random()-.5)*180,z=(random()-.5)*180;
+   if(Math.abs(x)<4&&Math.abs(z)<6)continue;
+   makeTree(x,z,.75+random()*.9);
+  }
+  // Lave steiner og bregnelignende tuer bryter opp skogbunnen.
+  for(let i=0;i<75;i++){
+   const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+random()*.45,0),mat(0x202b28));
+   rock.position.set((random()-.5)*100,.12,(random()-.5)*100);rock.scale.y=.45;scene.add(rock);
+  }
+  player=buildPlayer(role);
+  camera.position.set(0,2.45,5);
+ }
+ function resize(){
+  if(!renderer||!camera)return;
+  camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);
+ }
+ function loop(time){
+  animationId=requestAnimationFrame(loop);
+  const dt=Math.min((time-lastTime)/1000||0,.05);lastTime=time;
+  if(!player||!camera||!renderer)return;
+  let forward=(keys.KeyW?1:0)-(keys.KeyS?1:0)-joyY;
+  let side=(keys.KeyD?1:0)-(keys.KeyA?1:0)+joyX;
+  const length=Math.hypot(forward,side);if(length>1){forward/=length;side/=length;}
+  const speed=5.0;
+  const dx=(-Math.sin(yaw)*forward+Math.cos(yaw)*side)*speed*dt;
+  const dz=(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*speed*dt;
+  player.position.x+=dx;player.position.z+=dz;
+  if(length>.05)player.rotation.y=Math.atan2(dx,dz);
+  if(length>.05){
+   walkTime+=dt*9;
+   const swing=Math.sin(walkTime)*.48;
+   const limbs=player.userData;
+   limbs.legL.rotation.x=swing;limbs.legR.rotation.x=-swing;
+   limbs.armL.rotation.x=-swing*.7;limbs.armR.rotation.x=swing*.7;
+  }else if(player.userData){
+   Object.values(player.userData).forEach(l=>l.rotation.x*=.82);
+  }
+  const lookTarget=new THREE.Vector3(player.position.x,player.position.y+2.05,player.position.z);
+  const distance=5.1;
+  camera.position.set(player.position.x+Math.sin(yaw)*distance,player.position.y+2.65+pitch*3,player.position.z+Math.cos(yaw)*distance);
+  lookTarget.y+=pitch*2.2;
+  camera.lookAt(lookTarget);
+  for(const p of remotePlayers.values()){
+   p.model.position.x+=(p.targetX-p.model.position.x)*Math.min(1,dt*12);
+   p.model.position.z+=(p.targetZ-p.model.position.z)*Math.min(1,dt*12);
+   p.model.rotation.y=p.targetYaw;
+  }
+  renderer.render(scene,camera);
+ }
+ function pointerLock(){
+  if(matchMedia("(hover:hover) and (pointer:fine)").matches){
+   help.textContent="WASD for å gå · Hold venstre museknapp og dra for å rotere kameraet 360° rundt karakteren";
+  }else help.textContent="Bruk styrespaken for å gå · Dra på høyre side for å rotere kameraet rundt karakteren";
+ }
+ function startSkogSpill(role,index){
+  root.classList.add("aktiv");root.dataset.roleIndex=String(index);
+  document.getElementById("skogRolle").textContent=role.navn.toUpperCase();
+  document.getElementById("skogNavnPanel").style.display="flex";
+  document.getElementById("skogNavnInput").value="";
+  document.getElementById("skogNavnFeil").textContent="";
+  document.getElementById("skogNavnStart").disabled=false;
+  document.body.style.overflow="hidden";
+ }
+ async function startWorld(role,index){
+  await loadThree();
+  if(!root.classList.contains("aktiv"))return;
+  buildWorld(role);resize();lastTime=performance.now();loop(lastTime);pointerLock();
+ }
+ async function stopGame(){
+  root.classList.remove("aktiv","feil");document.body.style.overflow="";
+  if(heartbeatTimer)clearInterval(heartbeatTimer);heartbeatTimer=null;
+  if(broadcastTimer)clearInterval(broadcastTimer);broadcastTimer=null;
+  if(room){try{await room.untrack();await sb.removeChannel(room);}catch(e){}room=null;}
+  for(const p of remotePlayers.values()){if(scene)scene.remove(p.model);}remotePlayers.clear();
+  await releaseNickname();
+  document.getElementById("skogNavnPanel").style.display="flex";
+  if(animationId)cancelAnimationFrame(animationId);animationId=null;
+  if(document.pointerLockElement)document.exitPointerLock();
+  if(renderer){renderer.dispose();renderer=null;}
+  scene=null;camera=null;player=null;keys={};joyX=joyY=0;
+  document.getElementById("skogNavnStart").disabled=false;
+  knob.style.transform="translate(0,0)";
+ }
+ document.getElementById("skogNavnStart").addEventListener("click",()=>{
+  const role=roller[Number(root.dataset.roleIndex)];
+  if(role)enterGameWithNickname(role,Number(root.dataset.roleIndex));
+ });
+ document.getElementById("skogNavnInput").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("skogNavnStart").click();});
+ exit.addEventListener("click",stopGame);
+ document.addEventListener("keydown",e=>{
+  if(!root.classList.contains("aktiv"))return;
+  if(["KeyW","KeyA","KeyS","KeyD","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)){keys[e.code]=true;e.preventDefault();}
+  if(e.code==="Escape"&&document.pointerLockElement)document.exitPointerLock();
+ });
+ document.addEventListener("keyup",e=>{keys[e.code]=false;});
+ canvas.addEventListener("contextmenu",e=>e.preventDefault());
+ canvas.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="mouse"&&e.button===0){orbitDrag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);e.preventDefault();}
+ });
+ canvas.addEventListener("pointermove",e=>{
+  if(!orbitDrag||orbitDrag.id!==e.pointerId)return;
+  const dx=e.clientX-orbitDrag.x,dy=e.clientY-orbitDrag.y;orbitDrag.x=e.clientX;orbitDrag.y=e.clientY;
+  yaw-=dx*.008;pitch=Math.max(-.55,Math.min(.42,pitch-dy*.004));
+ });
+ ["pointerup","pointercancel","lostpointercapture"].forEach(name=>canvas.addEventListener(name,e=>{if(orbitDrag&&orbitDrag.id===e.pointerId)orbitDrag=null;}));
+ window.addEventListener("resize",resize);
+ joystick.addEventListener("pointerdown",e=>{
+  e.preventDefault();joystickActive=true;joyId=e.pointerId;joystick.setPointerCapture(e.pointerId);updateJoy(e);
+ });
+ joystick.addEventListener("pointermove",e=>{if(joystickActive&&e.pointerId===joyId)updateJoy(e);});
+ ["pointerup","pointercancel","lostpointercapture"].forEach(name=>joystick.addEventListener(name,()=>{
+  joystickActive=false;joyId=null;joyX=joyY=0;knob.style.transform="translate(0,0)";
+ }));
+ function updateJoy(e){
+  const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+  let x=(e.clientX-cx)/43,y=(e.clientY-cy)/43;const len=Math.hypot(x,y);if(len>1){x/=len;y/=len;}
+  joyX=x;joyY=y;knob.style.transform=`translate(${x*34}px,${y*34}px)`;
+ }
+ let rightLook=null;
+ root.addEventListener("pointerdown",e=>{
+  if(e.target.closest("#skogJoystick,#skogAvslutt"))return;
+  if(e.pointerType==="touch"&&e.clientX>innerWidth*.42){rightLook={id:e.pointerId,x:e.clientX,y:e.clientY};}
+ });
+ root.addEventListener("pointermove",e=>{
+  if(!rightLook||rightLook.id!==e.pointerId)return;
+  const dx=e.clientX-rightLook.x,dy=e.clientY-rightLook.y;rightLook.x=e.clientX;rightLook.y=e.clientY;
+  yaw-=dx*.009;pitch=Math.max(-.65,Math.min(.45,pitch-dy*.006));
+ });
+ ["pointerup","pointercancel"].forEach(name=>root.addEventListener(name,e=>{if(rightLook&&rightLook.id===e.pointerId)rightLook=null;}));
+ window.startSkogSpill=startSkogSpill;
+})();
+</script>
+
+</body></html>
