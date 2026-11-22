@@ -1289,9 +1289,10 @@ document.addEventListener("click",event=>{
  }
  
 function mat(color,roughness=1){return new THREE.MeshStandardMaterial({color,roughness});}
- const texLoader=new THREE.TextureLoader();
+ let texLoader=null;
  const tex={};
  function loadTex(key,file,repeatX=1,repeatY=1){
+  if(!texLoader)texLoader=new THREE.TextureLoader();
   const t=texLoader.load("./"+file);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(repeatX,repeatY);t.encoding=THREE.sRGBEncoding;tex[key]=t;return t;
  }
  function textured(color,key,roughness=1){return new THREE.MeshStandardMaterial({color,map:tex[key]||null,roughness});}
