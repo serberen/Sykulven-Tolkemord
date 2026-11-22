@@ -448,6 +448,25 @@ textarea{min-height:70px}
 #skogNavnFeil{min-height:22px;color:#f3a0a0;font-size:13px;margin:0 0 8px}
 #skogOnline{display:inline-block;margin-left:10px;color:#b8c6b9;font-size:11px;letter-spacing:0}
 
+
+#ulveHUD{position:absolute;top:66px;right:16px;z-index:5;padding:9px 13px;border:1px solid #d7bd7c99;border-radius:12px;background:#07111ddd;color:#fff;font-weight:900;text-align:right;pointer-events:none}
+#ulveHUD small{display:block;color:#e7c879;font-size:12px}
+#ulveShopOpen{position:absolute;top:66px;left:16px;z-index:6;border:1px solid #d7bd7c;border-radius:10px;background:#172638ed;color:#ffe6a3;padding:10px 16px;font-weight:900;cursor:pointer}
+#ulveShop{position:absolute;z-index:12;inset:8% 5%;max-width:760px;margin:auto;padding:18px;border:1px solid #d7bd7c;border-radius:18px;background:#081321f5;box-shadow:0 20px 80px #000d;overflow:auto;display:none;color:#fff}
+#ulveShop h2{margin:0 0 12px;color:#f3d58b}
+#ulveShopTabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+#ulveShopTabs button,.ulve-buy{border:1px solid #8c784d;border-radius:9px;padding:9px 12px;background:#1b2a3d;color:#fff;cursor:pointer}
+#ulveShopTabs button.active{background:#72582b}
+#ulveShopItems{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px}
+.ulve-item{padding:12px;border:1px solid #40516a;border-radius:12px;background:#122035}
+.ulve-item strong{display:block;color:#f4d88e}
+.ulve-item p{margin:5px 0 10px;font-size:13px;color:#c5d0df}
+.ulve-buy{width:100%;font-weight:800}
+.ulve-buy:disabled{opacity:.4;cursor:not-allowed}
+#ulveShopClose{float:right;border:0;background:#523b32;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer}
+#ulveToast{position:absolute;z-index:8;left:50%;bottom:18%;transform:translateX(-50%);padding:10px 16px;border-radius:10px;background:#081321ed;border:1px solid #d7bd7c;color:#fff;display:none;text-align:center;max-width:85%;pointer-events:none}
+@media(max-width:600px){#ulveHUD{top:116px;font-size:13px}#ulveShopOpen{top:116px}}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -1113,6 +1132,15 @@ document.addEventListener("click",event=>{
   </div>
  </div>
  <div id="skogTopp"><div id="skogTittel">MØRKESKOGEN · <span id="skogRolle">ROLLE</span> <small id="skogOnline">0 online</small></div><button id="skogAvslutt" type="button">← Til kortene</button></div>
+
+ <button id="ulveShopOpen" type="button">SHOP</button>
+ <div id="ulveHUD"><span>🐺 <b id="ulvePoeng">0</b> ulvepoeng</span><small>🎒 <b id="ulveInventory">0</b>/100 Rødhetter</small></div>
+ <div id="ulveToast"></div>
+ <section id="ulveShop" aria-label="Ulvebutikk">
+  <button id="ulveShopClose" type="button">Lukk ✕</button><h2>🐺 Ulvebutikken</h2>
+  <div id="ulveShopTabs"><button data-tab="våpen" class="active">Våpen</button><button data-tab="ferdigheter">Ferdigheter</button><button data-tab="spesielle">Spesielle</button></div>
+  <div id="ulveShopItems"></div>
+ </section>
  <div id="skogKryss"></div>
  <button id="skogInteract" type="button" aria-label="Interagér" title="Interagér">i</button>
  <div id="skogHjelp">WASD for å gå · Mus for å se rundt · ESC for å låse opp musen</div>
@@ -1441,6 +1469,7 @@ document.addEventListener("click",event=>{
   sprite.scale.set(2.65,.66,1);sprite.position.y=3.35;return sprite;
  }
  function buildWorld(role){
+  treeColliders.length=0;redHoods=[];drops=[];
   scene=new THREE.Scene();scene.background=new THREE.Color(0x07101b);scene.fog=new THREE.FogExp2(0x07101b,.021);
   camera=new THREE.PerspectiveCamera(72,innerWidth/innerHeight,.1,220);
   renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
@@ -1471,8 +1500,10 @@ document.addEventListener("click",event=>{
    const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.25+random()*.45,0),mat(0x202b28));
    rock.position.set((random()-.5)*360,terrainHeight((random()-.5)*360,(random()-.5)*360)+.12,(random()-.5)*360);rock.scale.y=.45;scene.add(rock);
   }
+  makeHouse();makeAgeCar();spawnRedHoods();
   player=buildPlayer(role);
   player.add(makeNameTag(myNickname,role.navn));
+  refreshHUD();
   camera.position.set(0,2.45,5);
  }
  function resize(){
@@ -1486,13 +1517,17 @@ document.addEventListener("click",event=>{
   let forward=(keys.KeyW?1:0)-(keys.KeyS?1:0)-joyY;
   let side=(keys.KeyD?1:0)-(keys.KeyA?1:0)+joyX;
   const length=Math.hypot(forward,side);if(length>1){forward/=length;side/=length;}
-  const speed=5.0;
+  if(attackCooldown>0)attackCooldown=Math.max(0,attackCooldown-dt);
+  if(progression.passive&&Math.random()<dt){addPoints(1);}
+  if(progression.breadcrumbs){crumbTimer+=dt;if(crumbTimer>5){crumbTimer=0;dropBreadcrumbs();}}
+  const speed=drivingCar?13.5:(progression.speed?7.2:5.0);
   const dx=(-Math.sin(yaw)*forward+Math.cos(yaw)*side)*speed*dt;
   const dz=(-Math.cos(yaw)*forward-Math.sin(yaw)*side)*speed*dt;
   const nextX=player.position.x+dx,nextZ=player.position.z+dz;
   const blocked=treeColliders.some(t=>Math.hypot(nextX-t.x,nextZ-t.z)<t.r);
   if(!blocked){player.position.x=nextX;player.position.z=nextZ;}
   player.position.y=terrainHeight(player.position.x,player.position.z);
+  if(drivingCar&&carGroup){carGroup.position.set(player.position.x,player.position.y,player.position.z);carGroup.rotation.y=player.rotation.y;}
   if(length>.05&&!blocked)player.rotation.y=Math.atan2(dx,dz);
   if(length>.05){
    walkTime+=dt*9;
@@ -1512,6 +1547,8 @@ document.addEventListener("click",event=>{
    player.position.z+Math.cos(yaw)*horizontal
   );
   camera.lookAt(lookTarget);
+  for(const n of redHoods){if(n.userData.lure){const vx=player.position.x-n.position.x,vz=player.position.z-n.position.z,d=Math.hypot(vx,vz);if(d>2){n.position.x+=vx/d*dt*1.8;n.position.z+=vz/d*dt*1.8;n.position.y=terrainHeight(n.position.x,n.position.z);}}n.position.y=terrainHeight(n.position.x,n.position.z)+Math.sin(time*.004+n.userData.phase)*.035;}
+  for(const d of drops){if(progression.magnet&&player.position.distanceTo(d.position)<8)collectDrop(d);}
   for(const p of remotePlayers.values()){
    p.model.position.x+=(p.targetX-p.model.position.x)*Math.min(1,dt*12);
    p.model.position.z+=(p.targetZ-p.model.position.z)*Math.min(1,dt*12);
@@ -1543,7 +1580,7 @@ document.addEventListener("click",event=>{
  }
  async function stopGame(){
   skogMusikk.pause();skogMusikk.currentTime=0;
-  root.classList.remove("aktiv","feil");document.body.style.overflow="";
+  root.classList.remove("aktiv","feil");document.body.style.overflow="";document.getElementById("ulveShop").style.display="none";
   if(heartbeatTimer)clearInterval(heartbeatTimer);heartbeatTimer=null;
   if(broadcastTimer)clearInterval(broadcastTimer);broadcastTimer=null;
   if(room){try{await room.untrack();await sb.removeChannel(room);}catch(e){}room=null;}
@@ -1553,7 +1590,7 @@ document.addEventListener("click",event=>{
   if(animationId)cancelAnimationFrame(animationId);animationId=null;
   if(document.pointerLockElement)document.exitPointerLock();
   if(renderer){renderer.dispose();renderer=null;}
-  scene=null;camera=null;player=null;keys={};joyX=joyY=0;
+  scene=null;camera=null;player=null;keys={};joyX=joyY=0;drivingCar=false;
   document.getElementById("skogNavnStart").disabled=false;
   knob.style.transform="translate(0,0)";
  }
@@ -1570,6 +1607,8 @@ document.addEventListener("click",event=>{
  document.addEventListener("keydown",e=>{
   if(!root.classList.contains("aktiv"))return;
   if(["KeyW","KeyA","KeyS","KeyD","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)){keys[e.code]=true;e.preventDefault();}
+  if(e.code==="KeyE"){interact();e.preventDefault();}
+  if(e.code==="Space"){attack();e.preventDefault();}
   if(e.code==="Escape"&&document.pointerLockElement)document.exitPointerLock();
  });
  document.addEventListener("keyup",e=>{keys[e.code]=false;});
@@ -1607,6 +1646,151 @@ document.addEventListener("click",event=>{
   yaw-=dx*.022;pitch=Math.max(-Math.PI/2+.025,Math.min(Math.PI/2-.025,pitch-dy*.014));
  });
  ["pointerup","pointercancel"].forEach(name=>root.addEventListener(name,e=>{if(rightLook&&rightLook.id===e.pointerId)rightLook=null;}));
+
+ // --- Rødhette-eventyret: lokal progresjon og 3D-objekter ---
+ const progression={points:0,inventory:0,weapon:0,speed:false,breadcrumbs:false,dash:false,magnet:false,autoDeliver:false,doublePoints:false,passive:false,ageCar:false};
+ let redHoods=[],drops=[],houseGroup=null,wolfGroup=null,carGroup=null,drivingCar=false,shopTab="våpen",lastTap=0,dashUntil=0,crumbTimer=0,attackCooldown=0;
+ const shopData={
+  "våpen":[
+   {id:"stick",name:"Trestokk",price:50,desc:"5 skade per slag."},
+   {id:"basket",name:"Matkurv med stein",price:70,desc:"10 skade per slag."},
+   {id:"sword",name:"Stort jernsverd",price:200,desc:"20 skade per slag."}
+  ],
+  "ferdigheter":[
+   {id:"speed",name:"Raskere bevegelser",price:100,desc:"Permanent høyere løpefart."},
+   {id:"breadcrumbs",name:"Brødsmuler",price:350,desc:"Legg ut smuler som lokker Rødhettene mot deg."},
+   {id:"dash",name:"Dash",price:500,desc:"Dobbeltrykk på skjermen for et langt rykk framover."},
+   {id:"magnet",name:"Ulve-magnet",price:1000,desc:"Lengre rekkevidde og automatisk opptak av beseirede Rødhetter."}
+  ],
+  "spesielle":[
+   {id:"autoDeliver",name:"Magisk levering",price:400,desc:"Rødhetter sendes automatisk til ulven etter at du beseirer dem."},
+   {id:"doublePoints",name:"Dobbel betaling",price:800,desc:"Få 20 poeng per levert Rødhette i stedet for 10."},
+   {id:"passive",name:"Ulvens sparegris",price:2000,desc:"Tjen 1 ulvepoeng automatisk hvert sekund."},
+   {id:"ageCar",name:"Åge Bil",price:5000,desc:"Lås opp den rosa bilen og kjør rundt i skogen."}
+  ]
+ };
+ const costs={stick:50,basket:70,sword:200,speed:100,breadcrumbs:350,dash:500,magnet:1000,autoDeliver:400,doublePoints:800,passive:2000,ageCar:5000};
+ const sound=(freq=220,duration=.09,type="sine")=>{try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(.08,c.currentTime);g.gain.exponentialRampToValueAtTime(.001,c.currentTime+duration);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+duration);o.onended=()=>c.close();}catch(e){}};
+ function toast(msg){const el=document.getElementById("ulveToast");if(!el)return;el.textContent=msg;el.style.display="block";clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display="none",2100);}
+ function refreshHUD(){document.getElementById("ulvePoeng").textContent=progression.points;document.getElementById("ulveInventory").textContent=progression.inventory;}
+ function makeHood(x,z){
+  const g=new THREE.Group(),red=mat(0x8f171d),cloak=mat(0x6c1119),skin=mat(0xe6b995),dark=mat(0x241b1b);
+  const body=new THREE.Mesh(new THREE.CylinderGeometry(.27,.34,.85,8),cloak);body.position.y=.8;g.add(body);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.27,12,10),skin);head.position.y=1.45;g.add(head);
+  const hood=new THREE.Mesh(new THREE.SphereGeometry(.34,12,10,0,Math.PI*2,0,Math.PI*.72),red);hood.position.y=1.53;g.add(hood);
+  const cape=new THREE.Mesh(new THREE.ConeGeometry(.48,.9,8),red);cape.position.y=.72;g.add(cape);
+  const basket=new THREE.Mesh(new THREE.BoxGeometry(.25,.2,.2),mat(0x9a6937));basket.position.set(.35,.75,.05);g.add(basket);
+  g.position.set(x,terrainHeight(x,z),z);scene.add(g);g.userData.hp=20;g.userData.maxHp=20;g.userData.alive=true;g.userData.phase=Math.random()*6;return g;
+ }
+ function makeHouse(){
+  houseGroup=new THREE.Group();const wood=mat(0x503322),wall=mat(0x9a7650),roof=mat(0x382b29);
+  const base=new THREE.Mesh(new THREE.BoxGeometry(8,4.2,6),wall);base.position.y=2.1;houseGroup.add(base);
+  const roofMesh=new THREE.Mesh(new THREE.ConeGeometry(5.5,3.2,4),roof);roofMesh.rotation.y=Math.PI/4;roofMesh.position.y=5.65;houseGroup.add(roofMesh);
+  const door=new THREE.Mesh(new THREE.BoxGeometry(1.2,2.5,.15),wood);door.position.set(0,1.25,3.08);houseGroup.add(door);
+  for(const x of [-2.4,2.4]){const win=new THREE.Mesh(new THREE.BoxGeometry(1.05,1,.12),mat(0x7798a2));win.position.set(x,2.65,3.08);houseGroup.add(win);}
+  houseGroup.position.set(0,terrainHeight(0,-11),-11);scene.add(houseGroup);
+  wolfGroup=new THREE.Group();const fur=mat(0x77736d),blanket=mat(0x8b2930),pillow=mat(0xe6d9bd);
+  const bed=new THREE.Mesh(new THREE.BoxGeometry(4.1,.45,2.6),wood);bed.position.y=.55;wolfGroup.add(bed);
+  const mattress=new THREE.Mesh(new THREE.BoxGeometry(3.8,.25,2.35),pillow);mattress.position.y=.9;wolfGroup.add(mattress);
+  const quilt=new THREE.Mesh(new THREE.BoxGeometry(2.4,.3,2.2),blanket);quilt.position.set(.55,1.12,0);wolfGroup.add(quilt);
+  const torso=new THREE.Mesh(new THREE.SphereGeometry(.7,14,10),fur);torso.scale.set(1.35,.65,.8);torso.position.set(-.55,1.45,0);wolfGroup.add(torso);
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.42,14,12),fur);head.position.set(-1.45,1.55,0);wolfGroup.add(head);
+  for(const z of [-.25,.25]){const ear=new THREE.Mesh(new THREE.ConeGeometry(.13,.42,7),fur);ear.position.set(-1.55,1.95,z);wolfGroup.add(ear);}
+  wolfGroup.position.set(0,terrainHeight(0,-11),-11);scene.add(wolfGroup);
+ }
+ function makeAgeCar(){
+  carGroup=new THREE.Group();const pink=mat(0xf39b98),glass=mat(0x69777b),black=mat(0x17191c),hair=mat(0x8a4d13);
+  const chassis=new THREE.Mesh(new THREE.BoxGeometry(2.6,.75,4.7),pink);chassis.position.y=.95;carGroup.add(chassis);
+  const cabin=new THREE.Mesh(new THREE.BoxGeometry(2.25,.9,2.5),pink);cabin.position.set(0,1.65,-.25);carGroup.add(cabin);
+  for(const z of [-.92,.82]){const w=new THREE.Mesh(new THREE.BoxGeometry(2.28,.62,.08),glass);w.position.set(0,1.7,z);carGroup.add(w);}
+  const bonnet=new THREE.Mesh(new THREE.BoxGeometry(2.35,.18,1.35),pink);bonnet.position.set(0,1.25,1.55);carGroup.add(bonnet);
+  const fringe=new THREE.Mesh(new THREE.BoxGeometry(2.2,.22,1.05),hair);fringe.position.set(0,1.43,2.05);carGroup.add(fringe);
+  for(const x of [-1.32,1.32])for(const z of [-1.5,1.5]){const wheel=new THREE.Mesh(new THREE.CylinderGeometry(.48,.48,.28,16),black);wheel.rotation.z=Math.PI/2;wheel.position.set(x,.55,z);carGroup.add(wheel);}
+  carGroup.position.set(2,terrainHeight(2,1),1);scene.add(carGroup);carGroup.visible=false;
+ }
+ function spawnRedHoods(){
+  redHoods=[];for(let i=0;i<24;i++){let x,z;do{x=(Math.random()-.5)*300;z=(Math.random()-.5)*300;}while(Math.hypot(x,z)<17);redHoods.push(makeHood(x,z));}
+ }
+ function buyUpgrade(id){
+  const item=Object.values(shopData).flat().find(v=>v.id===id);if(!item)return;
+  if(progression[id]===true|| (id==="stick"&&progression.weapon>=1)||(id==="basket"&&progression.weapon>=2)||(id==="sword"&&progression.weapon>=3)){toast("Du har allerede kjøpt denne oppgraderingen.");return;}
+  if(progression.points<item.price){toast("Du har ikke nok ulvepoeng.");return;}
+  progression.points=Math.min(5000,progression.points-item.price);
+  if(id==="stick")progression.weapon=Math.max(progression.weapon,1);
+  else if(id==="basket")progression.weapon=Math.max(progression.weapon,2);
+  else if(id==="sword")progression.weapon=3;
+  else progression[id]=true;
+  if(id==="ageCar"&&carGroup){carGroup.visible=true;toast("Åge Bil er låst opp! Gå bort til bilen og trykk E.");}
+  else toast(item.name+" kjøpt!");
+  refreshHUD();renderShop();
+ }
+ function renderShop(){
+  const box=document.getElementById("ulveShopItems");if(!box)return;
+  box.innerHTML=shopData[shopTab].map(item=>{const owned=(item.id==="stick"?progression.weapon>=1:item.id==="basket"?progression.weapon>=2:item.id==="sword"?progression.weapon>=3:progression[item.id]);return `<article class="ulve-item"><strong>${item.name} · ${item.price} poeng</strong><p>${item.desc}</p><button class="ulve-buy" data-buy="${item.id}" ${owned||progression.points<item.price?"disabled":""}>${owned?"Kjøpt": "Kjøp"}</button></article>`;}).join("");
+  box.querySelectorAll("[data-buy]").forEach(b=>b.addEventListener("click",()=>buyUpgrade(b.dataset.buy)));
+  document.querySelectorAll("#ulveShopTabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===shopTab));
+ }
+ function addPoints(n){progression.points=Math.min(5000,progression.points+n);refreshHUD();}
+ function collectDrop(drop){
+  if(!drop||!drop.userData.active)return;
+  if(progression.inventory>=100){toast("Inventory er fullt! Lever Rødhettene til ulven.");return;}
+  drop.userData.active=false;scene.remove(drop);drops=drops.filter(d=>d!==drop);progression.inventory++;refreshHUD();sound(660,.08);
+ }
+ function defeatHood(npc){
+  npc.userData.alive=false;scene.remove(npc);redHoods=redHoods.filter(n=>n!==npc);sound(95,.18,"triangle");
+  if(progression.autoDeliver){addPoints(progression.doublePoints?20:10);toast("Rødhette sendt til ulven!");return;}
+  if(progression.inventory>=100){toast("Inventory er fullt!");return;}
+  if(progression.magnet){progression.inventory++;refreshHUD();toast("Rødhette plukket opp automatisk!");return;}
+  const drop=new THREE.Group();const token=new THREE.Mesh(new THREE.BoxGeometry(.45,.18,.35),mat(0x9b2027));token.position.y=.12;drop.add(token);drop.position.copy(npc.position);scene.add(drop);drop.userData.active=true;drops.push(drop);
+ }
+ function nearestTarget(){
+  let best=null,dist=progression.magnet?5.5:3.7;
+  for(const n of redHoods){const d=player.position.distanceTo(n.position);if(d<dist){dist=d;best=n;}}
+  return best;
+ }
+ function attack(){
+  if(drivingCar){toast("Gå ut av bilen for å slåss.");return;}
+  if(attackCooldown>0)return;const n=nearestTarget();if(!n){toast("Kom nærmere en Rødhette for å slå.");return;}
+  attackCooldown=.38;const damage=[1,5,10,20][progression.weapon]||1;n.userData.hp-=damage;
+  n.rotation.y=player.rotation.y;const arm=player.userData.armR;if(arm){arm.rotation.x=-1.5;arm.rotation.z=-.4;}
+  sound(150+damage*8,.1,"sawtooth");
+  if(n.userData.hp<=0)defeatHood(n);else toast("Treff! "+n.userData.hp+" liv igjen.");
+ }
+ function interact(){
+  if(!player)return;
+  if(progression.ageCar&&carGroup&&player.position.distanceTo(carGroup.position)<4){drivingCar=!drivingCar;player.visible=!drivingCar;toast(drivingCar?"Du satte deg inn i Åge Bil! Trykk E igjen for å gå ut.":"Du gikk ut av Åge Bil.");sound(300,.12);return;}
+  if(player.position.distanceTo(wolfGroup.position)<5){
+   if(progression.inventory>0){const amount=progression.inventory;progression.inventory=0;addPoints(amount*(progression.doublePoints?20:10));toast("Ulven fikk "+amount+" Rødhetter!");sound(520,.22);refreshHUD();}
+   else toast("Den syke ulven trenger Rødhetter. Finn noen i skogen!");
+   return;
+  }
+  const drop=drops.find(d=>player.position.distanceTo(d.position)<(progression.magnet?8:3.2));
+  if(drop){collectDrop(drop);return;}
+  attack();
+ }
+ function dropBreadcrumbs(){
+  if(!progression.breadcrumbs||!scene)return;
+  const crumb=new THREE.Mesh(new THREE.SphereGeometry(.12,6,5),mat(0xc49a54));crumb.position.set(player.position.x,player.position.y+.12,player.position.z);scene.add(crumb);
+  setTimeout(()=>scene?.remove(crumb),9000);
+  redHoods.forEach(n=>{if(n.position.distanceTo(player.position)<45)n.userData.lure=true;});
+ }
+ document.getElementById("ulveShopOpen").addEventListener("click",()=>{document.getElementById("ulveShop").style.display="block";renderShop();});
+ document.getElementById("ulveShopClose").addEventListener("click",()=>document.getElementById("ulveShop").style.display="none");
+ document.querySelectorAll("#ulveShopTabs button").forEach(b=>b.addEventListener("click",()=>{shopTab=b.dataset.tab;renderShop();}));
+ document.getElementById("skogInteract").addEventListener("click",interact);
+
+ let tapStart=null;
+ canvas.addEventListener("pointerdown",e=>{tapStart={x:e.clientX,y:e.clientY,time:performance.now(),type:e.pointerType};});
+ canvas.addEventListener("pointerup",e=>{
+  if(!tapStart)return;const moved=Math.hypot(e.clientX-tapStart.x,e.clientY-tapStart.y);const elapsed=performance.now()-tapStart.time;
+  if(moved<12&&elapsed<450){
+   const now=performance.now();
+   if(progression.dash&&now-lastTap<330){dashUntil=now+260;player.position.x+=-Math.sin(yaw)*8;player.position.z+=-Math.cos(yaw)*8;sound(420,.15,"triangle");}
+   else attack();
+   lastTap=now;
+  }
+  tapStart=null;
+ });
  window.startSkogSpill=startSkogSpill;
 })();
 </script>
