@@ -508,6 +508,42 @@ textarea{min-height:70px}
 #nightPlayer.dagtid #nightPlayerDay{display:block;margin:auto}
 @media(max-width:600px){#nightPlayer{padding:20px 14px 18px}#nightPlayerCharacter{max-height:38vh;max-width:78vw}#nightPlayerControls{gap:7px}#nightPlayerControls button{min-height:54px;padding:8px 4px;font-size:15px}}
 
+
+/* Nattspiller: tilbake/avslutt og levende rolleoversikt */
+#nightPlayerTop{width:100%;display:grid;grid-template-columns:56px minmax(0,1fr) 56px;align-items:center;gap:12px;position:relative;z-index:2}
+#nightPlayerTitle{grid-column:2;grid-row:1}
+#nightPlayerExit,#nightPlayerRosterToggle{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 4px 14px #0009}
+#nightPlayerExit{grid-column:1;grid-row:1;background:#a91524;border:3px solid #ff555d;color:#fff;font:1000 38px/1 system-ui;text-shadow:0 2px 4px #400}
+#nightPlayerExit:hover{background:#d51c31}
+#nightPlayerRosterToggle{grid-column:3;grid-row:1;background:#f4d34d;border:3px solid #ffe98c}
+#nightPlayerRosterToggle[hidden]{display:none}
+.skull-disc{width:38px;height:38px;border-radius:50%;background:#13b9c6;display:grid;place-items:center;border:2px solid #fff}
+.skull-disc svg{width:30px;height:30px;display:block}
+#nightPlayerControls #nightPlayerBack{border-color:#e2c64e;color:#ffe36a}
+#nightPlayerRoster{position:fixed;z-index:5;top:0;right:0;bottom:0;width:min(390px,92vw);padding:18px 16px 22px;background:#f4d34d;color:#171717;box-shadow:-14px 0 38px #0009;transform:translateX(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;text-align:left}
+#nightPlayerRoster.open{transform:translateX(0)}
+.roster-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;margin:0 0 14px}
+.roster-head h2{grid-column:2;margin:0;text-align:center;color:#171717;font-size:clamp(20px,4vw,27px);font-weight:1000}
+#nightPlayerRosterClose{grid-column:1;width:42px;height:42px;border:0;border-radius:9px;background:#171717;color:#fff;font-size:29px;font-weight:1000;line-height:1;cursor:pointer}
+#nightPlayerRosterItems{overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;padding:3px 2px 16px}
+.roster-role{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:7px 7px 9px;border:3px solid #29251b;border-radius:11px;background:#fff0b0;color:#171717;font:900 13px/1.15 system-ui;cursor:pointer;min-width:0;overflow:hidden}
+.roster-role img{display:block;width:100%;aspect-ratio:.78;object-fit:cover;border-radius:5px;transition:filter .25s,transform .35s}
+.roster-role span{display:block;text-align:center;overflow-wrap:anywhere}
+.roster-role.dead{border:4px solid #c81022;background:#f3b5ad;box-shadow:0 0 0 2px #6b0b14}
+.roster-role.dead img{filter:grayscale(1) contrast(.9);opacity:.78}
+.roster-role .rip{position:absolute;top:9px;left:50%;transform:translateX(-50%) rotate(-9deg);padding:5px 12px;background:#a80016;color:#fff;border:2px solid #fff;font-size:19px;font-weight:1000;letter-spacing:.1em;text-shadow:0 1px 3px #000;box-shadow:0 2px 8px #0009}
+@keyframes kortOppstandelse{0%{transform:translateY(28px) scale(.78);filter:grayscale(1) brightness(.5);opacity:.2}35%{transform:translateY(-18px) scale(1.08);filter:brightness(1.8) drop-shadow(0 0 18px #fff7b0);opacity:1}65%{transform:translateY(5px) scale(.98);filter:brightness(1.35) drop-shadow(0 0 13px #fff2a0)}100%{transform:translateY(0) scale(1);filter:none;opacity:1}}
+.roster-role.resurrecting img{animation:kortOppstandelse .85s cubic-bezier(.2,.8,.2,1) both}
+.roster-role.resurrecting{animation:kortOppstandelse .85s ease-out both}
+@media(max-width:600px){
+ #nightPlayerTop{grid-template-columns:46px minmax(0,1fr) 46px;gap:7px}
+ #nightPlayerExit,#nightPlayerRosterToggle{width:44px;height:44px}
+ .skull-disc{width:33px;height:33px}
+ .skull-disc svg{width:26px;height:26px}
+ #nightPlayerRoster{width:min(350px,94vw);padding:14px 11px}
+ #nightPlayerRosterItems{gap:8px}
+}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
@@ -544,18 +580,37 @@ textarea{min-height:70px}
 <div id="nightPhaseList" class="night-phase-list"></div>
 </section>
 <div id="nightPlayer" aria-live="polite">
- <h1 id="nightPlayerTitle">Natt 1</h1>
+ <div id="nightPlayerTop">
+  <button id="nightPlayerExit" type="button" aria-label="Stopp natten og gå til hovedmenyen" title="Avslutt natten">×</button>
+  <h1 id="nightPlayerTitle">Natt 1</h1>
+  <button id="nightPlayerRosterToggle" type="button" aria-label="Vis roller i spill" title="Roller i spill">
+   <span class="skull-disc" aria-hidden="true">
+    <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+     <path fill="#fff" d="M32 5C17 5 7 16 7 31c0 9 4 15 11 20v7c0 2 2 3 4 3h20c2 0 4-1 4-3v-7c7-5 11-11 11-20C57 16 47 5 32 5Z"/>
+     <ellipse cx="22" cy="29" rx="6" ry="8" fill="#13b9c6"/><ellipse cx="42" cy="29" rx="6" ry="8" fill="#13b9c6"/>
+     <path fill="#13b9c6" d="m32 34-5 8h10zM23 48h18v5H23zM27 48v8h4v-8zm8 0v8h4v-8z"/>
+    </svg>
+   </span>
+  </button>
+ </div>
  <div id="nightPlayerMain">
   <img id="nightPlayerCharacter" alt="" />
-  <p id="nightPlayerText">Alle lukker øynene.</p>
+  <p id="nightPlayerText">Alle sammen, lukk øynene</p>
   <div id="nightPlayerTimer" aria-label="Nedtelling"></div>
  </div>
  <div id="nightPlayerDay">Det er dagtid og tid for diskusjon!</div>
  <div id="nightPlayerControls">
-  <button id="nightPlayerStop" type="button">Stopp</button>
+  <button id="nightPlayerBack" type="button">← Tilbake</button>
   <button id="nightPlayerPause" type="button">Pause</button>
   <button id="nightPlayerNext" type="button">Neste</button>
  </div>
+ <aside id="nightPlayerRoster" aria-hidden="true">
+  <div class="roster-head">
+   <button id="nightPlayerRosterClose" type="button" aria-label="Skjul roller">←</button>
+   <h2>Roller i spill</h2>
+  </div>
+  <div id="nightPlayerRosterItems"></div>
+ </aside>
 </div>
 <section id="settingsSide" class="panel hidden">
 <div class="actions"><button class="action" id="settingsBack" type="button">← Tilbake</button></div>
@@ -870,7 +925,8 @@ async function hentFaseLydklipp(id){
  return standard[id]?{url:standard[id],navn:standard[id]}:null;
 }
 async function slettLydklipp(id){const db=await hentLydDatabase();return new Promise((resolve,reject)=>{const tx=db.transaction("klipp","readwrite");tx.objectStore("klipp").delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});}
-function harValgtRolle(navn){return roller.some((r,i)=>r.navn.toLowerCase()===navn.toLowerCase()&&valgt.has(i));}
+const dødeRoller=new Set();
+function harValgtRolle(navn){return roller.some((r,i)=>r.navn.toLowerCase()===navn.toLowerCase()&&valgt.has(i)&&!dødeRoller.has(i));}
 function nattensRoller(natt){
  return natt.roller.filter(p=>{
   if(p.startfase||p.endfase)return true;
@@ -933,6 +989,46 @@ async function spillFil(file,navn){
  try{await lyd.play();const ok=await ventPaaLyd(lyd);if(!egenUrl)URL.revokeObjectURL(url);if(!ok)throw new Error("Lydfilen kunne ikke spilles av.");return true;}
  catch(e){if(!egenUrl)URL.revokeObjectURL(url);$("sekvensStatus").textContent="Feil ved avspilling av "+navn+": "+e.message;return false;}
 }
+
+function rolleVisningsnavn(index){
+ const r=roller[index],samme=[...valgt].filter(i=>roller[i].navn===r.navn).sort((a,b)=>a-b);
+ return samme.length>1?r.navn+" "+(samme.indexOf(index)+1):r.navn;
+}
+function tegnRolleoversikt(oppstandelseIndex=null){
+ const holder=$("nightPlayerRosterItems");if(!holder)return;holder.innerHTML="";
+ [...valgt].sort((a,b)=>a-b).forEach(index=>{
+  const r=roller[index],død=dødeRoller.has(index),knapp=document.createElement("button");
+  knapp.type="button";knapp.className="roster-role"+(død?" dead":"")+(index===oppstandelseIndex?" resurrecting":"");
+  knapp.dataset.roleIndex=String(index);knapp.setAttribute("aria-pressed",String(død));
+  const img=document.createElement("img");img.src=r.bilde;img.alt=r.navn;img.loading="lazy";
+  const navn=document.createElement("span");navn.textContent=rolleVisningsnavn(index);
+  knapp.append(img,navn);
+  if(død){const rip=document.createElement("strong");rip.className="rip";rip.textContent="RIP";knapp.append(rip);}
+  knapp.addEventListener("click",()=>toggleDødRolle(index));
+  holder.append(knapp);
+ });
+}
+function toggleRolleoversikt(){
+ const drawer=$("nightPlayerRoster"),open=!drawer.classList.contains("open");
+ drawer.classList.toggle("open",open);drawer.setAttribute("aria-hidden",String(!open));
+}
+function toggleDødRolle(index){
+ if(dødeRoller.has(index)){
+  dødeRoller.delete(index);tegnRolleoversikt(index);
+ }else{
+  dødeRoller.add(index);tegnRolleoversikt();
+ }
+ playerHoppOverDødAktivRolle();
+}
+function playerFaseLever(p){if(!p||p.startfase||p.endfase)return true;if(p.rolle==="Syk ulv")return harValgtRolle("Syk Ulven");return harValgtRolle(p.rolle);}
+function playerHoppOverDødAktivRolle(){
+ if(!playerRunning||playerPaused)return;
+ const current=playerSteps[playerIndex];if(!current?.p||playerFaseLever(current.p))return;
+ const id=current.p.id;playerStopAudio();playerClearTimer();playerWaitRemaining=0;
+ while(playerIndex<playerSteps.length&&playerSteps[playerIndex].p?.id===id)playerIndex++;
+ playerRunCurrent();
+}
+
 // Avspilleren bygges som en kø av lyd- og ventetrinn. Neste-knappen hopper ett trinn videre.
 let playerSteps=[],playerIndex=0,playerRunning=false,playerPaused=false,playerTimer=null,playerAudio=null,playerNightFinished=false,playerWaitRemaining=0,playerGeneration=0;
 const rolleBilder={
@@ -954,12 +1050,12 @@ function playerVis(p,tekst,visBilde=true){
  if(src){img.src=src;img.alt=p.rolle;img.style.display="block";}else{img.removeAttribute("src");img.alt="";img.style.display="none";}
  $("nightPlayerTimer").textContent="";
 }
-function playerLeggTilLyd(url,navn,p,tekst){playerSteps.push({type:"audio",url,navn,p,tekst});}
-function playerLeggTilVent(sek,p,tekst){playerSteps.push({type:"wait",sek,p,tekst});}
+function playerLeggTilLyd(url,navn,p,tekst,meta={}){playerSteps.push({type:"audio",url,navn,p,tekst,...meta});}
+function playerLeggTilVent(sek,p,tekst,meta={}){playerSteps.push({type:"wait",sek,p,tekst,...meta});}
 async function byggPlayerSteps(){
  const natt=aktivNatt(),faser=nattensRoller(natt);playerSteps=[];
  for(const p of faser){
-  if(p.startfase){let f=null;try{f=await hentFaseLydklipp(p.id);}catch(e){};if(f)playerLeggTilLyd(f.url||URL.createObjectURL(f.blob),"Start",null,p.tekst);playerLeggTilVent(5,null,p.tekst);continue;}
+  if(p.startfase){let f=null;try{f=await hentFaseLydklipp(p.id);}catch(e){};if(f)playerLeggTilLyd(f.url||URL.createObjectURL(f.blob),"Start",null,p.tekst,{startfase:true});playerLeggTilVent(5,null,p.tekst,{startfase:true});continue;}
   if(p.endfase){let f=null;try{f=await hentFaseLydklipp(p.id);}catch(e){};if(f)playerLeggTilLyd(f.url||URL.createObjectURL(f.blob),"Slutt",null,p.tekst);continue;}
   const tekster=playerDelTekst(p);
   const addDirect=(file,tekst)=>playerLeggTilLyd(file,p.rolle,p,tekst);
@@ -983,11 +1079,18 @@ async function byggPlayerSteps(){
 }
 function playerStopAudio(){if(playerAudio){try{playerAudio.pause();playerAudio.currentTime=0;}catch(e){}playerAudio=null;}}
 function playerClearTimer(){if(playerTimer){clearInterval(playerTimer);playerTimer=null;}}
+let playerStartBackCooldownUntil=0;
 function playerCompleteNight(){playerRunning=false;playerPaused=false;playerNightFinished=true;playerStopAudio();playerClearTimer();stoppBakgrunnsmusikk();$("nightPlayer").classList.add("dagtid");$("nightPlayerTitle").textContent="Natt "+nattNummer;$("nightPlayerNext").textContent=nattNummer<MAKS_NETTER?"Natt "+(nattNummer+1)+"  →":"Til kortene  →";$("nightPlayerPause").disabled=true;$("nightPlayerTimer").textContent="";}
 function playerRunCurrent(){
  if(!playerRunning||playerPaused)return;
+ while(playerIndex<playerSteps.length&&playerSteps[playerIndex].p&&!playerFaseLever(playerSteps[playerIndex].p)){
+  const deadId=playerSteps[playerIndex].p.id;
+  while(playerIndex<playerSteps.length&&playerSteps[playerIndex].p?.id===deadId)playerIndex++;
+ }
  if(playerIndex>=playerSteps.length){playerCompleteNight();return;}
- const step=playerSteps[playerIndex];playerVis(step.p,step.type==="wait"?"":step.tekst,!!step.p);
+ const step=playerSteps[playerIndex];
+ if(step.startfase&&nattNummer>1)playerStartBackCooldownUntil=Date.now()+2000;
+ playerVis(step.p,step.type==="wait"?"":step.tekst,!!step.p);
  if(step.type==="wait"){
   let left=playerWaitRemaining||step.sek;playerWaitRemaining=left;$("nightPlayerTimer").textContent=String(left);
   playerTimer=setInterval(()=>{if(!playerRunning||playerPaused)return;left--;playerWaitRemaining=left;$("nightPlayerTimer").textContent=left>0?String(left):"";if(left<=0){playerWaitRemaining=0;playerClearTimer();playerIndex++;playerRunCurrent();}},1000);
@@ -1000,9 +1103,11 @@ function playerRunCurrent(){
 }
 async function spillHeleNatten(){
  if(playerRunning)return;
- playerNightFinished=false;playerPaused=false;playerRunning=true;playerIndex=0;playerWaitRemaining=0;const generation=++playerGeneration;
+ playerNightFinished=false;playerPaused=false;playerRunning=true;playerIndex=0;playerWaitRemaining=0;playerStartBackCooldownUntil=0;const generation=++playerGeneration;
  $("nightPlayer").classList.remove("dagtid");$("nightPlayer").classList.add("aktiv");$("nightPlayerTitle").textContent="Natt "+nattNummer;
+ $("nightPlayerRosterToggle").hidden=nattNummer<2;
  $("nightPlayerPause").disabled=false;$("nightPlayerPause").textContent="Pause";$("nightPlayerNext").textContent="Neste";
+ tegnRolleoversikt();
  await byggPlayerSteps();if(generation!==playerGeneration||!playerRunning)return;if(!playerPaused)startBakgrunnsmusikk();playerRunCurrent();
 }
 function playerPauseToggle(){
@@ -1019,7 +1124,23 @@ function playerNext(){
  if(!playerRunning)return;
  playerStopAudio();playerClearTimer();playerWaitRemaining=0;playerIndex++;if(playerPaused){playerPaused=false;$("nightPlayerPause").textContent="Pause";}playerRunCurrent();
 }
-function playerStop(){playerGeneration++;playerRunning=false;playerPaused=false;playerNightFinished=false;playerStopAudio();playerClearTimer();stoppBakgrunnsmusikk();$("nightPlayer").classList.remove("aktiv","dagtid");avbrytSekvens("Avspillingen er stoppet.");nattNummer=1;valgtNatt=0;renderNatt();$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden");}
+function playerPrevious(){
+ const current=playerSteps[playerIndex];
+ if(current?.startfase&&nattNummer>1){
+  if(Date.now()<playerStartBackCooldownUntil)return;
+  playerGeneration++;playerRunning=false;playerPaused=false;playerNightFinished=false;playerStopAudio();playerClearTimer();playerWaitRemaining=0;stoppBakgrunnsmusikk();
+  nattNummer=Math.max(1,nattNummer-1);valgtNatt=Math.min(nattNummer-1,2);renderNatt();$("nightPlayer").classList.remove("dagtid");spillHeleNatten();return;
+ }
+ if(playerNightFinished){
+  playerNightFinished=false;playerRunning=true;playerPaused=false;playerIndex=Math.max(0,playerSteps.length-1);playerWaitRemaining=0;
+  $("nightPlayer").classList.remove("dagtid");$("nightPlayerPause").disabled=false;$("nightPlayerPause").textContent="Pause";playerRunCurrent();return;
+ }
+ if(!playerRunning||playerIndex<=0)return;
+ playerStopAudio();playerClearTimer();playerWaitRemaining=0;playerIndex--;
+ if(playerPaused){playerPaused=false;$("nightPlayerPause").textContent="Pause";}
+ playerRunCurrent();
+}
+function playerStop(){playerGeneration++;playerRunning=false;playerPaused=false;playerNightFinished=false;playerStopAudio();playerClearTimer();stoppBakgrunnsmusikk();$("nightPlayer").classList.remove("aktiv","dagtid");$("nightPlayerRoster").classList.remove("open");$("nightPlayerRoster").setAttribute("aria-hidden","true");$("nightPlayerRosterToggle").hidden=true;avbrytSekvens("Avspillingen er stoppet.");nattNummer=1;valgtNatt=0;dødeRoller.clear();renderNatt();$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden");}
 async function spillEnkeltKlipp(id,navn){
  avbrytSekvens();try{const file=await hentFaseLydklipp(id);if(!file){$("sekvensStatus").textContent="Du må laste opp en lydfil for "+navn+" først.";return;}const url=file.url||URL.createObjectURL(file.blob);lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;await lyd.play();$("sekvensStatus").textContent="Spiller: "+navn;}catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydklippet: "+e.message;}
 }
@@ -1158,14 +1279,17 @@ async function spillHeleSekvensen(){
  }
  if(token===sekvensToken){sekvensAktiv=false;stoppBakgrunnsmusikk();$("stoppLydKnapp").disabled=true;$("sekvensStatus").textContent="Opplesningen er ferdig.";}
 }
-$("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";valgtNatt=0;nattNummer=1;renderNatt();oppdaterLydinnstillinger();spillHeleNatten();};
+$("startKnapp").onclick=()=>{$("valgSide").classList.add("hidden");$("spillSide").classList.remove("hidden");$("spillAntall").textContent=valgt.size+" kort valgt";dødeRoller.clear();valgtNatt=0;nattNummer=1;renderNatt();oppdaterLydinnstillinger();spillHeleNatten();};
 $("tilbakeKnapp").onclick=()=>{playerStop();};
 document.querySelectorAll("#nightTabs button").forEach(button=>button.addEventListener("click",()=>visNatt(Number(button.dataset.night))));
 $("playNightButton").onclick=spillHeleNatten;
 $("stopNightButton").onclick=()=>avbrytSekvens("Avspillingen er stoppet.");
-$("nightPlayerStop").onclick=playerStop;
+$("nightPlayerExit").onclick=playerStop;
+$("nightPlayerBack").onclick=playerPrevious;
 $("nightPlayerPause").onclick=playerPauseToggle;
 $("nightPlayerNext").onclick=playerNext;
+$("nightPlayerRosterToggle").onclick=toggleRolleoversikt;
+$("nightPlayerRosterClose").onclick=toggleRolleoversikt;
 tegnKort();
 kobleLydkontroller();
 
