@@ -940,8 +940,16 @@ const rolleBilder={
  "Frimurer":"frimurer.webp","Dulter":"dulter.webp","Synsk":"synsk.webp","Paranormal etterforsker":"paranormal-etterforsker.webp",
  "Røver":"rover.webp","Bråkmaker":"brakmaker.webp","Beruset":"beruset.webp","Avslører":"avslo-rer.webp","Søvnløs":"sovnlos.webp","Rimmi":"rimmi.webp"
 };
+function playerRensTekst(tekst){
+ return String(tekst||"").replace(/[«»“”„"]/g,"").trim();
+}
+function playerDelTekst(p){
+ const linjer=String(p?.tekst||"").split(/\n/).map(playerRensTekst).filter(Boolean);
+ return {vakne:linjer[0]||"",lukke:linjer[1]||""};
+}
 function playerVis(p,tekst,visBilde=true){
- $("nightPlayerText").textContent=tekst||"";
+ // Vis bare ren transkripsjon – ingen anførselstegn.
+ $("nightPlayerText").textContent=playerRensTekst(tekst);
  const img=$("nightPlayerCharacter"),src=visBilde&&p?rolleBilder[p.rolle]:null;
  if(src){img.src=src;img.alt=p.rolle;img.style.display="block";}else{img.removeAttribute("src");img.alt="";img.style.display="none";}
  $("nightPlayerTimer").textContent="";
@@ -953,19 +961,20 @@ async function byggPlayerSteps(){
  for(const p of faser){
   if(p.startfase){let f=null;try{f=await hentFaseLydklipp(p.id);}catch(e){};if(f)playerLeggTilLyd(f.url||URL.createObjectURL(f.blob),"Start",null,p.tekst);playerLeggTilVent(5,null,p.tekst);continue;}
   if(p.endfase){let f=null;try{f=await hentFaseLydklipp(p.id);}catch(e){};if(f)playerLeggTilLyd(f.url||URL.createObjectURL(f.blob),"Slutt",null,p.tekst);continue;}
-  const addDirect=(file)=>playerLeggTilLyd(file,p.rolle,p,p.tekst);
+  const tekster=playerDelTekst(p);
+  const addDirect=(file,tekst)=>playerLeggTilLyd(file,p.rolle,p,tekst);
   if(p.id==="vokter"){
-   addDirect("./vokter-nattinstruksjon.wav");playerLeggTilVent(lydinnstillinger.pauseSekunder,p,p.tekst);addDirect("./vokter-lukk-oynene.wav");
+   addDirect("./vokter-nattinstruksjon.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./vokter-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="frimurer"||p.id==="avsloerer"){
-   const pre=p.id==="frimurer"?"frimurer":"avsloerer";addDirect("./"+pre+"-vakne.wav");playerLeggTilVent(lydinnstillinger.pauseSekunder,p,p.tekst);addDirect("./"+pre+"-lukk-oynene.wav");
+   const pre=p.id==="frimurer"?"frimurer":"avsloerer";addDirect("./"+pre+"-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./"+pre+"-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="beruset"||p.id==="beruset_n2"){
-   addDirect(p.id==="beruset_n2"?"./beruset-vakne-natt2.wav":"./beruset-vakne.wav");playerLeggTilVent(lydinnstillinger.pauseSekunder,p,p.tekst);addDirect("./beruset-lukk-oynene.wav");
+   addDirect(p.id==="beruset_n2"?"./beruset-vakne-natt2.wav":"./beruset-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./beruset-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="braakmaker"){
-   addDirect("./braakmaker-vakne.wav");playerLeggTilVent(lydinnstillinger.pauseSekunder,p,p.tekst);addDirect("./braakmaker-lukk-oynene.wav");
+   addDirect("./braakmaker-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./braakmaker-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="sovnlos"){
-   addDirect("./sovnlos-vakne.wav");playerLeggTilVent(lydinnstillinger.pauseSekunder,p,p.tekst);addDirect("./sovnlos-lukk-oynene.wav");
+   addDirect("./sovnlos-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./sovnlos-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="rimmi_n2"||p.id==="rimmi_n3"){
-   addDirect("./rimmi-vakne.wav");playerLeggTilVent(lydinnstillinger.pauseSekunder,p,p.tekst);addDirect("./rimmi-lukk-oynene.wav");
+   addDirect("./rimmi-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./rimmi-lukk-oynene.wav",tekster.lukke);
   }else{
    let f=null;try{f=await hentLydklipp(p.id);}catch(e){};if(f)playerLeggTilLyd(URL.createObjectURL(f.blob),p.rolle,p,p.tekst);
   }
