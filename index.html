@@ -1166,7 +1166,7 @@ function playerRunCurrent(){
  if(playerIndex>=playerSteps.length){playerCompleteNight();return;}
  const step=playerSteps[playerIndex];
  const hopperHeleNattTilbake=!!(step.startfase&&nattNummer>1);
- $("nightPlayerBack").textContent=hopperHeleNattTilbake?"Natt "+(nattNummer-1)+"  →":"Forrige";
+ $("nightPlayerBack").textContent=hopperHeleNattTilbake?"←  Natt "+(nattNummer-1):"Forrige";
  if(hopperHeleNattTilbake)playerStartBackCooldownUntil=Date.now()+2000;
  playerVis(step.p,step.type==="wait"?"":step.tekst,!!step.p);
  if(step.type==="wait"){
