@@ -915,7 +915,7 @@ async function spillHeleNatten(){
   const p=phases[i];let file;
   try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
   if(token!==sekvensToken)break;
-  if(!file&&p.id!=="frimurer"&&p.id!=="vokter"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
+  if(!file&&p.id!=="frimurer"&&p.id!=="vokter"&&p.id!=="avsloerer"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
   let ok=true;
   if(p.id==="vokter"){
    const instruction={url:"./vokter-nattinstruksjon.wav"};
@@ -927,14 +927,16 @@ async function spillHeleNatten(){
    const close={url:"./vokter-lukk-oynene.wav"};
    ok=await spillFil(close,"Vokter – lukk øynene igjen");
    if(!ok)break;
-  }else if(p.id==="frimurer"){
-   const wake=new Audio("./frimurer-vakne.wav");wake.volume=lydinnstillinger.stemmeVolum;
+  }else if(p.id==="frimurer"||p.id==="avsloerer"){
+   const rolleNavn=p.id==="frimurer"?"Frimurerne":"Avslører";
+   const filPrefiks=p.id==="frimurer"?"frimurer":"avsloerer";
+   const wake=new Audio("./"+filPrefiks+"-vakne.wav");wake.volume=lydinnstillinger.stemmeVolum;
    try{await wake.play();ok=await ventPaaLyd(wake);}catch(e){ok=false;}
    if(!ok)break;
    if(token!==sekvensToken)break;
-   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Frimurerne utfører handlingen. Lukk øynene om {sek} sekunder …");
+   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,rolleNavn+" utfører handlingen. Lukk øynene om {sek} sekunder …");
    if(!ventet)break;
-   const close=new Audio("./frimurer-lukk-oynene.wav");close.volume=lydinnstillinger.stemmeVolum;
+   const close=new Audio("./"+filPrefiks+"-lukk-oynene.wav");close.volume=lydinnstillinger.stemmeVolum;
    try{await close.play();ok=await ventPaaLyd(close);}catch(e){ok=false;}
    if(!ok)break;
   }else{
@@ -1023,7 +1025,7 @@ function spillVokterOpplesning(fil){
  lydklipp.play().catch(()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;});
 }
 function stoppRolleopplesning(navn){
- if(navn==="Emo"||navn==="Frimurer")stoppEmoOpplesning();
+ if(navn==="Emo"||navn==="Frimurer"||navn==="Avslører")stoppEmoOpplesning();
  if(navn==="Vokter")stoppVokterOpplesning();
 }
 function spillKortrolleopplesning(navn,type){
@@ -1031,6 +1033,8 @@ function spillKortrolleopplesning(navn,type){
   spillEmoOpplesning(type==="info"?"./emo-info-v2.wav?rev=2":"./emo-rollevalg-v2.wav");
  }else if(navn==="Frimurer"){
   spillFrimurerOpplesning(type);
+ }else if(navn==="Avslører"){
+  spillEmoOpplesning(type==="info"?"./avsloerer-info.wav":"./avsloerer-rolle.wav");
  }else if(navn==="Vokter"){
   spillVokterOpplesning(type==="info"?"./vokter-info.wav":"./vokter-rollevalg.wav");
  }
