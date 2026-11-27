@@ -555,6 +555,9 @@ textarea{min-height:70px}
  background:#f4d34d;border:3px solid #ffe98c;box-shadow:0 4px 16px #000b;
 }
 #nightPlayerRosterToggle[hidden]{display:none !important}
+#nightPlayerExit{background:transparent !important;border:0 !important;box-shadow:none !important;padding:3px !important}
+#nightPlayerExit:hover{background:transparent !important;filter:brightness(1.2)}
+#nightPlayerExit svg{display:block;width:100%;height:100%}
 #nightPlayer.aktiv ~ #nightPlayerRosterToggle{display:grid}
 #nightPlayerRosterToggle .skull-disc{width:38px;height:38px;border-radius:50%;background:#13b9c6;display:grid;place-items:center;border:2px solid #fff}
 #nightPlayerRosterToggle .skull-disc svg{width:30px;height:30px;display:block}
@@ -613,7 +616,9 @@ body.night-player-active .info-audio-toggle{display:none}
 </section>
 <div id="nightPlayer" aria-live="polite">
  <div id="nightPlayerTop">
-  <button id="nightPlayerExit" type="button" aria-label="Stopp natten og gå til hovedmenyen" title="Avslutt natten">×</button>
+  <button id="nightPlayerExit" type="button" aria-label="Stopp natten og gå til hovedmenyen" title="Avslutt natten">
+   <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" fill="none" stroke="#ff1018" stroke-width="4.5"/><path d="M20 20 44 44M44 20 20 44" fill="none" stroke="#ff1018" stroke-width="6.5" stroke-linecap="square"/></svg>
+  </button>
   <h1 id="nightPlayerTitle">Natt 1</h1>
  </div>
  <div id="nightPlayerMain">
@@ -623,7 +628,7 @@ body.night-player-active .info-audio-toggle{display:none}
  </div>
  <div id="nightPlayerDay">Det er dagtid og tid for diskusjon!</div>
  <div id="nightPlayerControls">
-  <button id="nightPlayerBack" type="button">← Tilbake</button>
+  <button id="nightPlayerBack" type="button">Forrige</button>
   <button id="nightPlayerPause" type="button">Pause</button>
   <button id="nightPlayerNext" type="button">Neste</button>
  </div>
@@ -1103,7 +1108,7 @@ async function byggPlayerSteps(){
 function playerStopAudio(){if(playerAudio){try{playerAudio.pause();playerAudio.currentTime=0;}catch(e){}playerAudio=null;}}
 function playerClearTimer(){if(playerTimer){clearInterval(playerTimer);playerTimer=null;}}
 let playerStartBackCooldownUntil=0;
-function playerCompleteNight(){playerRunning=false;playerPaused=false;playerNightFinished=true;playerStopAudio();playerClearTimer();stoppBakgrunnsmusikk();$("nightPlayer").classList.add("dagtid");$("nightPlayerTitle").textContent="Natt "+nattNummer;$("nightPlayerNext").textContent=nattNummer<MAKS_NETTER?"Natt "+(nattNummer+1)+"  →":"Til kortene  →";$("nightPlayerPause").disabled=true;$("nightPlayerTimer").textContent="";}
+function playerCompleteNight(){$("nightPlayerBack").textContent="Forrige";playerRunning=false;playerPaused=false;playerNightFinished=true;playerStopAudio();playerClearTimer();stoppBakgrunnsmusikk();$("nightPlayer").classList.add("dagtid");$("nightPlayerTitle").textContent="Natt "+nattNummer;$("nightPlayerNext").textContent=nattNummer<MAKS_NETTER?"Natt "+(nattNummer+1)+"  →":"Til kortene  →";$("nightPlayerPause").disabled=true;$("nightPlayerTimer").textContent="";}
 function playerRunCurrent(){
  if(!playerRunning||playerPaused)return;
  while(playerIndex<playerSteps.length&&playerSteps[playerIndex].p&&!playerFaseLever(playerSteps[playerIndex].p)){
@@ -1112,7 +1117,9 @@ function playerRunCurrent(){
  }
  if(playerIndex>=playerSteps.length){playerCompleteNight();return;}
  const step=playerSteps[playerIndex];
- if(step.startfase&&nattNummer>1)playerStartBackCooldownUntil=Date.now()+2000;
+ const hopperHeleNattTilbake=!!(step.startfase&&nattNummer>1);
+ $("nightPlayerBack").textContent=hopperHeleNattTilbake?"Natt "+(nattNummer-1)+"  →":"Forrige";
+ if(hopperHeleNattTilbake)playerStartBackCooldownUntil=Date.now()+2000;
  playerVis(step.p,step.type==="wait"?"":step.tekst,!!step.p);
  if(step.type==="wait"){
   let left=playerWaitRemaining||step.sek;playerWaitRemaining=left;$("nightPlayerTimer").textContent=String(left);
@@ -1128,7 +1135,7 @@ async function spillHeleNatten(){
  if(playerRunning)return;
  playerNightFinished=false;playerPaused=false;playerRunning=true;playerIndex=0;playerWaitRemaining=0;playerStartBackCooldownUntil=0;const generation=++playerGeneration;
  $("nightPlayer").classList.remove("dagtid");$("nightPlayer").classList.add("aktiv");document.body.classList.add("night-player-active");$("nightPlayerTitle").textContent="Natt "+nattNummer;
- $("nightPlayerRosterToggle").hidden=nattNummer<2;
+ $("nightPlayerRosterToggle").hidden=false;
  $("nightPlayerPause").disabled=false;$("nightPlayerPause").textContent="Pause";$("nightPlayerNext").textContent="Neste";
  tegnRolleoversikt();
  await byggPlayerSteps();if(generation!==playerGeneration||!playerRunning)return;if(!playerPaused)startBakgrunnsmusikk();playerRunCurrent();
@@ -1318,7 +1325,16 @@ kobleLydkontroller();
 
 // Innstillingsknappen blir et hjem-symbol mens innstillingene er åpne.
 let sideForInnstillinger="valgSide";
+let playerPausedBySettings=false;
 const settingsToggle=$("settingsToggle");
+function pausePlayerForSettings(){
+ playerPausedBySettings=false;
+ if(playerRunning&&!playerPaused){playerPauseToggle();playerPausedBySettings=true;}
+}
+function resumePlayerAfterSettings(){
+ if(playerPausedBySettings&&playerRunning&&playerPaused)playerPauseToggle();
+ playerPausedBySettings=false;
+}
 function oppdaterInnstillingsikon(){
  const iInnstillinger=!$("settingsSide").classList.contains("hidden");
  settingsToggle.innerHTML=iInnstillinger
@@ -1333,8 +1349,11 @@ settingsToggle.addEventListener("click",event=>{
   // Tilbakepilen returnerer til siden som var åpen før innstillingene.
   $("settingsSide").classList.add("hidden");
   $(sideForInnstillinger).classList.remove("hidden");
+  resumePlayerAfterSettings();
  }else{
-  // Når kortvelgeren forlates, stopp alle opplesninger og UI-lyder fra startmenyen.
+  // Sett nattavspilleren helt på pause mens innstillingene er åpne.
+  pausePlayerForSettings();
+  // Stopp også eventuelle opplesninger og UI-lyder fra startmenyen.
   stoppAlleStartmenyLyder();
   sideForInnstillinger=$("spillSide").classList.contains("hidden")?"valgSide":"spillSide";
   $("valgSide").classList.add("hidden");
@@ -1347,6 +1366,7 @@ $("settingsBack").addEventListener("click",event=>{
  event.preventDefault();event.stopPropagation();
  $("settingsSide").classList.add("hidden");
  $(sideForInnstillinger).classList.remove("hidden");
+ resumePlayerAfterSettings();
  oppdaterInnstillingsikon();
 });
 
