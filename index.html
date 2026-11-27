@@ -519,21 +519,21 @@ textarea{min-height:70px}
 #nightPlayerExit:hover{background:#d51c31}
 #nightPlayerRosterToggle{grid-column:3;grid-row:1;background:#f4d34d;border:3px solid #ffe98c}
 #nightPlayerRosterToggle[hidden]{display:none}
-.skull-disc{width:38px;height:38px;border-radius:50%;background:#13b9c6;display:grid;place-items:center;border:2px solid #fff}
-.skull-disc svg{width:30px;height:30px;display:block}
+.skull-disc{width:38px;height:38px;border-radius:50%;background:transparent;display:grid;place-items:center;border:0}
+.skull-disc svg{width:34px;height:34px;display:block}
 #nightPlayerControls #nightPlayerBack{border-color:#e2c64e;color:#ffe36a}
 #nightPlayerRoster{position:fixed;z-index:5;top:0;right:0;bottom:0;width:min(390px,92vw);padding:18px 16px 22px;background:#f4d34d;color:#171717;box-shadow:-14px 0 38px #0009;transform:translateX(105%);transition:transform .32s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column;text-align:left}
 #nightPlayerRoster.open{transform:translateX(0)}
 .roster-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;margin:0 0 14px}
 .roster-head h2{grid-column:2;margin:0;text-align:center;color:#171717;font-size:clamp(20px,4vw,27px);font-weight:1000}
 #nightPlayerRosterClose{grid-column:1;width:42px;height:42px;border:0;border-radius:9px;background:#171717;color:#fff;font-size:29px;font-weight:1000;line-height:1;cursor:pointer}
-#nightPlayerRosterItems{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:8px 4px 12px;overflow:hidden}
-.roster-browse{width:100%;display:grid;grid-template-columns:48px minmax(0,1fr) 48px;align-items:center;gap:10px}
-.roster-page-button{width:46px;height:54px;border:0;border-radius:12px;background:#171717;color:#ffe36a;font-size:30px;font-weight:1000;cursor:pointer}
-.roster-page-button:disabled{opacity:.25;cursor:default}
-.roster-role{position:relative;display:flex;flex-direction:column;align-items:center;gap:9px;width:min(100%,290px);max-height:calc(100% - 12px);padding:9px 9px 12px;border:3px solid #29251b;border-radius:13px;background:#fff0b0;color:#171717;font:900 16px/1.15 system-ui;cursor:pointer;min-width:0;overflow:hidden}
-.roster-role img{display:block;width:auto;max-width:100%;height:min(55vh,430px);aspect-ratio:.78;object-fit:contain;border-radius:6px;transition:filter .25s,transform .35s}
-.roster-counter{font:900 14px/1 system-ui;color:#29251b;background:#fff0b0;border:2px solid #29251b;border-radius:999px;padding:8px 14px}
+#nightPlayerRosterItems{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;gap:12px;padding:8px 0 12px;overflow:hidden}
+#rosterCardHolder{width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:#29251b #ffe98c;touch-action:pan-x;cursor:grab;padding:10px 0 16px;box-sizing:border-box}
+#rosterCardHolder:active{cursor:grabbing}
+.roster-track{display:flex;align-items:stretch;gap:14px;width:max-content;padding:0 28px}
+.roster-role{position:relative;flex:0 0 min(66vw,250px);width:min(66vw,250px);display:flex;flex-direction:column;align-items:center;gap:9px;padding:9px 9px 12px;border:3px solid #29251b;border-radius:13px;background:#fff0b0;color:#171717;font:900 16px/1.15 system-ui;cursor:pointer;min-width:0;overflow:hidden;scroll-snap-align:center}
+.roster-role img{display:block;width:100%;height:min(52vh,390px);object-fit:contain;border-radius:6px;transition:filter .25s,transform .35s}
+.roster-counter{align-self:center;font:900 14px/1 system-ui;color:#29251b;background:#fff0b0;border:2px solid #29251b;border-radius:999px;padding:8px 14px}
 .roster-hint{font:700 12px/1.35 system-ui;color:#443b20;text-align:center;margin:0}
 .roster-role span{display:block;text-align:center;overflow-wrap:anywhere}
 .roster-role.dead{border:4px solid #c81022;background:#f3b5ad;box-shadow:0 0 0 2px #6b0b14}
@@ -543,10 +543,9 @@ textarea{min-height:70px}
 .roster-role.resurrecting img{animation:kortOppstandelse .85s cubic-bezier(.2,.8,.2,1) both}
 .roster-role.resurrecting{animation:kortOppstandelse .85s ease-out both}
 @media(max-width:600px){
- .roster-browse{grid-template-columns:40px minmax(0,1fr) 40px;gap:6px}
- .roster-page-button{width:38px;height:48px;font-size:25px}
- .roster-role{width:min(100%,260px)}
- .roster-role img{height:min(52vh,390px)}
+ .roster-track{gap:10px;padding-left:20px;padding-right:20px}
+ .roster-role{flex-basis:min(72vw,240px);width:min(72vw,240px)}
+ .roster-role img{height:min(48vh,350px)}
  #nightPlayerTop{grid-template-columns:46px minmax(0,1fr) 46px;gap:7px}
  #nightPlayerExit,#nightPlayerRosterToggle{width:44px;height:44px}
  .skull-disc{width:33px;height:33px}
@@ -574,15 +573,15 @@ textarea{min-height:70px}
 #nightPlayerExit:hover{background:transparent !important;filter:brightness(1.2)}
 #nightPlayerExit svg{display:block;width:100%;height:100%}
 #nightPlayer.aktiv ~ #nightPlayerRosterToggle{display:grid}
-#nightPlayerRosterToggle .skull-disc{width:38px;height:38px;border-radius:50%;background:#13b9c6;display:grid;place-items:center;border:2px solid #fff}
-#nightPlayerRosterToggle .skull-disc svg{width:30px;height:30px;display:block}
+#nightPlayerRosterToggle .skull-disc{width:40px;height:40px;background:transparent;border:0}
+#nightPlayerRosterToggle .skull-disc svg{width:36px;height:36px;display:block}
 #nightPlayerRosterToggle{display:none}
 body.night-player-active #nightPlayerRosterToggle:not([hidden]){display:grid}
 body.night-player-active .info-audio-toggle{display:none}
 @media(max-width:480px){
  #nightPlayerRosterToggle{top:62px;right:10px;width:44px;height:44px}
- #nightPlayerRosterToggle .skull-disc{width:33px;height:33px}
- #nightPlayerRosterToggle .skull-disc svg{width:26px;height:26px}
+ #nightPlayerRosterToggle .skull-disc{width:36px;height:36px}
+ #nightPlayerRosterToggle .skull-disc svg{width:32px;height:32px}
 }
 
 </style>
@@ -590,10 +589,9 @@ body.night-player-active .info-audio-toggle{display:none}
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
 <button id="nightPlayerRosterToggle" type="button" aria-label="Vis roller i spill" title="Roller i spill">
  <span class="skull-disc" aria-hidden="true">
-  <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-   <path fill="#fff" d="M32 5C17 5 7 16 7 31c0 9 4 15 11 20v7c0 2 2 3 4 3h20c2 0 4-1 4-3v-7c7-5 11-11 11-20C57 16 47 5 32 5Z"/>
-   <ellipse cx="22" cy="29" rx="6" ry="8" fill="#13b9c6"/><ellipse cx="42" cy="29" rx="6" ry="8" fill="#13b9c6"/>
-   <path fill="#13b9c6" d="m32 34-5 8h10zM23 48h18v5H23zM27 48v8h4v-8zm8 0v8h4v-8z"/>
+  <svg viewBox="0 0 64 64" role="img" aria-hidden="true" fill="none" stroke="#ffe36a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+   <path d="M32 6C17 6 7 17 7 31c0 9 4 15 11 20v7h28v-7c7-5 11-11 11-20C57 17 47 6 32 6Z"/>
+   <path d="M20 29c0-4 2-7 5-7s5 3 5 7-2 7-5 7-5-3-5-7Zm14 0c0-4 2-7 5-7s5 3 5 7-2 7-5 7-5-3-5-7ZM32 36l-4 7h8l-4-7ZM22 51h20M27 51v6m5-6v6m5-6v6"/>
   </svg>
  </span>
 </button>
@@ -653,11 +651,7 @@ body.night-player-active .info-audio-toggle{display:none}
    <h2>Roller i spill</h2>
   </div>
   <div id="nightPlayerRosterItems">
-   <div class="roster-browse">
-    <button class="roster-page-button" id="rosterPrev" type="button" aria-label="Forrige rollekort">‹</button>
-    <div id="rosterCardHolder"></div>
-    <button class="roster-page-button" id="rosterNext" type="button" aria-label="Neste rollekort">›</button>
-   </div>
+   <div id="rosterCardHolder" aria-label="Bla horisontalt gjennom rollekortene"></div>
    <div class="roster-counter" id="rosterCounter">0 / 0</div>
    <p class="roster-hint">Trykk på kortet for å markere rollen som død eller levende</p>
   </div>
@@ -1041,7 +1035,7 @@ async function spillFil(file,navn){
  catch(e){if(!egenUrl)URL.revokeObjectURL(url);$("sekvensStatus").textContent="Feil ved avspilling av "+navn+": "+e.message;return false;}
 }
 
-let rolleoversiktIndex=0;
+let rolleoversiktIndex=0,rosterLoopAdjusting=false;
 function rolleVisningsnavn(index){
  const r=roller[index],samme=[...valgt].filter(i=>roller[i].navn===r.navn).sort((a,b)=>a-b);
  return samme.length>1?r.navn+" "+(samme.indexOf(index)+1):r.navn;
@@ -1050,23 +1044,30 @@ function tegnRolleoversikt(oppstandelseIndex=null){
  const holder=$("rosterCardHolder"),counter=$("rosterCounter");if(!holder||!counter)return;
  const liste=[...valgt].sort((a,b)=>a-b);
  if(!liste.length){holder.innerHTML="<p>Ingen roller valgt.</p>";counter.textContent="0 / 0";return;}
- if(rolleoversiktIndex>=liste.length)rolleoversiktIndex=liste.length-1;
- if(rolleoversiktIndex<0)rolleoversiktIndex=0;
- const index=liste[rolleoversiktIndex],r=roller[index],død=dødeRoller.has(index),knapp=document.createElement("button");
- knapp.type="button";knapp.className="roster-role"+(død?" dead":"")+(index===oppstandelseIndex?" resurrecting":"");
- knapp.dataset.roleIndex=String(index);knapp.setAttribute("aria-pressed",String(død));
- const img=document.createElement("img");img.src=r.bilde;img.alt=r.navn;img.loading="eager";
- const navn=document.createElement("span");navn.textContent=rolleVisningsnavn(index);
- knapp.append(img,navn);
- if(død){const rip=document.createElement("strong");rip.className="rip";rip.textContent="RIP";knapp.append(rip);}
- knapp.addEventListener("click",()=>toggleDødRolle(index));
- holder.replaceChildren(knapp);counter.textContent=(rolleoversiktIndex+1)+" / "+liste.length;
- $("rosterPrev").disabled=rolleoversiktIndex===0;
- $("rosterNext").disabled=rolleoversiktIndex===liste.length-1;
+ if(rolleoversiktIndex>=liste.length)rolleoversiktIndex=0;
+ const track=document.createElement("div");track.className="roster-track";
+ for(let copy=0;copy<3;copy++)for(const index of liste){
+  const r=roller[index],død=dødeRoller.has(index),knapp=document.createElement("button");
+  knapp.type="button";knapp.className="roster-role"+(død?" dead":"")+(index===oppstandelseIndex?" resurrecting":"");
+  knapp.dataset.roleIndex=String(index);knapp.setAttribute("aria-pressed",String(død));
+  const img=document.createElement("img");img.src=r.bilde;img.alt=r.navn;img.loading="eager";
+  const navn=document.createElement("span");navn.textContent=rolleVisningsnavn(index);knapp.append(img,navn);
+  if(død){const rip=document.createElement("strong");rip.className="rip";rip.textContent="RIP";knapp.append(rip);}
+  knapp.addEventListener("click",()=>toggleDødRolle(index));track.append(knapp);
+ }
+ holder.replaceChildren(track);
+ const first=track.querySelector(".roster-role"),gap=parseFloat(getComputedStyle(track).gap||"0"),w=first?first.getBoundingClientRect().width+gap:0;
+ if(w)holder.scrollLeft=w*liste.length+rolleoversiktIndex*w;
+ counter.textContent=(rolleoversiktIndex+1)+" / "+liste.length;
 }
-function blaRolleoversikt(retning){
- const antall=valgt.size;if(!antall)return;
- rolleoversiktIndex=Math.max(0,Math.min(antall-1,rolleoversiktIndex+retning));tegnRolleoversikt();
+function blaRolleoversikt(retning){const holder=$("rosterCardHolder"),first=holder?.querySelector(".roster-role");if(!first)return;const gap=parseFloat(getComputedStyle(first.parentElement).gap||"0");holder.scrollBy({left:retning*(first.getBoundingClientRect().width+gap),behavior:"smooth"});}
+function oppdaterRolleoversiktScroll(){
+ const holder=$("rosterCardHolder"),track=holder?.querySelector(".roster-track");if(!track||rosterLoopAdjusting)return;
+ const liste=[...valgt].sort((a,b)=>a-b),first=track.querySelector(".roster-role");if(!liste.length||!first)return;
+ const step=first.getBoundingClientRect().width+parseFloat(getComputedStyle(track).gap||"0"),segment=step*liste.length;if(!segment)return;
+ if(holder.scrollLeft<segment*.45||holder.scrollLeft>segment*1.55){rosterLoopAdjusting=true;holder.scrollLeft+=holder.scrollLeft<segment*.45?segment:-segment;requestAnimationFrame(()=>rosterLoopAdjusting=false);}
+ const rel=((holder.scrollLeft-segment)%segment+segment)%segment;rolleoversiktIndex=Math.round(rel/step)%liste.length;
+ $("rosterCounter").textContent=(rolleoversiktIndex+1)+" / "+liste.length;
 }
 let playerPausedByRoster=false;
 function toggleRolleoversikt(){
@@ -1161,8 +1162,8 @@ function playerRunCurrent(){
  }else{
   playerAudio=new Audio(step.url);playerAudio.volume=lydinnstillinger.stemmeVolum;
   playerAudio.onended=()=>{if(!playerRunning||playerPaused)return;playerAudio=null;playerIndex++;playerRunCurrent();};
-  playerAudio.onerror=()=>{playerAudio=null;playerIndex++;playerRunCurrent();};
-  playerAudio.play().catch(()=>{playerAudio=null;playerIndex++;playerRunCurrent();});
+  playerAudio.onerror=()=>{if(!playerRunning)return;playerPaused=true;playerClearTimer();$("nightPlayerPause").textContent="Fortsett";$("nightPlayerText").textContent="Kunne ikke spille av lydklippet. Trykk Fortsett for å prøve igjen, eller Neste for å hoppe over.";};
+  playerAudio.play().catch(()=>{if(!playerRunning)return;playerPaused=true;$("nightPlayerPause").textContent="Fortsett";$("nightPlayerText").textContent="Avspillingen ble blokkert av nettleseren. Trykk Fortsett for å prøve igjen.";});
  }
 }
 async function spillHeleNatten(){
@@ -1176,9 +1177,9 @@ async function spillHeleNatten(){
 }
 function playerPauseToggle(){
  if(!playerRunning)return;
- playerPaused=!playerPaused;
- if(playerPaused){if(playerAudio)playerAudio.pause();if(bakgrunnsmusikk)bakgrunnsmusikk.pause();playerClearTimer();$("nightPlayerPause").textContent="Fortsett";}
- else{if(playerAudio)playerAudio.play().catch(()=>{});else playerRunCurrent();if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});$("nightPlayerPause").textContent="Pause";}
+ if(!playerPaused){playerPaused=true;if(playerAudio)playerAudio.pause();if(bakgrunnsmusikk)bakgrunnsmusikk.pause();playerClearTimer();$("nightPlayerPause").textContent="Fortsett";return;}
+ if(playerAudio){playerAudio.play().then(()=>{playerPaused=false;$("nightPlayerPause").textContent="Pause";if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});}).catch(()=>{$("nightPlayerPause").textContent="Fortsett";});}
+ else{playerPaused=false;$("nightPlayerPause").textContent="Pause";playerRunCurrent();if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});}
 }
 function playerNext(){
  if(playerNightFinished){
@@ -1354,15 +1355,14 @@ $("nightPlayerPause").onclick=playerPauseToggle;
 $("nightPlayerNext").onclick=playerNext;
 $("nightPlayerRosterToggle").onclick=toggleRolleoversikt;
 $("nightPlayerRosterClose").onclick=toggleRolleoversikt;
-$("rosterPrev").onclick=()=>blaRolleoversikt(-1);
-$("rosterNext").onclick=()=>blaRolleoversikt(1);
+$("rosterCardHolder").addEventListener("scroll",oppdaterRolleoversiktScroll,{passive:true});
 
 // Trykk midt på avspilleren for å pause/fortsette. Kontroller og toppknapper
 // ligger utenfor dette området og beholder sine egne handlinger.
 let nightSwipeStart=null,nightSwipeHandledUntil=0;
 const nightPlayerMain=$("nightPlayerMain");
 nightPlayerMain.addEventListener("click",event=>{
- if(Date.now()<nightSwipeHandledUntil)return;
+ if(Date.now()<nightSwipeHandledUntil||event.detail===0)return;
  if(event.target.closest("button,a,input,textarea,select"))return;
  playerPauseToggle();
 });
