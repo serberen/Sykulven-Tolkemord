@@ -544,9 +544,41 @@ textarea{min-height:70px}
  #nightPlayerRosterItems{gap:8px}
 }
 
+
+/* Under nattavspilling ligger innstillinger og rolleoversikt som faste HUD-knapper */
+.settings-toggle{z-index:22010 !important}
+#settingsSide{z-index:22000 !important}
+#nightPlayerRosterToggle{
+ position:fixed;top:72px;right:16px;z-index:22010;
+ width:48px;height:48px;border-radius:50%;display:none;
+ place-items:center;padding:0;cursor:pointer;
+ background:#f4d34d;border:3px solid #ffe98c;box-shadow:0 4px 16px #000b;
+}
+#nightPlayerRosterToggle[hidden]{display:none !important}
+#nightPlayer.aktiv ~ #nightPlayerRosterToggle{display:grid}
+#nightPlayerRosterToggle .skull-disc{width:38px;height:38px;border-radius:50%;background:#13b9c6;display:grid;place-items:center;border:2px solid #fff}
+#nightPlayerRosterToggle .skull-disc svg{width:30px;height:30px;display:block}
+#nightPlayerRosterToggle{display:none}
+body.night-player-active #nightPlayerRosterToggle:not([hidden]){display:grid}
+body.night-player-active .info-audio-toggle{display:none}
+@media(max-width:480px){
+ #nightPlayerRosterToggle{top:62px;right:10px;width:44px;height:44px}
+ #nightPlayerRosterToggle .skull-disc{width:33px;height:33px}
+ #nightPlayerRosterToggle .skull-disc svg{width:26px;height:26px}
+}
+
 </style>
 </head><body>
 <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Åpne innstillinger" title="Innstillinger">⚙</button>
+<button id="nightPlayerRosterToggle" type="button" aria-label="Vis roller i spill" title="Roller i spill">
+ <span class="skull-disc" aria-hidden="true">
+  <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+   <path fill="#fff" d="M32 5C17 5 7 16 7 31c0 9 4 15 11 20v7c0 2 2 3 4 3h20c2 0 4-1 4-3v-7c7-5 11-11 11-20C57 16 47 5 32 5Z"/>
+   <ellipse cx="22" cy="29" rx="6" ry="8" fill="#13b9c6"/><ellipse cx="42" cy="29" rx="6" ry="8" fill="#13b9c6"/>
+   <path fill="#13b9c6" d="m32 34-5 8h10zM23 48h18v5H23zM27 48v8h4v-8zm8 0v8h4v-8z"/>
+  </svg>
+ </span>
+</button>
 <button class="info-audio-toggle" id="infoAudioToggle" type="button" aria-label="Slå av informasjonsopplesning" aria-pressed="false" title="Opplesning av kortinformasjon på">
  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
   <path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/><path class="mute-slash" d="M4 4 20 20"/>
@@ -583,15 +615,6 @@ textarea{min-height:70px}
  <div id="nightPlayerTop">
   <button id="nightPlayerExit" type="button" aria-label="Stopp natten og gå til hovedmenyen" title="Avslutt natten">×</button>
   <h1 id="nightPlayerTitle">Natt 1</h1>
-  <button id="nightPlayerRosterToggle" type="button" aria-label="Vis roller i spill" title="Roller i spill">
-   <span class="skull-disc" aria-hidden="true">
-    <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-     <path fill="#fff" d="M32 5C17 5 7 16 7 31c0 9 4 15 11 20v7c0 2 2 3 4 3h20c2 0 4-1 4-3v-7c7-5 11-11 11-20C57 16 47 5 32 5Z"/>
-     <ellipse cx="22" cy="29" rx="6" ry="8" fill="#13b9c6"/><ellipse cx="42" cy="29" rx="6" ry="8" fill="#13b9c6"/>
-     <path fill="#13b9c6" d="m32 34-5 8h10zM23 48h18v5H23zM27 48v8h4v-8zm8 0v8h4v-8z"/>
-    </svg>
-   </span>
-  </button>
  </div>
  <div id="nightPlayerMain">
   <img id="nightPlayerCharacter" alt="" />
@@ -1104,7 +1127,7 @@ function playerRunCurrent(){
 async function spillHeleNatten(){
  if(playerRunning)return;
  playerNightFinished=false;playerPaused=false;playerRunning=true;playerIndex=0;playerWaitRemaining=0;playerStartBackCooldownUntil=0;const generation=++playerGeneration;
- $("nightPlayer").classList.remove("dagtid");$("nightPlayer").classList.add("aktiv");$("nightPlayerTitle").textContent="Natt "+nattNummer;
+ $("nightPlayer").classList.remove("dagtid");$("nightPlayer").classList.add("aktiv");document.body.classList.add("night-player-active");$("nightPlayerTitle").textContent="Natt "+nattNummer;
  $("nightPlayerRosterToggle").hidden=nattNummer<2;
  $("nightPlayerPause").disabled=false;$("nightPlayerPause").textContent="Pause";$("nightPlayerNext").textContent="Neste";
  tegnRolleoversikt();
@@ -1140,7 +1163,7 @@ function playerPrevious(){
  if(playerPaused){playerPaused=false;$("nightPlayerPause").textContent="Pause";}
  playerRunCurrent();
 }
-function playerStop(){playerGeneration++;playerRunning=false;playerPaused=false;playerNightFinished=false;playerStopAudio();playerClearTimer();stoppBakgrunnsmusikk();$("nightPlayer").classList.remove("aktiv","dagtid");$("nightPlayerRoster").classList.remove("open");$("nightPlayerRoster").setAttribute("aria-hidden","true");$("nightPlayerRosterToggle").hidden=true;avbrytSekvens("Avspillingen er stoppet.");nattNummer=1;valgtNatt=0;dødeRoller.clear();renderNatt();$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden");}
+function playerStop(){playerGeneration++;playerRunning=false;playerPaused=false;playerNightFinished=false;playerStopAudio();playerClearTimer();stoppBakgrunnsmusikk();$("nightPlayer").classList.remove("aktiv","dagtid");document.body.classList.remove("night-player-active");$("nightPlayerRoster").classList.remove("open");$("nightPlayerRoster").setAttribute("aria-hidden","true");$("nightPlayerRosterToggle").hidden=true;avbrytSekvens("Avspillingen er stoppet.");nattNummer=1;valgtNatt=0;dødeRoller.clear();renderNatt();$("spillSide").classList.add("hidden");$("valgSide").classList.remove("hidden");}
 async function spillEnkeltKlipp(id,navn){
  avbrytSekvens();try{const file=await hentFaseLydklipp(id);if(!file){$("sekvensStatus").textContent="Du må laste opp en lydfil for "+navn+" først.";return;}const url=file.url||URL.createObjectURL(file.blob);lyd=new Audio(url);lyd.volume=lydinnstillinger.stemmeVolum;await lyd.play();$("sekvensStatus").textContent="Spiller: "+navn;}catch(e){$("sekvensStatus").textContent="Kunne ikke spille lydklippet: "+e.message;}
 }
