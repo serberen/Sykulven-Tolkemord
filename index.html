@@ -1066,7 +1066,7 @@ function spillVokterOpplesning(fil){
  lydklipp.play().catch(()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;});
 }
 function stoppRolleopplesning(navn){
- if(navn==="Emo"||navn==="Frimurer"||navn==="Avslører"||navn==="Beruset"||navn==="Søvnløs"||navn==="Rimmi"||navn==="Bråkmaker")stoppEmoOpplesning();
+ if(navn==="Emo"||navn==="Frimurer"||navn==="Avslører"||navn==="Beruset"||navn==="Søvnløs"||navn==="Rimmi"||navn==="Bråkmaker"||navn==="Jeger")stoppEmoOpplesning();
  if(navn==="Vokter")stoppVokterOpplesning();
 }
 function spillKortrolleopplesning(navn,type){
@@ -1084,6 +1084,8 @@ function spillKortrolleopplesning(navn,type){
   spillEmoOpplesning(type==="info"?"./rimmi-info.wav":"./rimmi-rolle.wav");
  }else if(navn==="Bråkmaker"){
   spillEmoOpplesning(type==="info"?"./braakmaker-info.wav":"./braakmaker-rolle.wav");
+ }else if(navn==="Jeger"){
+  spillEmoOpplesning(type==="info"?"./jeger-info.wav":"./jeger-rolle.wav");
  }else if(navn==="Vokter"){
   spillVokterOpplesning(type==="info"?"./vokter-info.wav":"./vokter-rollevalg.wav");
  }
