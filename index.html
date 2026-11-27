@@ -494,7 +494,7 @@ textarea{min-height:70px}
 #nightPlayer{position:fixed;inset:0;z-index:19000;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:clamp(18px,4vh,42px) 20px clamp(18px,3vh,30px);background:linear-gradient(180deg,rgba(5,13,9,.64),rgba(3,9,6,.78)),url("skog-bakgrunn.webp") center/cover fixed,#101a12;color:#f5d34f;text-align:center}
 #nightPlayer.aktiv{display:flex}
 #nightPlayerTitle{margin:0;font-size:clamp(28px,5vw,54px);font-weight:1000;letter-spacing:.04em;color:#f4d34d;text-shadow:0 3px 8px #000,0 0 18px #000;line-height:1.05}
-#nightPlayerMain{flex:1;min-height:0;width:min(100%,1000px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(12px,2.5vh,24px);padding:18px 0}
+#nightPlayerMain{flex:1;min-height:0;width:min(100%,1000px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(12px,2.5vh,24px);padding:18px 0;box-sizing:border-box}
 #nightPlayerMain{cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none}
 #nightPlayerMain:active{cursor:pointer}
 #nightPlayerCharacter{display:none;max-height:min(44vh,390px);max-width:min(70vw,390px);width:auto;height:auto;object-fit:contain;filter:drop-shadow(0 12px 22px #000c)}
@@ -1115,6 +1115,19 @@ const rolleBilder={
 function playerRensTekst(tekst){
  return String(tekst||"").replace(/[«»“”„"]/g,"").trim();
 }
+// Behold kortet på samme plass; krymp bare instruksjonsteksten når den blir lang.
+function playerTilpassTekst(){
+ const main=$("nightPlayerMain"),txt=$("nightPlayerText"),img=$("nightPlayerCharacter");
+ if(!main||!txt||!main.clientHeight)return;
+ txt.style.fontSize="";
+ const style=getComputedStyle(main),gap=parseFloat(style.rowGap)||0;
+ const padding=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
+ const bildeHøyde=img&&img.style.display!=="none"?img.getBoundingClientRect().height:0;
+ const tilgjengelig=Math.max(34,main.clientHeight-padding-bildeHøyde-(bildeHøyde?gap:0)-4);
+ let størrelse=parseFloat(getComputedStyle(txt).fontSize)||27;
+ while(txt.scrollHeight>tilgjengelig&&størrelse>15){størrelse-=1;txt.style.fontSize=størrelse+"px";}
+}
+window.addEventListener("resize",()=>requestAnimationFrame(playerTilpassTekst));
 function playerDelTekst(p){
  const linjer=String(p?.tekst||"").split(/\n/).map(playerRensTekst).filter(Boolean);
  return {vakne:linjer[0]||"",lukke:linjer[1]||""};
@@ -1123,8 +1136,9 @@ function playerVis(p,tekst,visBilde=true){
  // Vis bare ren transkripsjon – ingen anførselstegn.
  $("nightPlayerText").textContent=playerRensTekst(tekst);
  const img=$("nightPlayerCharacter"),src=visBilde&&p?rolleBilder[p.rolle]:null;
- if(src){img.src=src;img.alt=p.rolle;img.style.display="block";}else{img.removeAttribute("src");img.alt="";img.style.display="none";}
+ if(src){img.onload=()=>requestAnimationFrame(playerTilpassTekst);img.src=src;img.alt=p.rolle;img.style.display="block";}else{img.onload=null;img.removeAttribute("src");img.alt="";img.style.display="none";}
  $("nightPlayerTimer").textContent="";
+ requestAnimationFrame(()=>requestAnimationFrame(playerTilpassTekst));
 }
 function playerLeggTilLyd(url,navn,p,tekst,meta={}){playerSteps.push({type:"audio",url,navn,p,tekst,...meta});}
 function playerLeggTilVent(sek,p,tekst,meta={}){playerSteps.push({type:"wait",sek,p,tekst,...meta});}
