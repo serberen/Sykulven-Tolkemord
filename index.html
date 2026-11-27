@@ -928,9 +928,33 @@ const lydinnstillinger={bakgrunnPaa:true,bakgrunnVolum:0.22,stemmeVolum:1,pauseS
 function kobleLydkontroller(){
  const bg=$("backgroundVolume"),voice=$("voiceVolume"),pause=$("roleInterval"),enabled=$("backgroundEnabled");
  if(bg)bg.addEventListener("input",()=>{lydinnstillinger.bakgrunnVolum=Number(bg.value)/100;$("backgroundVolumeValue").textContent=bg.value+"%";bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;});
- if(voice)voice.addEventListener("input",()=>{lydinnstillinger.stemmeVolum=Number(voice.value)/100;$("voiceVolumeValue").textContent=voice.value+"%";if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;});
- if(pause)pause.addEventListener("input",()=>{lydinnstillinger.pauseSekunder=Number(pause.value);$("roleIntervalValue").textContent=pause.value+" sek";});
- if(enabled)enabled.addEventListener("change",()=>{lydinnstillinger.bakgrunnPaa=enabled.checked;settBakgrunnsmusikk();});
+ if(voice)voice.addEventListener("input",()=>{
+  lydinnstillinger.stemmeVolum=Number(voice.value)/100;
+  $("voiceVolumeValue").textContent=voice.value+"%";
+  if(lyd)lyd.volume=lydinnstillinger.stemmeVolum;
+  if(playerAudio)playerAudio.volume=lydinnstillinger.stemmeVolum;
+ });
+ if(pause)pause.addEventListener("input",()=>{
+  lydinnstillinger.pauseSekunder=Number(pause.value);
+  $("roleIntervalValue").textContent=pause.value+" sek";
+  // Oppdater også pauser som allerede ligger i nattens kø.
+  const current=playerSteps[playerIndex];
+  const elapsed=current?.type==="wait"&&current.rolePause?Math.max(0,current.sek-playerWaitRemaining):0;
+  for(const step of playerSteps){if(step.type==="wait"&&step.rolePause)step.sek=lydinnstillinger.pauseSekunder;}
+  if(playerRunning&&current?.type==="wait"&&current.rolePause){
+   playerWaitRemaining=Math.max(0,lydinnstillinger.pauseSekunder-elapsed);
+   if(!playerPaused){
+    playerClearTimer();let left=playerWaitRemaining;
+    $("nightPlayerTimer").textContent=left>0?String(left):"";
+    if(left<=0){playerWaitRemaining=0;playerIndex++;playerRunCurrent();}
+    else playerTimer=setInterval(()=>{if(!playerRunning||playerPaused)return;left--;playerWaitRemaining=left;$("nightPlayerTimer").textContent=left>0?String(left):"";if(left<=0){playerWaitRemaining=0;playerClearTimer();playerIndex++;playerRunCurrent();}},1000);
+   }
+  }
+ });
+ if(enabled)enabled.addEventListener("change",()=>{
+  lydinnstillinger.bakgrunnPaa=enabled.checked;
+  settBakgrunnsmusikk();
+ });
 }
 function oppdaterLydinnstillinger(){
  bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
@@ -942,7 +966,14 @@ function oppdaterLydinnstillinger(){
 }
 function startBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;if(lydinnstillinger.bakgrunnPaa)bakgrunnsmusikk.play().catch(()=>{});}
 function stoppBakgrunnsmusikk(){bakgrunnsmusikk.pause();bakgrunnsmusikk.currentTime=0;}
-function settBakgrunnsmusikk(){bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;if(!lydinnstillinger.bakgrunnPaa){bakgrunnsmusikk.pause();return;}if(sekvensAktiv&&bakgrunnsmusikk.paused)bakgrunnsmusikk.play().catch(()=>{});}
+function settBakgrunnsmusikk(){
+ bakgrunnsmusikk.volume=lydinnstillinger.bakgrunnVolum;
+ if(!lydinnstillinger.bakgrunnPaa){bakgrunnsmusikk.pause();return;}
+ // Bakgrunnsmusikk skal følge både nattspilleren og den eldre sekvensspilleren.
+ const settingsOpen=!!document.getElementById("settingsSide")&&!$("settingsSide").classList.contains("hidden");
+ if(!settingsOpen&&((playerRunning&&!playerPaused)||sekvensAktiv)&&bakgrunnsmusikk.paused)
+  bakgrunnsmusikk.play().catch(()=>{});
+}
 
 // Lydklippene lagres i IndexedDB slik at de fortsatt finnes etter at siden lastes på nytt.
 let lydDatabasePromise=null;
@@ -1105,17 +1136,17 @@ async function byggPlayerSteps(){
   const tekster=playerDelTekst(p);
   const addDirect=(file,tekst)=>playerLeggTilLyd(file,p.rolle,p,tekst);
   if(p.id==="vokter"){
-   addDirect("./vokter-nattinstruksjon.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./vokter-lukk-oynene.wav",tekster.lukke);
+   addDirect("./vokter-nattinstruksjon.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"",{rolePause:true});addDirect("./vokter-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="frimurer"||p.id==="avsloerer"){
-   const pre=p.id==="frimurer"?"frimurer":"avsloerer";addDirect("./"+pre+"-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./"+pre+"-lukk-oynene.wav",tekster.lukke);
+   const pre=p.id==="frimurer"?"frimurer":"avsloerer";addDirect("./"+pre+"-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"",{rolePause:true});addDirect("./"+pre+"-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="beruset"||p.id==="beruset_n2"){
-   addDirect(p.id==="beruset_n2"?"./beruset-vakne-natt2.wav":"./beruset-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./beruset-lukk-oynene.wav",tekster.lukke);
+   addDirect(p.id==="beruset_n2"?"./beruset-vakne-natt2.wav":"./beruset-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"",{rolePause:true});addDirect("./beruset-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="braakmaker"){
-   addDirect("./braakmaker-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./braakmaker-lukk-oynene.wav",tekster.lukke);
+   addDirect("./braakmaker-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"",{rolePause:true});addDirect("./braakmaker-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="sovnlos"){
-   addDirect("./sovnlos-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./sovnlos-lukk-oynene.wav",tekster.lukke);
+   addDirect("./sovnlos-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"",{rolePause:true});addDirect("./sovnlos-lukk-oynene.wav",tekster.lukke);
   }else if(p.id==="rimmi_n2"||p.id==="rimmi_n3"){
-   addDirect("./rimmi-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"");addDirect("./rimmi-lukk-oynene.wav",tekster.lukke);
+   addDirect("./rimmi-vakne.wav",tekster.vakne);playerLeggTilVent(lydinnstillinger.pauseSekunder,p,"",{rolePause:true});addDirect("./rimmi-lukk-oynene.wav",tekster.lukke);
   }else{
    let f=null;try{f=await hentLydklipp(p.id);}catch(e){};if(f)playerLeggTilLyd(URL.createObjectURL(f.blob),p.rolle,p,p.tekst);
   }
