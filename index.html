@@ -865,7 +865,7 @@ function renderNatt(){
   const play=document.createElement("button");play.className="action";play.type="button";play.textContent="▶ Spill klippet";play.addEventListener("click",()=>spillEnkeltKlipp(p.id,p.rolle));
   const remove=document.createElement("button");remove.className="action";remove.type="button";remove.textContent="Fjern lydfil";remove.addEventListener("click",async()=>{try{await slettLydklipp(p.id);meta.textContent="Ingen lydfil lagt inn."; }catch(e){meta.textContent="Kunne ikke fjerne lydfilen."; }});
   controls.append(input,play,remove);card.append(heading,script,meta,controls);list.append(card);
-  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":(p.id==="beruset"||p.id==="beruset_n2")?"Standardlyder: Beruset har egne oppvåkningslyder for natt 1 og natt 2, og samme lukk-øynene-lyd begge netter.":p.id==="sovnlos"?"Standardlyder: Søvnløs har egne Våkne- og Lukk øynene-lyder.":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":(p.id==="beruset"||p.id==="beruset_n2")?"Standardlyder: Beruset har egne oppvåkningslyder for natt 1 og natt 2, og samme lukk-øynene-lyd begge netter.":p.id==="sovnlos"?"Standardlyder: Søvnløs har egne Våkne- og Lukk øynene-lyder.":"Lokal lagring er ikke tilgjengelig.";});
+  hentLydklipp(p.id).then(file=>{if(meta.isConnected)meta.textContent=file?"Egen lydfil lagret: "+file.navn:(p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":(p.id==="beruset"||p.id==="beruset_n2")?"Standardlyder: Beruset har egne oppvåkningslyder for natt 1 og natt 2, og samme lukk-øynene-lyd begge netter.":p.id==="sovnlos"?"Standardlyder: Søvnløs har egne Våkne- og Lukk øynene-lyder.":(p.id==="rimmi_n2"||p.id==="rimmi_n3")?"Standardlyder: Rimmi har Våkne- og Lukk øynene-lyder fra Natt 2 og videre.":"Ingen lydfil lagt inn ennå.");}).catch(()=>{if(meta.isConnected)meta.textContent=p.startfase?"Standardlyd: natt-start-lukk-oynene.mp3":p.endfase?"Standardlyd: natt-slutt-vakn-opp.mp3":p.id==="frimurer"?"Standardlyder: frimurer-vakne.wav og frimurer-lukk-oynene.wav":p.id==="vokter"?"Standardlyder: vokter-nattinstruksjon.wav og vokter-lukk-oynene.wav":(p.id==="beruset"||p.id==="beruset_n2")?"Standardlyder: Beruset har egne oppvåkningslyder for natt 1 og natt 2, og samme lukk-øynene-lyd begge netter.":p.id==="sovnlos"?"Standardlyder: Søvnløs har egne Våkne- og Lukk øynene-lyder.":(p.id==="rimmi_n2"||p.id==="rimmi_n3")?"Standardlyder: Rimmi har Våkne- og Lukk øynene-lyder fra Natt 2 og videre.":"Lokal lagring er ikke tilgjengelig.";});
  });
  if(!phases.length){const p=document.createElement("p");p.className="small";p.textContent="Ingen av rollene i denne natten er valgt i kortvelgeren. Velg rollene du skal bruke, så vises instruksjonene her.";list.append(p);}
 }
@@ -915,7 +915,7 @@ async function spillHeleNatten(){
   const p=phases[i];let file;
   try{file=await hentLydklipp(p.id);}catch(e){$("sekvensStatus").textContent="Kunne ikke hente lydfilene fra nettleseren.";break;}
   if(token!==sekvensToken)break;
-  if(!file&&p.id!=="frimurer"&&p.id!=="vokter"&&p.id!=="avsloerer"&&p.id!=="beruset"&&p.id!=="beruset_n2"&&p.id!=="sovnlos"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
+  if(!file&&p.id!=="frimurer"&&p.id!=="vokter"&&p.id!=="avsloerer"&&p.id!=="beruset"&&p.id!=="beruset_n2"&&p.id!=="sovnlos"&&p.id!=="rimmi_n2"&&p.id!=="rimmi_n3"){skippet++;$("sekvensStatus").textContent="Hopper over "+p.rolle+" – ingen lydfil er lastet opp.";continue;}
   let ok=true;
   if(p.id==="vokter"){
    const instruction={url:"./vokter-nattinstruksjon.wav"};
@@ -958,6 +958,16 @@ async function spillHeleNatten(){
    const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Søvnløs ser på sitt eget kort. Lukk øynene om {sek} sekunder …");
    if(!ventet)break;
    const close=new Audio("./sovnlos-lukk-oynene.wav");close.volume=lydinnstillinger.stemmeVolum;
+   try{await close.play();ok=await ventPaaLyd(close);}catch(e){ok=false;}
+   if(!ok)break;
+  }else if(p.id==="rimmi_n2"||p.id==="rimmi_n3"){
+   const wake=new Audio("./rimmi-vakne.wav");wake.volume=lydinnstillinger.stemmeVolum;
+   try{await wake.play();ok=await ventPaaLyd(wake);}catch(e){ok=false;}
+   if(!ok)break;
+   if(token!==sekvensToken)break;
+   const ventet=await ventSekunder(lydinnstillinger.pauseSekunder,token,"Rimmi utfører handlingen. Lukk øynene om {sek} sekunder …");
+   if(!ventet)break;
+   const close=new Audio("./rimmi-lukk-oynene.wav");close.volume=lydinnstillinger.stemmeVolum;
    try{await close.play();ok=await ventPaaLyd(close);}catch(e){ok=false;}
    if(!ok)break;
   }else{
@@ -1046,7 +1056,7 @@ function spillVokterOpplesning(fil){
  lydklipp.play().catch(()=>{if(aktivVokterLyd===lydklipp)aktivVokterLyd=null;});
 }
 function stoppRolleopplesning(navn){
- if(navn==="Emo"||navn==="Frimurer"||navn==="Avslører"||navn==="Beruset"||navn==="Søvnløs")stoppEmoOpplesning();
+ if(navn==="Emo"||navn==="Frimurer"||navn==="Avslører"||navn==="Beruset"||navn==="Søvnløs"||navn==="Rimmi")stoppEmoOpplesning();
  if(navn==="Vokter")stoppVokterOpplesning();
 }
 function spillKortrolleopplesning(navn,type){
@@ -1060,6 +1070,8 @@ function spillKortrolleopplesning(navn,type){
   spillEmoOpplesning(type==="info"?"./beruset-info.wav":"./beruset-rolle.wav");
  }else if(navn==="Søvnløs"){
   spillEmoOpplesning(type==="info"?"./sovnlos-info.wav":"./sovnlos-rolle.wav");
+ }else if(navn==="Rimmi"){
+  spillEmoOpplesning(type==="info"?"./rimmi-info.wav":"./rimmi-rolle.wav");
  }else if(navn==="Vokter"){
   spillVokterOpplesning(type==="info"?"./vokter-info.wav":"./vokter-rollevalg.wav");
  }
