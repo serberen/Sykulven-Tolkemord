@@ -554,9 +554,9 @@ textarea{min-height:70px}
 #settingsSide .actions{max-width:760px;margin-left:auto;margin-right:auto}
 #nightPlayerRosterToggle{
  position:fixed;top:76px;right:16px;z-index:22010;
- width:48px;height:48px;border-radius:50%;display:none;
+ width:48px;height:48px;border-radius:0;display:none;
  place-items:center;padding:0;cursor:pointer;
- background:#f4d34d;border:3px solid #ffe98c;box-shadow:0 4px 16px #000b;
+ background:transparent !important;border:0 !important;box-shadow:none !important;
 }
 #nightPlayerRosterToggle[hidden]{display:none !important}
 body.night-player-active .settings-toggle{top:16px !important;right:16px !important;left:auto !important;width:48px !important;height:48px !important;border-radius:50% !important}
@@ -564,7 +564,7 @@ body.night-player-active #nightPlayerExit{position:fixed !important;top:16px !im
 #nightPlayerExit:hover{background:transparent !important;filter:brightness(1.2)}
 #nightPlayerExit svg{display:block;width:100%;height:100%}
 #nightPlayer.aktiv ~ #nightPlayerRosterToggle{display:grid}
-#nightPlayerRosterToggle .skull-disc{width:40px;height:40px;background:transparent;border:0}
+#nightPlayerRosterToggle .skull-disc{width:40px;height:40px;background:transparent;border:0;box-shadow:none}
 #nightPlayerRosterToggle .skull-disc svg{width:36px;height:36px;display:block}
 #nightPlayerRosterToggle{display:none}
 body.night-player-active #nightPlayerRosterToggle:not([hidden]){display:grid}
